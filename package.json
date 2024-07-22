@@ -1,0 +1,43 @@
+{
+  "name": "@balmy/earn-periphery",
+  "description": "This repository adds existing contracts the ability to perform stateless simulations",
+  "version": "0.0.0",
+  "author": {
+    "name": "Balmy",
+    "url": "https://github.com/balmy-protocol"
+  },
+  "devDependencies": {
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d",
+    "@prb/test": "github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19",
+    "@openzeppelin": "github:OpenZeppelin/openzeppelin-contracts#9ef69c03d13230aeff24d91cb54c9d24c4de7c8b",
+    "@balmy/nft-permissions": "github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638",
+    "@balmy/earn-core": "github:balmy-protocol/earn-core",
+    "prettier": "^2.8.7",
+    "solhint-community": "^3.5.0"
+  },
+  "files": [
+    "contracts"
+  ],
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "forge",
+    "foundry",
+    "smart-contracts",
+    "solidity",
+    "template"
+  ],
+  "scripts": {
+    "clean": "rm -rf cache out",
+    "lint": "pnpm lint:sol && pnpm prettier:check",
+    "lint:sol": "forge fmt --check && pnpm solhint \"{script,src,test}/**/*.sol\"",
+    "prettier:check": "prettier --check \"**/*.{json,md,yml}\"",
+    "prettier:write": "prettier --write \"**/*.{json,md,yml}\"",
+    "prepublishOnly": "cp -r ./src ./contracts",
+    "postpublish": "rm -r ./contracts"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
