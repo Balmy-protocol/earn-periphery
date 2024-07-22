@@ -25,9 +25,9 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
-"@balmy/earn-core@github:balmy-protocol/earn-core":
+"@balmy/earn-core@https://github.com/balmy-protocol/earn-core":
   version "0.0.0"
-  resolved "git+ssh://git@github.com/balmy-protocol/earn-core.git#c5a9d675843f34835784a3ff80a77ec9dfa0f7ab"
+  resolved "https://github.com/balmy-protocol/earn-core#c5a9d675843f34835784a3ff80a77ec9dfa0f7ab"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
