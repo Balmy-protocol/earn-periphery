@@ -99,6 +99,7 @@ jobs:
         uses: actions/github-script@v6
         env:
           SLITHER_OUTPUT: ${{ steps.slither.outputs.stdout }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         if: github.event_name == 'pull_request'
         with:
           debug: true
