@@ -70,4 +70,10 @@ interface IFeeManager {
    * @param newFees The new default fees
    */
   function setDefaultFees(Fees memory newFees) external;
+
+  /**
+   * @notice Checks if a strategy has default fees
+   * @param strategyId The strategy to check
+   */
+  function hasDefaultFees(StrategyId strategyId) external view returns (bool);
 }

@@ -24,6 +24,7 @@ contract FeeManagerTest is PRBTest {
 
   function test_constants() public {
     assertEq(feeManager.MANAGE_FEES_ROLE(), keccak256("MANAGE_FEES_ROLE"));
+    assertEq(feeManager.MAX_FEE(), 5000);
   }
 
   function test_constructor() public {
@@ -34,7 +35,7 @@ contract FeeManagerTest is PRBTest {
     assertEq(feeManager.owner(), superAdmin);
     assertEq(feeManager.defaultAdmin(), superAdmin);
 
-    assert(feeManager.defaultFees().equals(defaultFees));
+    assertTrue(feeManager.defaultFees().equals(defaultFees));
   }
 
   function test_constructor_RevertWhen_FeeGreaterThanMaximum() public {
@@ -50,7 +51,7 @@ contract FeeManagerTest is PRBTest {
     emit DefaultFeesChanged(newDefaultFees);
     feeManager.setDefaultFees(newDefaultFees);
 
-    assert(feeManager.defaultFees().equals(newDefaultFees));
+    assertTrue(feeManager.defaultFees().equals(newDefaultFees));
   }
 
   function test_setDefaultFee_RevertWhen_CalledWithoutRole() public {
@@ -75,7 +76,7 @@ contract FeeManagerTest is PRBTest {
     vm.expectEmit();
     emit StrategyFeesChanged(strategyId, newFees);
     feeManager.updateFees(strategyId, newFees);
-    assert(feeManager.getFees(strategyId).equals(newFees));
+    assertTrue(feeManager.getFees(strategyId).equals(newFees));
   }
 
   function test_updateFees_RevertWhen_CalledWithoutRole() public {
@@ -97,9 +98,9 @@ contract FeeManagerTest is PRBTest {
     feeManager.updateFees(strategyId, newFees);
   }
 
-  function test_getFees() public view {
+  function test_getFees() public {
     StrategyId strategyId = StrategyId.wrap(1);
-    assert(feeManager.getFees(strategyId).equals(defaultFees));
+    assertTrue(feeManager.getFees(strategyId).equals(defaultFees));
   }
 
   function test_setToDefault() public {
@@ -109,10 +110,10 @@ contract FeeManagerTest is PRBTest {
     vm.expectEmit();
     emit StrategyFeesChanged(strategyId, newFees);
     feeManager.updateFees(strategyId, newFees);
-    assert(feeManager.getFees(strategyId).equals(newFees));
+    assertTrue(feeManager.getFees(strategyId).equals(newFees));
     vm.prank(manageFeeAdmin);
     feeManager.setToDefault(strategyId);
-    assert(feeManager.getFees(strategyId).equals(defaultFees));
+    assertTrue(feeManager.getFees(strategyId).equals(defaultFees));
   }
 
   function test_setToDefault_RevertWhen_CalledWithoutRole() public {
@@ -123,5 +124,20 @@ contract FeeManagerTest is PRBTest {
       )
     );
     feeManager.setToDefault(strategyId);
+  }
+
+  function test_hasDefaultFees() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertTrue(feeManager.hasDefaultFees(strategyId));
+
+    Fees memory newFees = Fees(5, 1, 2, 3);
+    vm.prank(manageFeeAdmin);
+    feeManager.updateFees(strategyId, newFees);
+
+    assertFalse(feeManager.hasDefaultFees(strategyId));
+
+    vm.prank(manageFeeAdmin);
+    feeManager.setToDefault(strategyId);
+    assertTrue(feeManager.hasDefaultFees(strategyId));
   }
 }
