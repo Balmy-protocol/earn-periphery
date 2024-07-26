@@ -96,4 +96,32 @@ contract FeeManagerTest is PRBTest {
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
     feeManager.updateFees(strategyId, newFees);
   }
+
+  function test_getFees() public view {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assert(feeManager.getFees(strategyId).equals(defaultFees));
+  }
+
+  function test_setToDefault() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    Fees memory newFees = Fees(5, 1, 2, 3);
+    vm.prank(manageFeeAdmin);
+    vm.expectEmit();
+    emit StrategyFeesChanged(strategyId, newFees);
+    feeManager.updateFees(strategyId, newFees);
+    assert(feeManager.getFees(strategyId).equals(newFees));
+    vm.prank(manageFeeAdmin);
+    feeManager.setToDefault(strategyId);
+    assert(feeManager.getFees(strategyId).equals(defaultFees));
+  }
+
+  function test_setToDefault_RevertWhen_CalledWithoutRole() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), feeManager.MANAGE_FEES_ROLE()
+      )
+    );
+    feeManager.setToDefault(strategyId);
+  }
 }
