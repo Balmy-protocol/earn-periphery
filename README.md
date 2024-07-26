@@ -12,6 +12,86 @@ to track all pending withdrawals for a specific position in one place
 
 A singleton contract that holds global configuration for the Earn ecosystem.
 
+### Fee Manager
+
+A singleton contract that holds the fees values for each strategy
+
+#### Fees
+
+The fees can be deposit, withdraw, save, or perfomance.
+
+## Usage
+
+This is a list of the most frequently needed commands.
+
+### Build
+
+Build the contracts:
+
+```sh
+$ forge build
+```
+
+### Clean
+
+Delete the build artifacts and cache directories:
+
+```sh
+$ forge clean
+```
+
+### Compile
+
+Compile the contracts:
+
+```sh
+$ forge build
+```
+
+### Coverage
+
+Get a test coverage report:
+
+```sh
+$ forge coverage
+```
+
+### Format
+
+Format the contracts:
+
+```sh
+$ forge fmt
+```
+
+### Gas Usage
+
+Get a gas report:
+
+```sh
+$ forge test --gas-report
+```
+
+### Lint
+
+Lint the contracts:
+
+```sh
+$ pnpm lint
+```
+
+### Test
+
+Run the tests:
+
+```sh
+$ forge test
+```
+
+## License
+
+TBD
+
 ## Usage
 
 This is a list of the most frequently needed commands.
