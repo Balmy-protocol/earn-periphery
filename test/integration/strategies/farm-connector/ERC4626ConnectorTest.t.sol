@@ -7,8 +7,10 @@ import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmedi
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 
 contract ERC4626ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
-  IERC4626 constant sDAI = IERC4626(0x83F20F44975D03b1b09e64809B757c47f942BEeA);
+  // solhint-disable-next-line const-name-snakecase
+  IERC4626 internal constant sDAI = IERC4626(0x83F20F44975D03b1b09e64809B757c47f942BEeA);
 
+  // solhint-disable-next-line no-empty-blocks
   function _setUp() internal override { }
 
   function _configureFork() internal override {

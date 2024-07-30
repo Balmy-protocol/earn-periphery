@@ -14,6 +14,7 @@ import { BaseConnector } from "./base/BaseConnector.sol";
 
 abstract contract ERC4626Connector is BaseConnector {
   using SafeERC20 for IERC20;
+  using SafeERC20 for IERC4626;
 
   /// @notice Returns the address of the ERC4626 vault
   IERC4626 public immutable ERC4626Vault;
@@ -124,6 +125,7 @@ abstract contract ERC4626Connector is BaseConnector {
     virtual
     override
     returns (IDelayedWithdrawalAdapter)
+  // solhint-disable-next-line no-empty-blocks
   { }
 
   function _connector_deposit(
@@ -159,8 +161,9 @@ abstract contract ERC4626Connector is BaseConnector {
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     // Note: we assume params are consistent and valid because they were validated by the EarnVault
+    // slither-disable-next-line unused-return
     ERC4626Vault.withdraw(toWithdraw[0], recipient, address(this));
-    return new IEarnStrategy.WithdrawalType[](1);
+    return _connector_supportedWithdrawals();
   }
 
   function _connector_specialWithdraw(
@@ -180,13 +183,13 @@ abstract contract ERC4626Connector is BaseConnector {
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = abi.decode(withdrawData, (uint256));
       uint256 assets = ERC4626Vault.previewRedeem(shares);
-      ERC4626Vault.transfer(recipient, shares);
+      ERC4626Vault.safeTransfer(recipient, shares);
       withdrawn[0] = assets;
       result = abi.encode(assets);
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
       uint256 assets = abi.decode(withdrawData, (uint256));
       uint256 shares = ERC4626Vault.previewWithdraw(assets);
-      ERC4626Vault.transfer(recipient, shares);
+      ERC4626Vault.safeTransfer(recipient, shares);
       withdrawn[0] = assets;
       result = abi.encode(shares);
     } else {
@@ -204,7 +207,7 @@ abstract contract ERC4626Connector is BaseConnector {
     returns (bytes memory)
   {
     uint256 balance = ERC4626Vault.balanceOf(address(this));
-    ERC4626Vault.transfer(address(newStrategy), balance);
+    ERC4626Vault.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
   }
 
@@ -216,5 +219,6 @@ abstract contract ERC4626Connector is BaseConnector {
     internal
     virtual
     override
+  // solhint-disable-next-line no-empty-blocks
   { }
 }

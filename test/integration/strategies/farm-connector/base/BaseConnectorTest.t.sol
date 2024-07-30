@@ -12,7 +12,6 @@ import {
   StrategyId
 } from "src/strategies/connector/base/BaseConnector.sol";
 import { BaseConnectorInstance } from "./BaseConnectorInstance.sol";
-import { console } from "forge-std/console.sol";
 
 abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   BaseConnectorInstance internal connector;
