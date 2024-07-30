@@ -12,6 +12,7 @@ abstract contract BaseConnector {
   error InvalidDepositToken(address invalidToken);
   error InvalidSpecialWithdrawalCode(SpecialWithdrawalCode invalidCode);
 
+  // slither-disable-start naming-convention
   function _connector_asset() internal view virtual returns (address);
 
   function _connector_allTokens() internal view virtual returns (address[] memory tokens);
@@ -80,4 +81,5 @@ abstract contract BaseConnector {
   )
     internal
     virtual;
+  // slither-disable-end naming-convention
 }

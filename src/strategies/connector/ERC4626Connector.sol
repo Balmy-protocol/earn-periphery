@@ -17,6 +17,7 @@ abstract contract ERC4626Connector is BaseConnector {
   using SafeERC20 for IERC4626;
 
   /// @notice Returns the address of the ERC4626 vault
+  // slither-disable-next-line naming-convention
   IERC4626 public immutable ERC4626Vault;
   address internal immutable _assetToken;
 
@@ -31,15 +32,18 @@ abstract contract ERC4626Connector is BaseConnector {
     IERC20(_connector_asset()).forceApprove(address(ERC4626Vault), type(uint256).max);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
     return _assetToken;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     tokens = new address[](1);
     tokens[0] = _connector_asset();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedWithdrawals()
     internal
     view
@@ -50,16 +54,19 @@ abstract contract ERC4626Connector is BaseConnector {
     return new IEarnStrategy.WithdrawalType[](1);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(ERC4626Vault);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view virtual override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
     supported[1] = address(ERC4626Vault);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
     if (depositToken == _connector_asset()) {
       return ERC4626Vault.maxDeposit(address(this));
@@ -70,6 +77,7 @@ abstract contract ERC4626Connector is BaseConnector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_totalBalances()
     internal
     view
@@ -83,6 +91,7 @@ abstract contract ERC4626Connector is BaseConnector {
     balances[0] = ERC4626Vault.previewRedeem(ERC4626Vault.balanceOf(address(this)));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
     internal
     view
@@ -94,6 +103,7 @@ abstract contract ERC4626Connector is BaseConnector {
       || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedSpecialWithdrawals()
     internal
     view
@@ -106,6 +116,7 @@ abstract contract ERC4626Connector is BaseConnector {
     codes[1] = SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxWithdraw()
     internal
     view
@@ -119,6 +130,7 @@ abstract contract ERC4626Connector is BaseConnector {
     withdrawable[0] = ERC4626Vault.maxWithdraw(address(this));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_delayedWithdrawalAdapter(address token)
     internal
     view
@@ -128,6 +140,7 @@ abstract contract ERC4626Connector is BaseConnector {
   // solhint-disable-next-line no-empty-blocks
   { }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount
@@ -149,6 +162,7 @@ abstract contract ERC4626Connector is BaseConnector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
     address[] memory,
@@ -166,6 +180,7 @@ abstract contract ERC4626Connector is BaseConnector {
     return _connector_supportedWithdrawals();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
@@ -197,6 +212,7 @@ abstract contract ERC4626Connector is BaseConnector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_migrateToNewStrategy(
     IEarnStrategy newStrategy,
     bytes calldata
@@ -211,6 +227,7 @@ abstract contract ERC4626Connector is BaseConnector {
     return abi.encode(balance);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_strategyRegistered(
     StrategyId strategyId,
     IEarnStrategy oldStrategy,
