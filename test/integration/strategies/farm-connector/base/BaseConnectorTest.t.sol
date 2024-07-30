@@ -119,14 +119,16 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
 
   function testFork_migrateToNewStrategy() public {
     BaseConnectorInstance newConnector = _buildNewConnector();
-    (, uint256[] memory balances1) = connector.totalBalances();
+    (, uint256[] memory oldConnectorBalancesBefore) = connector.totalBalances();
 
     // Migrate
     connector.migrateToNewStrategy(IEarnStrategy(address(newConnector)), "");
 
     // Make sure balances were migrated correctly
-    (, uint256[] memory balances2) = newConnector.totalBalances();
-    assertEq(balances1, balances2);
+    (, uint256[] memory oldConnectorBalancesAfter) = connector.totalBalances();
+    (, uint256[] memory newConnectorBalancesAfter) = newConnector.totalBalances();
+    assertEq(oldConnectorBalancesBefore, newConnectorBalancesAfter);
+    assertEq(oldConnectorBalancesAfter, new uint256[](oldConnectorBalancesAfter.length));
   }
 
   function testFork_strategyRegistered() public {

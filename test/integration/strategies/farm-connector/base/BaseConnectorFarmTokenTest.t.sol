@@ -9,12 +9,12 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
   using ArrayHelper for SpecialWithdrawalCode[];
   using ArrayHelper for address[];
 
-  function testFor_supportedDepositTokens_farmToken() public {
+  function testFork_supportedDepositTokens_farmToken() public {
     address[] memory supported = connector.supportedDepositTokens();
     assertTrue(supported.contains(_farmToken()));
   }
 
-  function testFor_maxDeposit_farmToken() public {
+  function testFork_maxDeposit_farmToken() public {
     assertEq(connector.maxDeposit(_farmToken()), type(uint256).max);
   }
 
