@@ -34,8 +34,9 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
 
   /// @inheritdoc IFeeManager
   function getFees(StrategyId strategyId) external view override returns (Fees memory) {
-    if (_fees[strategyId].isSet) {
-      return _fees[strategyId].fees;
+    StrategyFees memory strategyFees = _fees[strategyId];
+    if (strategyFees.isSet) {
+      return strategyFees.fees;
     }
     return _defaultFees;
   }

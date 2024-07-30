@@ -6,7 +6,7 @@ import { Fees } from "../types/Fees.sol";
 
 /**
  * @title Fee Manager Interface
- * @notice This manager handles fees
+ * @notice This manager handles fees for the strategies that call it
  */
 interface IFeeManager {
   /// @notice Thrown when trying to set fees greater than the maximum fee
