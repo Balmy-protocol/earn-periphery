@@ -15,7 +15,7 @@
     "forge-std": "github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d",
     "prettier": "^2.8.7",
     "solhint-community": "^3.5.0",
-    "@beefy-contracts" : "github:beefyfinance/beefy-contracts",
+    "@beefy-contracts": "github:beefyfinance/beefy-contracts",
     "@openzeppelin/contracts-upgradeable": "^4.9.3"
   },
   "files": [

@@ -10,16 +10,14 @@ import {
 } from "./base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IVault } from "@beefy-contracts/interfaces/beefy/IVault.sol";
-import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
-import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract BeefyConnector is BaseConnector {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  IVault internal vault;
-  IERC20 internal asset;
+  IVault internal immutable vault;
+  IERC20 internal immutable asset;
 
   constructor(IVault _vault) {
     vault = _vault;
@@ -32,24 +30,29 @@ contract BeefyConnector is BaseConnector {
     asset.forceApprove(address(vault), type(uint256).max);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
     return address(asset);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     tokens = new address[](1);
     tokens[0] = _connector_asset();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
     return depositToken == _connector_asset();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
     supported = new address[](1);
     supported[0] = _connector_asset();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view override returns (uint256) {
     if (!_connector_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
@@ -57,14 +60,17 @@ contract BeefyConnector is BaseConnector {
     return type(uint256).max;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedWithdrawals() internal pure override returns (IEarnStrategy.WithdrawalType[] memory) {
     return new IEarnStrategy.WithdrawalType[](1); // IMMEDIATE
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode) internal pure override returns (bool) {
     return false;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedSpecialWithdrawals()
     internal
     pure
@@ -74,6 +80,7 @@ contract BeefyConnector is BaseConnector {
     return new SpecialWithdrawalCode[](0);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxWithdraw()
     internal
     view
@@ -83,6 +90,7 @@ contract BeefyConnector is BaseConnector {
     (tokens, withdrawable) = _connector_totalBalances();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_totalBalances()
     internal
     view
@@ -95,10 +103,12 @@ contract BeefyConnector is BaseConnector {
     balances[0] = vaultBalanceInAssets(address(this));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_delayedWithdrawalAdapter(address) internal pure override returns (IDelayedWithdrawalAdapter) {
     return IDelayedWithdrawalAdapter(address(0));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount
@@ -117,6 +127,7 @@ contract BeefyConnector is BaseConnector {
     return convertSharesToAssets(sharesDeposited);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
     address[] memory tokens,
@@ -139,6 +150,7 @@ contract BeefyConnector is BaseConnector {
     return _connector_supportedWithdrawals();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
@@ -153,6 +165,7 @@ contract BeefyConnector is BaseConnector {
     revert InvalidSpecialWithdrawalCode(withdrawalCode);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_migrateToNewStrategy(
     IEarnStrategy newStrategy,
     bytes calldata
@@ -168,6 +181,8 @@ contract BeefyConnector is BaseConnector {
     return abi.encode(withdrawn);
   }
 
+  // solhint-disable-next-line no-empty-blocks
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_strategyRegistered(
     StrategyId strategyId,
     IEarnStrategy oldStrategy,
@@ -177,14 +192,17 @@ contract BeefyConnector is BaseConnector {
     override
   { }
 
+  // slither-disable-next-line naming-convention,dead-code
   function vaultBalanceInAssets(address account) internal view returns (uint256) {
     return convertSharesToAssets(vault.balanceOf(account));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function convertSharesToAssets(uint256 shares) private view returns (uint256) {
     return shares.mulDiv(vault.balance(), vault.totalSupply(), Math.Rounding.Floor);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function convertAssetsToShares(uint256 assets) private view returns (uint256) {
     if (vault.totalSupply() == 0) {
       return assets;
