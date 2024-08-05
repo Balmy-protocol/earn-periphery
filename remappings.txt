@@ -3,7 +3,11 @@ ds-test/=node_modules/ds-test/src
 forge-std/=node_modules/forge-std/src
 src/=src/
 @openzeppelin/=node_modules/@openzeppelin/
+@openzeppelin-4/=node_modules/@openzeppelin/
 @balmy/nft-permissions/=node_modules/@balmy/nft-permissions/src/
 @balmy/nft-permissions-test/=node_modules/@balmy/nft-permissions/test/
 @balmy/earn-core/=node_modules/@balmy/earn-core/src/
 @balmy/earn-core-test/=node_modules/@balmy/earn-core/test/
+
+@beefy-contracts=node_modules/@beefy-contracts/contracts/BIFI/
+@openzeppelin/contracts-upgradeable=node_modules/@openzeppelin/contracts-upgradeable
