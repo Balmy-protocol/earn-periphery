@@ -13,9 +13,8 @@ contract BeefyConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnect
   function _setUp() internal override { }
 
   function _configureFork() internal override {
-    uint256 bnbFork = vm.createFork(vm.rpcUrl("bnb_smart_chain"));
+    uint256 bnbFork = vm.createFork(vm.rpcUrl("bnb_smart_chain"), 41_132_256);
     vm.selectFork(bnbFork);
-    vm.rollFork(41_132_256);
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
