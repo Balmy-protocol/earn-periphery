@@ -230,14 +230,20 @@ contract BeefyConnector is BaseConnector {
     override
   { }
 
+  // slither-disable-next-line dead-code
   function _vaultBalanceInAssets(address account) private view returns (uint256) {
     return _convertSharesToAssets(_vault.balanceOf(account));
   }
 
+  // slither-disable-next-line dead-code
   function _convertSharesToAssets(uint256 shares) private view returns (uint256) {
+    if (_vault.totalSupply() == 0) {
+      return shares;
+    }
     return shares.mulDiv(_vault.balance(), _vault.totalSupply(), Math.Rounding.Floor);
   }
 
+  // slither-disable-next-line dead-code
   function _convertAssetsToShares(uint256 assets) private view returns (uint256) {
     if (_vault.totalSupply() == 0) {
       return assets;

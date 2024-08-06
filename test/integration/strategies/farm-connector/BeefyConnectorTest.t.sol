@@ -7,14 +7,15 @@ import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmedi
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 
 contract BeefyConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
-  IVault internal aBeefyVault = IVault(0x0383E88A19E5c387FeBafbF51E5bA642d2ad8bE0);
+  IVault internal aBeefyVault = IVault(0x01D9cfB8a9D43013a1FdC925640412D8d2D900F0);
 
   // solhint-disable-next-line no-empty-blocks
   function _setUp() internal override { }
 
   function _configureFork() internal override {
-    uint256 bnbFork = vm.createFork(vm.rpcUrl("bnb_smart_chain"), 41_132_256);
-    vm.selectFork(bnbFork);
+    uint256 optimismFork = vm.createFork(vm.rpcUrl("optimism"));
+    vm.selectFork(optimismFork);
+    vm.rollFork(120_000_000);
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
