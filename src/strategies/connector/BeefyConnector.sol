@@ -9,30 +9,38 @@ import {
   StrategyId
 } from "./base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IVault } from "@beefy-contracts/interfaces/beefy/IVault.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
+
+interface IVault is IERC20 {
+  function deposit(uint256) external;
+  function withdraw(uint256) external;
+  function withdrawAll() external;
+  function balance() external view returns (uint256);
+  function want() external view returns (IERC20);
+}
 
 contract BeefyConnector is BaseConnector {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  IVault internal immutable vault;
-  IERC20 internal immutable asset;
+  IVault internal immutable _vault;
+  IERC20 internal immutable _asset;
 
-  constructor(IVault _vault) {
-    vault = _vault;
-    asset = IERC20(_vault.want());
+  constructor(IVault vault) {
+    _vault = vault;
+    _asset = IERC20(_vault.want());
     maxApproveVault();
   }
 
   /// @notice Performs a max approve to the vault, so that we can deposit without any worries
   function maxApproveVault() public {
-    asset.forceApprove(address(vault), type(uint256).max);
+    _asset.forceApprove(address(_vault), type(uint256).max);
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
-    return address(asset);
+    return address(_asset);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -43,13 +51,14 @@ contract BeefyConnector is BaseConnector {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
-    return depositToken == _connector_asset();
+    return depositToken == _connector_asset() || depositToken == address(_vault);
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
-    supported = new address[](1);
+    supported = new address[](2);
     supported[0] = _connector_asset();
+    supported[1] = address(_vault);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -66,8 +75,14 @@ contract BeefyConnector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode) internal pure override returns (bool) {
-    return false;
+  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
+    internal
+    pure
+    override
+    returns (bool)
+  {
+    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
+      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -77,7 +92,9 @@ contract BeefyConnector is BaseConnector {
     override
     returns (SpecialWithdrawalCode[] memory codes)
   {
-    return new SpecialWithdrawalCode[](0);
+    codes = new SpecialWithdrawalCode[](2);
+    codes[0] = SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT;
+    codes[1] = SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -100,7 +117,7 @@ contract BeefyConnector is BaseConnector {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = vaultBalanceInAssets(address(this));
+    balances[0] = _vaultBalanceInAssets(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -117,20 +134,22 @@ contract BeefyConnector is BaseConnector {
     override
     returns (uint256 assetsDeposited)
   {
-    if (!_connector_isDepositTokenSupported(depositToken)) {
+    if (depositToken == _connector_asset()) {
+      uint256 balance = _vault.balanceOf(address(this));
+      _vault.deposit(depositAmount);
+      uint256 sharesDeposited = _vault.balanceOf(address(this)) - balance;
+      return _convertSharesToAssets(sharesDeposited);
+    } else if (depositToken == address(_vault)) {
+      return _convertSharesToAssets(depositAmount);
+    } else {
       revert InvalidDepositToken(depositToken);
     }
-
-    uint256 balance = vault.balanceOf(address(this));
-    vault.deposit(depositAmount);
-    uint256 sharesDeposited = vault.balanceOf(address(this)) - balance;
-    return convertSharesToAssets(sharesDeposited);
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
-    address[] memory tokens,
+    address[] memory,
     uint256[] memory toWithdraw,
     address recipient
   )
@@ -138,15 +157,21 @@ contract BeefyConnector is BaseConnector {
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    if (tokens.length != 1 || !_connector_isDepositTokenSupported(tokens[0])) {
-      revert InvalidDepositToken(tokens[0]);
+    uint256 assets = toWithdraw[0];
+
+    // We convert the assets to shares with rounding up
+    // This way we make sure that the correct amount is withdrawn
+    uint256 shares = _convertAssetsToShares(assets);
+    _vault.withdraw(shares);
+
+    uint256 balance = _asset.balanceOf(address(this));
+    // If we have less assets than requested, we transfer the maximum
+    if (assets > balance) {
+      assets = balance;
     }
 
-    uint256 assets = toWithdraw[0];
-    uint256 shares = convertAssetsToShares(assets);
-    uint256 balanceBefore = asset.balanceOf(address(this));
-    vault.withdraw(shares);
-    asset.safeTransfer(recipient, asset.balanceOf(address(this)) - balanceBefore);
+    _asset.safeTransfer(recipient, assets);
+
     return _connector_supportedWithdrawals();
   }
 
@@ -154,15 +179,30 @@ contract BeefyConnector is BaseConnector {
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
-    bytes calldata,
-    address
+    bytes calldata withdrawData,
+    address recipient
   )
     internal
-    pure
     override
-    returns (uint256[] memory, IEarnStrategy.WithdrawalType[] memory, bytes memory)
+    returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
   {
-    revert InvalidSpecialWithdrawalCode(withdrawalCode);
+    withdrawn = new uint256[](1);
+    withdrawalTypes = new IEarnStrategy.WithdrawalType[](1);
+    if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
+      uint256 shares = abi.decode(withdrawData, (uint256));
+      uint256 assets = _convertSharesToAssets(shares);
+      IERC20(_vault).safeTransfer(recipient, shares);
+      withdrawn[0] = assets;
+      result = abi.encode(assets);
+    } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
+      uint256 assets = abi.decode(withdrawData, (uint256));
+      uint256 shares = _convertAssetsToShares(assets);
+      IERC20(_vault).safeTransfer(recipient, shares);
+      withdrawn[0] = assets;
+      result = abi.encode(shares);
+    } else {
+      revert InvalidSpecialWithdrawalCode(withdrawalCode);
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -174,14 +214,12 @@ contract BeefyConnector is BaseConnector {
     override
     returns (bytes memory)
   {
-    uint256 balanceBefore = asset.balanceOf(address(this));
-    vault.withdrawAll();
-    uint256 withdrawn = asset.balanceOf(address(this)) - balanceBefore;
-    asset.safeTransfer(address(newStrategy), withdrawn);
-    return abi.encode(withdrawn);
+    uint256 balance = _vault.balanceOf(address(this));
+    IERC20(_vault).safeTransfer(address(newStrategy), balance);
+    return abi.encode(balance);
   }
 
-  // solhint-disable-next-line no-empty-blocks
+  // solhint-disable no-empty-blocks
   // slither-disable-next-line naming-convention,dead-code
   function _connector_strategyRegistered(
     StrategyId strategyId,
@@ -192,21 +230,18 @@ contract BeefyConnector is BaseConnector {
     override
   { }
 
-  // slither-disable-next-line naming-convention,dead-code
-  function vaultBalanceInAssets(address account) internal view returns (uint256) {
-    return convertSharesToAssets(vault.balanceOf(account));
+  function _vaultBalanceInAssets(address account) private view returns (uint256) {
+    return _convertSharesToAssets(_vault.balanceOf(account));
   }
 
-  // slither-disable-next-line naming-convention,dead-code
-  function convertSharesToAssets(uint256 shares) private view returns (uint256) {
-    return shares.mulDiv(vault.balance(), vault.totalSupply(), Math.Rounding.Floor);
+  function _convertSharesToAssets(uint256 shares) private view returns (uint256) {
+    return shares.mulDiv(_vault.balance(), _vault.totalSupply(), Math.Rounding.Floor);
   }
 
-  // slither-disable-next-line naming-convention,dead-code
-  function convertAssetsToShares(uint256 assets) private view returns (uint256) {
-    if (vault.totalSupply() == 0) {
+  function _convertAssetsToShares(uint256 assets) private view returns (uint256) {
+    if (_vault.totalSupply() == 0) {
       return assets;
     }
-    return assets.mulDiv(vault.totalSupply(), vault.balance(), Math.Rounding.Floor);
+    return assets.mulDiv(_vault.totalSupply(), _vault.balance(), Math.Rounding.Ceil);
   }
 }

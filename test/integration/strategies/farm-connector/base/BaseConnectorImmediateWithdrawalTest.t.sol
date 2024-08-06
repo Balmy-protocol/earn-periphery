@@ -45,7 +45,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();
-    assertAlmostEq(_balance(connector.asset(), recipient), toWithdraw[0], 1);
+    assertEq(_balance(connector.asset(), recipient), toWithdraw[0]);
     assertAlmostEq(toWithdraw[0], balancesBefore[0] - balancesAfter[0], 1);
   }
 }
