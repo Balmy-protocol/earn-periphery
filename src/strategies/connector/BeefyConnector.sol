@@ -20,6 +20,8 @@ interface IBeefyVault is IERC20 {
   function want() external view returns (IERC20);
 }
 
+// The BeefyConnector is an implementation based on Beefy's Adapter to interact directly with Beefy's Vaults
+// https://docs.beefy.finance/developer-documentation/other-beefy-contracts/beefywrapper-contract
 contract BeefyConnector is BaseConnector {
   using SafeERC20 for IERC20;
   using Math for uint256;
