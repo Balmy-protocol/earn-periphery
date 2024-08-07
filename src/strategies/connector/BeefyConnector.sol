@@ -12,7 +12,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 
-interface IVault is IERC20 {
+interface IBeefyVault is IERC20 {
   function deposit(uint256) external;
   function withdraw(uint256) external;
   function withdrawAll() external;
@@ -24,10 +24,10 @@ contract BeefyConnector is BaseConnector {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  IVault internal immutable _vault;
+  IBeefyVault internal immutable _vault;
   IERC20 internal immutable _asset;
 
-  constructor(IVault vault) {
+  constructor(IBeefyVault vault) {
     _vault = vault;
     _asset = IERC20(_vault.want());
     maxApproveVault();
@@ -117,7 +117,7 @@ contract BeefyConnector is BaseConnector {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = _vaultBalanceInAssets(address(this));
+    balances[0] = _convertSharesToAssets(_vault.balanceOf(address(this)));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -231,23 +231,20 @@ contract BeefyConnector is BaseConnector {
   { }
 
   // slither-disable-next-line dead-code
-  function _vaultBalanceInAssets(address account) private view returns (uint256) {
-    return _convertSharesToAssets(_vault.balanceOf(account));
-  }
-
-  // slither-disable-next-line dead-code
   function _convertSharesToAssets(uint256 shares) private view returns (uint256) {
-    if (_vault.totalSupply() == 0) {
+    uint256 totalSupply = _vault.totalSupply();
+    if (totalSupply == 0) {
       return shares;
     }
-    return shares.mulDiv(_vault.balance(), _vault.totalSupply(), Math.Rounding.Floor);
+    return shares.mulDiv(_vault.balance(), totalSupply, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line dead-code
   function _convertAssetsToShares(uint256 assets) private view returns (uint256) {
-    if (_vault.totalSupply() == 0) {
+    uint256 totalSupply = _vault.totalSupply();
+    if (totalSupply == 0) {
       return assets;
     }
-    return assets.mulDiv(_vault.totalSupply(), _vault.balance(), Math.Rounding.Ceil);
+    return assets.mulDiv(totalSupply, _vault.balance(), Math.Rounding.Ceil);
   }
 }

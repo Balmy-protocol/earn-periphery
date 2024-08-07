@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { BeefyConnector, IVault } from "src/strategies/connector/BeefyConnector.sol";
+import { BeefyConnector, IBeefyVault } from "src/strategies/connector/BeefyConnector.sol";
 import { BaseConnectorInstance } from "./base/BaseConnectorTest.t.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 
 contract BeefyConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
-  IVault internal aBeefyVault = IVault(0x01D9cfB8a9D43013a1FdC925640412D8d2D900F0);
+  IBeefyVault internal aBeefyVault = IBeefyVault(0x01D9cfB8a9D43013a1FdC925640412D8d2D900F0);
 
   // solhint-disable-next-line no-empty-blocks
   function _setUp() internal override { }
@@ -28,5 +28,5 @@ contract BeefyConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnect
 }
 
 contract BeefyConnectorInstance is BaseConnectorInstance, BeefyConnector {
-  constructor(IVault _vault) BeefyConnector(_vault) { }
+  constructor(IBeefyVault _vault) BeefyConnector(_vault) { }
 }
