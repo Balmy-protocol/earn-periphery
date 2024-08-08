@@ -34,7 +34,6 @@ contract AaveV2Connector is BaseConnector {
 
   /// @notice Performs a max approve to the vault, so that we can deposit without any worries
   function maxApproveVault() public {
-    _asset.forceApprove(address(_vault), type(uint256).max);
     _asset.forceApprove(address(_pool), type(uint256).max);
   }
 
@@ -135,10 +134,8 @@ contract AaveV2Connector is BaseConnector {
     returns (uint256 assetsDeposited)
   {
     if (depositToken == _connector_asset()) {
-      uint256 balance = _vault.balanceOf(address(this));
       _pool.deposit(depositToken, depositAmount, address(this), 0);
-      uint256 sharesDeposited = _vault.balanceOf(address(this)) - balance;
-      return sharesDeposited;
+      return depositAmount;
     } else if (depositToken == address(_vault)) {
       return depositAmount;
     } else {

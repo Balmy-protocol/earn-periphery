@@ -12,7 +12,7 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   IAaveV2Pool internal aAaveV2Pool = IAaveV2Pool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9); // Aave V2 LendingPool
 
   // We need a holder for the aToken token
-  address internal constant AAVEV2VAULTHOLDER = 0xeb43b5597E3bDe0b0C03eE6731bA7c0247E1581E; // aWETH holder
+  address internal constant AAVE_V2_VAULT_HOLDER = 0xeb43b5597E3bDe0b0C03eE6731bA7c0247E1581E; // aWETH holder
 
   // solhint-disable-next-line no-empty-blocks
   function _setUp() internal override { }
@@ -31,16 +31,17 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     return address(aAaveV2Vault);
   }
 
-  function _setBalance(address asset, address account, uint256 amount) public override {
+  function _setBalance(address asset, address account, uint256 amount) internal override {
     if (asset == address(aAaveV2Vault)) {
       // We need to set the balance of the account to 0
       uint256 balance = IERC20(asset).balanceOf(account);
-      vm.prank(account);
-      IERC20(asset).transfer(AAVEV2VAULTHOLDER, balance);
-
-      // and then transfer the amount to the account to set the expected balance
-      vm.prank(AAVEV2VAULTHOLDER);
-      IERC20(asset).transfer(account, amount);
+      if (balance > amount) {
+        vm.prank(account);
+        IERC20(asset).transfer(AAVE_V2_VAULT_HOLDER, balance - amount);
+      } else if (balance < amount) {
+        vm.prank(AAVE_V2_VAULT_HOLDER);
+        IERC20(asset).transfer(account, amount - balance);
+      }
     } else {
       return super._setBalance(asset, account, amount);
     }
