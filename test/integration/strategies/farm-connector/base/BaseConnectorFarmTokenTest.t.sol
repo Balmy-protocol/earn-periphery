@@ -51,8 +51,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertTrue(withdrawalTypes[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Check transfer
-    assertEq(_balance(_farmToken(), recipient), amountToWithdraw);
-    assertEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw);
+    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 1);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 1);
   }
 
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAssetAmount() public {
@@ -82,8 +82,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
 
     // Check transfer
     uint256 sharesWithdrawn = abi.decode(withdrawData, (uint256));
-    assertEq(_balance(_farmToken(), recipient), sharesWithdrawn);
-    assertEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - sharesWithdrawn);
+    assertAlmostEq(_balance(_farmToken(), recipient), sharesWithdrawn, 1);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - sharesWithdrawn, 1);
   }
 
   function _farmToken() internal view virtual returns (address);

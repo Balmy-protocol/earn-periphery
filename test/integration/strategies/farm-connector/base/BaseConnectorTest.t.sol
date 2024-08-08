@@ -146,7 +146,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     return asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? account.balance : IERC20(asset).balanceOf(account);
   }
 
-  function _setBalance(address asset, address account, uint256 amount) internal {
+  function _setBalance(address asset, address account, uint256 amount) internal virtual {
     if (asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
       deal(account, amount);
     } else {
