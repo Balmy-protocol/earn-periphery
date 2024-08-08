@@ -11,7 +11,7 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   IERC20 internal aAaveV2Asset = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH
   IAaveV2Pool internal aAaveV2Pool = IAaveV2Pool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9); // Aave V2 LendingPool
 
-  // We need a holder for the aToken token 
+  // We need a holder for the aToken token
   address internal constant AAVEV2VAULTHOLDER = 0xeb43b5597E3bDe0b0C03eE6731bA7c0247E1581E; // aWETH holder
 
   // solhint-disable-next-line no-empty-blocks
@@ -20,7 +20,7 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   function _configureFork() internal override {
     uint256 mainnetFork = vm.createFork(vm.rpcUrl("mainnet"));
     vm.selectFork(mainnetFork);
-    vm.rollFork(20_478_227); 
+    vm.rollFork(20_478_227);
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
