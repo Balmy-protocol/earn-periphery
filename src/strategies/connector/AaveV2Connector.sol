@@ -117,7 +117,7 @@ contract AaveV2Connector is BaseConnector {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = _vaultBalanceInAssets(address(this));
+    balances[0] = _vault.balanceOf(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -212,25 +212,4 @@ contract AaveV2Connector is BaseConnector {
     internal
     override
   { }
-
-  // slither-disable-next-line dead-code
-  function _vaultBalanceInAssets(address account) private view returns (uint256) {
-    return (_vault.balanceOf(account));
-  }
-
-  // slither-disable-next-line dead-code
-  function _convertSharesToAssets(uint256 shares) private view returns (uint256) {
-    if (_vault.totalSupply() == 0) {
-      return shares;
-    }
-    return shares.mulDiv(_vault.balanceOf(address(this)), _vault.totalSupply(), Math.Rounding.Floor);
-  }
-
-  // slither-disable-next-line dead-code
-  function _convertAssetsToShares(uint256 assets) private view returns (uint256) {
-    if (_vault.totalSupply() == 0) {
-      return assets;
-    }
-    return assets.mulDiv(_vault.totalSupply(), _vault.balanceOf(address(this)), Math.Rounding.Ceil);
-  }
 }
