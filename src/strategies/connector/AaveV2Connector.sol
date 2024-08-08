@@ -29,11 +29,11 @@ contract AaveV2Connector is BaseConnector {
     _vault = vault;
     _asset = asset;
     _pool = pool;
-    maxApproveVault();
+    maxApprovePool();
   }
 
-  /// @notice Performs a max approve to the vault, so that we can deposit without any worries
-  function maxApproveVault() public {
+  /// @notice Performs a max approve to the pool, so that we can deposit without any worries
+  function maxApprovePool() public {
     _asset.forceApprove(address(_pool), type(uint256).max);
   }
 
