@@ -17,20 +17,15 @@ interface IAaveV2Pool {
   function withdraw(address asset, uint256 amount, address to) external returns (uint256);
 }
 
-interface AToken is IERC20 {
-  function scaledBalanceOf(address account) external view returns (uint256);
-  function scaledTotalSupply() external view returns (uint256);
-}
-
 contract AaveV2Connector is BaseConnector {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  AToken internal immutable _vault;
+  IERC20 internal immutable _vault;
   IERC20 internal immutable _asset;
   IAaveV2Pool internal immutable _pool;
 
-  constructor(AToken vault, IERC20 asset, IAaveV2Pool pool) {
+  constructor(IERC20 vault, IERC20 asset, IAaveV2Pool pool) {
     _vault = vault;
     _asset = asset;
     _pool = pool;

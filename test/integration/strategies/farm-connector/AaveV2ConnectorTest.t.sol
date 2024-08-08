@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { AaveV2Connector, IERC20, IAaveV2Pool, AToken } from "src/strategies/connector/AaveV2Connector.sol";
+import { AaveV2Connector, IERC20, IAaveV2Pool } from "src/strategies/connector/AaveV2Connector.sol";
 import { BaseConnectorInstance } from "./base/BaseConnectorTest.t.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 
 contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
-  AToken internal aAaveV2Vault = AToken(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); // aWETH
+  IERC20 internal aAaveV2Vault = IERC20(0x030bA81f1c18d280636F32af80b9AAd02Cf0854e); // aWETH
   IERC20 internal aAaveV2Asset = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2); // WETH
   IAaveV2Pool internal aAaveV2Pool = IAaveV2Pool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9); // Aave V2 LendingPool
 
@@ -48,5 +48,5 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
 }
 
 contract AaveV2ConnectorInstance is BaseConnectorInstance, AaveV2Connector {
-  constructor(AToken __vault, IERC20 __asset, IAaveV2Pool __pool) AaveV2Connector(__vault, __asset, __pool) { }
+  constructor(IERC20 __vault, IERC20 __asset, IAaveV2Pool __pool) AaveV2Connector(__vault, __asset, __pool) { }
 }
