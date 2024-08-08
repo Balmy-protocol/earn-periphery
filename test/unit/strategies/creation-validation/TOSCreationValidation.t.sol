@@ -12,7 +12,7 @@ contract TOSCreationValidationTest is Test {
   event TOSUpdated(bytes tos, address sender);
 
   TOSCreationValidationInstance private tosValidation;
-  bytes private tos = "this are the terms of service";
+  bytes private tos = "these are the terms of service";
   address private admin = address(1);
   VmSafe.Wallet private alice = vm.createWallet("alice");
 
