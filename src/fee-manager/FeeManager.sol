@@ -18,7 +18,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   /// @inheritdoc IFeeManager
   uint16 public constant MAX_FEE = 5000; // 50%
 
-  mapping(StrategyId strategy => StrategyFees) internal _fees;
+  mapping(StrategyId strategy => StrategyFees fees) internal _fees;
   Fees internal _defaultFees;
 
   constructor(
