@@ -27,7 +27,7 @@ abstract contract TOSCreationValidation is BaseCreationValidation, AccessControl
 
   constructor(bytes memory tos, address[] memory admins) {
     _setTOS(tos);
-    for (uint i; i < admins.length; ++i)  {
+    for (uint256 i; i < admins.length; ++i) {
       _grantRole(TOS_UPDATE_ROLE, admins[i]);
     }
   }
