@@ -2,7 +2,9 @@
 pragma solidity >=0.8.22;
 
 import { AaveV3Connector, IERC20, IAaveV3Pool, IAaveV3Rewards } from "src/strategies/connector/AaveV3Connector.sol";
-import { BaseConnectorInstance } from "./base/BaseConnectorTest.t.sol";
+import { BaseConnector } from "src/strategies/connector/base/BaseConnector.sol";
+import { BaseConnectorTest } from "./base/BaseConnectorTest.t.sol";
+import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 import { BaseConnectorRewardTokenTest } from "./base/BaseConnectorRewardTokenTest.t.sol";
@@ -39,6 +41,23 @@ contract AaveV3ConnectorTest is
     return address(aAaveV3Vault);
   }
 
+  function testFork_claimRewardTokens() public {
+    AaveV3Connector aveV3Connector = AaveV3Connector(address(connector));
+    address[] memory asset = new address[](1);
+    asset[0] = address(aAaveV3Vault);
+    // Deposit tokens
+    _give(_farmToken(), address(connector), 10e18);
+    connector.deposit(_farmToken(), 10e18);
+
+    vm.rollFork(123_000_000); // Roll the fork to generate some rewards
+    uint256 amountToClaim = aAaveV3RewardsController.getUserRewards(asset, address(connector), connector.asset());
+    (, uint256[] memory balancesBefore) = connector.totalBalances();
+    uint256 amountClaimed = aveV3Connector._connector_claimAndDepositAssetRewards();
+    (, uint256[] memory balancesAfter) = connector.totalBalances();
+    assertEq(balancesAfter[0] - balancesBefore[0], amountToClaim);
+    assertEq(amountClaimed, amountToClaim);
+  }
+
   function _setBalance(address asset, address account, uint256 amount) internal override {
     if (asset == address(aAaveV3Vault)) {
       // We need to set the balance of the account to 0
@@ -56,7 +75,32 @@ contract AaveV3ConnectorTest is
   }
 
   function _rewardTokens() internal view virtual override returns (address[] memory) {
-    return aAaveV3RewardsController.getRewardsByAsset(address(aAaveV3Vault));
+    address[] memory completeRewardList = aAaveV3RewardsController.getRewardsByAsset(address(aAaveV3Vault));
+
+    // Check if the asset is in the rewards list and remove it
+    bool found = false;
+    for (uint256 i = 0; i < completeRewardList.length; i++) {
+      address rewardToken = completeRewardList[i];
+      if (rewardToken == address(aAaveV3Asset)) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found || completeRewardList.length == 0) {
+      return completeRewardList;
+    } else {
+      address[] memory rewardsList = new address[](completeRewardList.length - 1);
+      uint256 j = 0;
+      for (uint256 i = 0; i < completeRewardList.length - 1; i++) {
+        address rewardToken = completeRewardList[i];
+        if (rewardToken != address(aAaveV3Asset)) {
+          rewardsList[j] = rewardToken;
+          j++;
+        }
+      }
+      return rewardsList;
+    }
   }
 }
 

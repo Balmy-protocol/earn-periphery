@@ -53,11 +53,26 @@ contract AaveV3Connector is BaseConnector {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
-    address[] memory rewardsList = _getRewardsList();
-    tokens = new address[](rewardsList.length + 1);
-    tokens[0] = _connector_asset();
+    address[] memory rewardsList = _rewards.getRewardsByAsset(address(_vault));
+
+    // Check if the asset is in the rewards list and remove it
+    bool found = false;
     for (uint256 i = 0; i < rewardsList.length; i++) {
-      tokens[i + 1] = rewardsList[i];
+      address rewardToken = rewardsList[i];
+      if (rewardToken == _connector_asset()) {
+        found = true;
+        break;
+      }
+    }
+    tokens = new address[](rewardsList.length + (found ? 0 : 1));
+    tokens[0] = _connector_asset();
+    uint256 j = 1;
+    for (uint256 i = 0; i < rewardsList.length; i++) {
+      address rewardToken = rewardsList[i];
+      if (rewardToken != _connector_asset()) {
+        tokens[j] = rewardToken;
+        j++;
+      }
     }
   }
 
@@ -126,14 +141,13 @@ contract AaveV3Connector is BaseConnector {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    address[] memory rewardsList = _getRewardsList();
     tokens = _connector_allTokens();
     balances = new uint256[](tokens.length);
     balances[0] = _vault.balanceOf(address(this));
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);
-    for (uint256 i = 0; i < rewardsList.length; i++) {
-      balances[i + 1] = _rewards.getUserRewards(asset, address(this), rewardsList[i]);
+    for (uint256 i = 1; i < tokens.length; i++) {
+      balances[i] = _rewards.getUserRewards(asset, address(this), tokens[i]);
     }
   }
 
@@ -240,8 +254,13 @@ contract AaveV3Connector is BaseConnector {
     override
   { }
 
-  // slither-disable-next-line dead-code
-  function _getRewardsList() internal view returns (address[] memory) {
-    return _rewards.getRewardsByAsset(address(_vault));
+  function _connector_claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
+    address[] memory asset = new address[](1);
+    asset[0] = address(_vault);
+    amountToClaim = _rewards.getUserRewards(asset, address(this), _connector_asset());
+    if (amountToClaim > 0) {
+      _rewards.claimRewards(asset, amountToClaim, address(this), _connector_asset());
+      _pool.supply(_connector_asset(), amountToClaim, address(this), 0);
+    }
   }
 }
