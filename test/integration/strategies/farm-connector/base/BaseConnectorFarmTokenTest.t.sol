@@ -31,7 +31,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     _setBalance(_farmToken(), recipient, 0);
     _setBalance(_farmToken(), address(connector), originalConnectorBalance);
 
-    (, uint256[] memory balancesBefore) = connector.totalBalances();
+    (address[] memory tokens, uint256[] memory balancesBefore) = connector.totalBalances();
 
     (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory withdrawData) =
     connector.specialWithdraw(
@@ -47,7 +47,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 1);
 
     // Check withdrawal type
-    assertEq(withdrawalTypes.length, 1);
+    assertEq(withdrawalTypes.length, tokens.length);
     assertTrue(withdrawalTypes[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Check transfer
@@ -62,7 +62,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     _setBalance(_farmToken(), recipient, 0);
     _setBalance(_farmToken(), address(connector), originalConnectorBalance);
 
-    (, uint256[] memory balancesBefore) = connector.totalBalances();
+    (address[] memory tokens, uint256[] memory balancesBefore) = connector.totalBalances();
 
     (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory withdrawData) =
     connector.specialWithdraw(
@@ -77,7 +77,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertAlmostEq(assetsToWithdraw, balancesBefore[0] - balancesAfter[0], 1);
 
     // Check withdrawal type
-    assertEq(withdrawalTypes.length, 1);
+    assertEq(withdrawalTypes.length, tokens.length);
     assertTrue(withdrawalTypes[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Check transfer
