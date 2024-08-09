@@ -19,11 +19,14 @@ contract TOSCreationValidationTest is Test {
   function setUp() public virtual {
     vm.expectEmit();
     emit TOSUpdated(tos, address(this));
-    tosValidation = new TOSCreationValidationInstance(tos, admin);
+    address[] memory admins = new address[](1);
+    admins[0] = admin;
+    tosValidation = new TOSCreationValidationInstance(tos, admins);
   }
 
   function test_constructor() public {
     assertEq(tosValidation.tosHash(), MessageHashUtils.toEthSignedMessageHash(tos));
+    assertTrue(tosValidation.hasRole(tosValidation.TOS_UPDATE_ROLE(), admin));
   }
 
   function test_supportsInterface() public {
@@ -60,7 +63,7 @@ contract TOSCreationValidationTest is Test {
   }
 
   function test_validate_tosIsNotSet() public {
-    TOSCreationValidationInstance validation = new TOSCreationValidationInstance("", admin);
+    TOSCreationValidationInstance validation = new TOSCreationValidationInstance("", new address[](0));
     // Since TOS is empty, signature can be anything
     validation.validate(address(0), "");
   }
@@ -72,9 +75,7 @@ contract TOSCreationValidationTest is Test {
 }
 
 contract TOSCreationValidationInstance is TOSCreationValidation {
-  constructor(bytes memory tos, address admin) TOSCreationValidation(tos) {
-    _grantRole(TOS_UPDATE_ROLE, admin);
-  }
+  constructor(bytes memory tos, address[] memory admins) TOSCreationValidation(tos, admins) { }
 
   function validate(address sender, bytes calldata signature) external view {
     _creationValidation_validate(sender, signature);

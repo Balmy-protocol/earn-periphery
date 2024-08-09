@@ -25,8 +25,11 @@ abstract contract TOSCreationValidation is BaseCreationValidation, AccessControl
   /// @notice The hash of the current TOS
   bytes32 public tosHash;
 
-  constructor(bytes memory tos) {
+  constructor(bytes memory tos, address[] memory admins) {
     _setTOS(tos);
+    for (uint256 i; i < admins.length; ++i) {
+      _grantRole(TOS_UPDATE_ROLE, admins[i]);
+    }
   }
 
   function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
