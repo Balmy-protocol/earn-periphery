@@ -47,6 +47,17 @@ contract AaveV3Connector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
+    address[] memory asset = new address[](1);
+    asset[0] = address(_vault);
+    amountToClaim = _rewards.getUserRewards(asset, address(this), _connector_asset());
+    if (amountToClaim > 0) {
+      _rewards.claimRewards(asset, amountToClaim, address(this), _connector_asset());
+      _pool.supply(_connector_asset(), amountToClaim, address(this), 0);
+    }
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
     return address(_asset);
   }
@@ -55,23 +66,22 @@ contract AaveV3Connector is BaseConnector {
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     address[] memory rewardsList = _rewards.getRewardsByAsset(address(_vault));
 
-    // Check if the asset is in the rewards list and remove it
-    bool found = false;
-    for (uint256 i = 0; i < rewardsList.length; i++) {
-      address rewardToken = rewardsList[i];
-      if (rewardToken == _connector_asset()) {
-        found = true;
-        break;
-      }
-    }
-    tokens = new address[](rewardsList.length + (found ? 0 : 1));
+    uint256 rewardsListLength = rewardsList.length;
+    tokens = new address[](rewardsListLength + 1);
     tokens[0] = _connector_asset();
-    uint256 j = 1;
-    for (uint256 i = 0; i < rewardsList.length; i++) {
+    uint256 amountOfValidTokens = 1;
+    for (uint256 i = 0; i < rewardsListLength; ++i) {
       address rewardToken = rewardsList[i];
       if (rewardToken != _connector_asset()) {
-        tokens[j] = rewardToken;
-        j++;
+        tokens[amountOfValidTokens] = rewardToken;
+        amountOfValidTokens++;
+      }
+    }
+
+    if (amountOfValidTokens != rewardsListLength + 1) {
+      // Resize the array
+      assembly {
+        mstore(tokens, amountOfValidTokens)
       }
     }
   }
@@ -148,7 +158,7 @@ contract AaveV3Connector is BaseConnector {
     balances[0] = _vault.balanceOf(address(this));
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);
-    for (uint256 i = 1; i < tokens.length; i++) {
+    for (uint256 i = 1; i < tokens.length; ++i) {
       balances[i] = _rewards.getUserRewards(asset, address(this), tokens[i]);
     }
   }
@@ -195,7 +205,7 @@ contract AaveV3Connector is BaseConnector {
     }
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);
-    for (uint256 i = 1; i < tokens.length; i++) {
+    for (uint256 i = 1; i < tokens.length; ++i) {
       uint256 amountToWithdraw = toWithdraw[i];
       if (amountToWithdraw > 0) {
         _rewards.claimRewards(asset, amountToWithdraw, recipient, tokens[i]);
@@ -215,13 +225,12 @@ contract AaveV3Connector is BaseConnector {
     override
     returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
   {
-    uint256 tokensLength = _connector_allTokens().length;
-    withdrawn = new uint256[](tokensLength);
-    withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokensLength);
     if (
       withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
+      withdrawalTypes = _connector_supportedWithdrawals();
+      withdrawn = new uint256[](withdrawalTypes.length);
       uint256 assets = abi.decode(withdrawData, (uint256));
       IERC20(_vault).safeTransfer(recipient, assets);
       withdrawn[0] = assets;
@@ -255,15 +264,4 @@ contract AaveV3Connector is BaseConnector {
     internal
     override
   { }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
-    address[] memory asset = new address[](1);
-    asset[0] = address(_vault);
-    amountToClaim = _rewards.getUserRewards(asset, address(this), _connector_asset());
-    if (amountToClaim > 0) {
-      _rewards.claimRewards(asset, amountToClaim, address(this), _connector_asset());
-      _pool.supply(_connector_asset(), amountToClaim, address(this), 0);
-    }
-  }
 }

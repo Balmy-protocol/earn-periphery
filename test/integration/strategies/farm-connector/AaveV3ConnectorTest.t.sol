@@ -5,13 +5,8 @@ import { AaveV3Connector, IERC20, IAaveV3Pool, IAaveV3Rewards } from "src/strate
 import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
-import { BaseConnectorRewardTokenTest } from "./base/BaseConnectorRewardTokenTest.t.sol";
 
-contract AaveV3ConnectorTest is
-  BaseConnectorImmediateWithdrawalTest,
-  BaseConnectorFarmTokenTest,
-  BaseConnectorRewardTokenTest
-{
+contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
   IERC20 internal aAaveV3Vault = IERC20(0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE); // aDAI
   IERC20 internal aAaveV3Asset = IERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1); // DAI
   IAaveV3Pool internal aAaveV3Pool = IAaveV3Pool(0x794a61358D6845594F94dc1DB02A252b5b4814aD); // Aave V3 LendingPool
@@ -50,7 +45,7 @@ contract AaveV3ConnectorTest is
     vm.rollFork(123_000_000); // Roll the fork to generate some rewards
     uint256 amountToClaim = aAaveV3RewardsController.getUserRewards(asset, address(connector), connector.asset());
     (, uint256[] memory balancesBefore) = connector.totalBalances();
-    uint256 amountClaimed = aveV3Connector._connector_claimAndDepositAssetRewards();
+    uint256 amountClaimed = aveV3Connector.claimAndDepositAssetRewards();
     (, uint256[] memory balancesAfter) = connector.totalBalances();
     assertEq(balancesAfter[0] - balancesBefore[0], amountToClaim);
     assertEq(amountClaimed, amountToClaim);
@@ -72,32 +67,29 @@ contract AaveV3ConnectorTest is
     }
   }
 
-  function _rewardTokens() internal view virtual override returns (address[] memory) {
-    address[] memory completeRewardList = aAaveV3RewardsController.getRewardsByAsset(address(aAaveV3Vault));
-
-    // Check if the asset is in the rewards list and remove it
-    bool found = false;
-    for (uint256 i = 0; i < completeRewardList.length; i++) {
-      address rewardToken = completeRewardList[i];
-      if (rewardToken == address(aAaveV3Asset)) {
-        found = true;
-        break;
-      }
+  function _rewardTokens() internal view virtual returns (address[] memory) {
+    address[] memory tokens = connector.allTokens();
+    address[] memory rewardsList = new address[](tokens.length - 1);
+    for (uint256 i = 1; i < tokens.length; i++) {
+      rewardsList[i - 1] = tokens[i];
     }
+    return rewardsList;
+  }
 
-    if (!found || completeRewardList.length == 0) {
-      return completeRewardList;
-    } else {
-      address[] memory rewardsList = new address[](completeRewardList.length - 1);
-      uint256 j = 0;
-      for (uint256 i = 0; i < completeRewardList.length - 1; i++) {
-        address rewardToken = completeRewardList[i];
-        if (rewardToken != address(aAaveV3Asset)) {
-          rewardsList[j] = rewardToken;
-          j++;
-        }
-      }
-      return rewardsList;
+  function _generateYield(address recipient) internal virtual override {
+    _setBalance(_farmToken(), recipient, 0);
+
+    address[] memory rewardTokens = _rewardTokens();
+
+    // Deposit tokens
+    _give(_farmToken(), address(connector), 10e18);
+    connector.deposit(_farmToken(), 10e18);
+
+    vm.rollFork(123_000_000); // Roll the fork to generate some rewards
+
+    for (uint256 i; i < rewardTokens.length; ++i) {
+      // Remove reward tokens from recipient, only to avoid to save previous rewards balance
+      _setBalance(rewardTokens[i], recipient, 0);
     }
   }
 }

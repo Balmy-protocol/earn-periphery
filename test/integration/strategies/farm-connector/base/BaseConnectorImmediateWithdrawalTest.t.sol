@@ -28,13 +28,18 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     _give(connector.asset(), address(connector), 10e18);
     connector.deposit(connector.asset(), 10e18);
 
+    // Generate yield if connector handles it
+    _generateYield(recipient);
+
     // Check previous state
     address[] memory tokens = connector.allTokens();
     (, uint256[] memory balancesBefore) = connector.totalBalances();
 
     // Withdraw
     uint256[] memory toWithdraw = new uint256[](tokens.length);
-    toWithdraw[0] = balancesBefore[0] / 2;
+    for (uint256 i; i < tokens.length; ++i) {
+      toWithdraw[i] = balancesBefore[i] / 2;
+    }
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(1, tokens, toWithdraw, address(1));
 
     // Check result
@@ -45,7 +50,11 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();
-    assertEq(_balance(connector.asset(), recipient), toWithdraw[0]);
-    assertAlmostEq(toWithdraw[0], balancesBefore[0] - balancesAfter[0], 1);
+    for (uint256 i; i < tokens.length; ++i) {
+      assertEq(_balance(tokens[i], recipient), toWithdraw[i]);
+      assertAlmostEq(toWithdraw[i], balancesBefore[i] - balancesAfter[i], 1);
+    }
   }
+
+  function _generateYield(address recipient) internal virtual { }
 }
