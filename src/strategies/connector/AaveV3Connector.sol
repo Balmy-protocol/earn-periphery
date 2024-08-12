@@ -80,6 +80,7 @@ contract AaveV3Connector is BaseConnector {
 
     if (amountOfValidTokens != rewardsListLength + 1) {
       // Resize the array
+      // slither-disable-next-line assembly
       assembly {
         mstore(tokens, amountOfValidTokens)
       }
