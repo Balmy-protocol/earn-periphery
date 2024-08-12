@@ -92,7 +92,9 @@ abstract contract ERC4626Connector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
+  function _connector_isSpecialWithdrawalSupported(
+    SpecialWithdrawalCode withdrawalCode
+  )
     internal
     view
     virtual
@@ -131,7 +133,9 @@ abstract contract ERC4626Connector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_delayedWithdrawalAdapter(address token)
+  function _connector_delayedWithdrawalAdapter(
+    address token
+  )
     internal
     view
     virtual

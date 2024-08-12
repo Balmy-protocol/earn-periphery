@@ -2,8 +2,6 @@
 pragma solidity >=0.8.22;
 
 import { AaveV3Connector, IERC20, IAaveV3Pool, IAaveV3Rewards } from "src/strategies/connector/AaveV3Connector.sol";
-import { BaseConnector } from "src/strategies/connector/base/BaseConnector.sol";
-import { BaseConnectorTest } from "./base/BaseConnectorTest.t.sol";
 import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";

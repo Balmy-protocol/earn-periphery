@@ -102,7 +102,9 @@ contract AaveV3Connector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
+  function _connector_isSpecialWithdrawalSupported(
+    SpecialWithdrawalCode withdrawalCode
+  )
     internal
     pure
     override
@@ -254,6 +256,7 @@ contract AaveV3Connector is BaseConnector {
     override
   { }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);

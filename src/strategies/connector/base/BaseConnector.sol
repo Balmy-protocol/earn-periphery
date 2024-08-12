@@ -20,7 +20,9 @@ abstract contract BaseConnector {
   function _connector_supportedDepositTokens() internal view virtual returns (address[] memory supported);
   function _connector_maxDeposit(address depositToken) internal view virtual returns (uint256);
   function _connector_supportedWithdrawals() internal view virtual returns (IEarnStrategy.WithdrawalType[] memory);
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
+  function _connector_isSpecialWithdrawalSupported(
+    SpecialWithdrawalCode withdrawalCode
+  )
     internal
     view
     virtual
