@@ -62,7 +62,8 @@ contract AaveV3Connector is BaseConnector {
     return address(_asset);
   }
 
-  // slither-disable-next-line naming-convention,dead-code
+  // slither-disable-start assembly
+  // slither-disable-next-line naming-convention,dead-code,assembly
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     address[] memory rewardsList = _rewards.getRewardsByAsset(address(_vault));
 
@@ -79,13 +80,13 @@ contract AaveV3Connector is BaseConnector {
 
     if (amountOfValidTokens != rewardsListLength + 1) {
       // Resize the array
-      // slither-disable-next-line assembly
       // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(tokens, amountOfValidTokens)
       }
     }
   }
+  // slither-disable-end assembly
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
