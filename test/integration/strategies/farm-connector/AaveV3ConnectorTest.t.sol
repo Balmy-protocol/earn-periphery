@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { AaveV3Connector, IERC20, IAaveV3Pool, IAaveV3Rewards } from "src/strategies/connector/AaveV3Connector.sol";
+import {
+  AaveV3Connector, SafeERC20, IERC20, IAaveV3Pool, IAaveV3Rewards
+} from "src/strategies/connector/AaveV3Connector.sol";
 import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
@@ -10,8 +12,8 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   IERC20 internal aAaveV3Vault = IERC20(0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE); // aDAI
   IERC20 internal aAaveV3Asset = IERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1); // DAI
   IAaveV3Pool internal aAaveV3Pool = IAaveV3Pool(0x794a61358D6845594F94dc1DB02A252b5b4814aD); // Aave V3 LendingPool
-  IAaveV3Rewards internal aAaveV3RewardsController = IAaveV3Rewards(0x929EC64c34a17401F460460D4B9390518E5B473e); // Aave
-    // V3 Rewards Controller
+  IAaveV3Rewards internal aAaveV3RewardsController = IAaveV3Rewards(0x929EC64c34a17401F460460D4B9390518E5B473e); // V3
+    // Rewards
 
   // We need a holder for the aToken token
   address internal constant AAVE_V3_VAULT_HOLDER = 0xB2289E329D2F85F1eD31Adbb30eA345278F21bcf; // aDAI holder
@@ -22,7 +24,9 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   function _configureFork() internal override {
     uint256 optimismFork = vm.createFork(vm.rpcUrl("optimism"));
     vm.selectFork(optimismFork);
+
     vm.rollFork(20_000_000);
+
     vm.makePersistent(address(_farmToken())); // We need to make the farm token persistent for the next roll fork
   }
 
@@ -35,20 +39,30 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   }
 
   function testFork_claimRewardTokens() public {
-    AaveV3Connector aveV3Connector = AaveV3Connector(address(connector));
+    // Mock the rewards controller to include the asset as a reward
+    IAaveV3Rewards aAaveV3RewardsControllerMock =
+      new AaveV3RewardsWithAssetRewardsMock(aAaveV3Asset, aAaveV3RewardsController);
+    // Give rewards to the rewards controller for the asset
+    _give(address(aAaveV3Asset), address(aAaveV3RewardsControllerMock), 10e10);
+
+    AaveV3ConnectorInstance aveV3Connector =
+      new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
     address[] memory asset = new address[](1);
     asset[0] = address(aAaveV3Vault);
-    // Deposit tokens
-    _give(_farmToken(), address(connector), 10e18);
-    connector.deposit(_farmToken(), 10e18);
 
-    vm.rollFork(123_000_000); // Roll the fork to generate some rewards
-    uint256 amountToClaim = aAaveV3RewardsController.getUserRewards(asset, address(connector), connector.asset());
-    (, uint256[] memory balancesBefore) = connector.totalBalances();
+    uint256 amountToClaimBefore =
+      aAaveV3RewardsControllerMock.getUserRewards(asset, address(connector), connector.asset());
+
+    (, uint256[] memory totalBalancesBefore) = aveV3Connector.totalBalances();
     uint256 amountClaimed = aveV3Connector.claimAndDepositAssetRewards();
-    (, uint256[] memory balancesAfter) = connector.totalBalances();
-    assertEq(balancesAfter[0] - balancesBefore[0], amountToClaim);
-    assertEq(amountClaimed, amountToClaim);
+    (, uint256[] memory totalBalancesAfter) = aveV3Connector.totalBalances();
+
+    uint256 amountToClaimAfter =
+      aAaveV3RewardsControllerMock.getUserRewards(asset, address(connector), connector.asset());
+
+    assertEq(totalBalancesAfter[0] - totalBalancesBefore[0], amountClaimed);
+    assertEq(amountToClaimAfter, amountClaimed - amountToClaimBefore);
+    assertEq(amountClaimed, amountToClaimBefore);
   }
 
   function _setBalance(address asset, address account, uint256 amount) internal override {
@@ -76,21 +90,13 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     return rewardsList;
   }
 
-  function _generateYield(address recipient) internal virtual override {
-    _setBalance(_farmToken(), recipient, 0);
-
-    address[] memory rewardTokens = _rewardTokens();
-
-    // Deposit tokens
+  function _generateYield() internal virtual override {
+    // Deposit tokens that generate rewards
     _give(_farmToken(), address(connector), 10e18);
     connector.deposit(_farmToken(), 10e18);
 
-    vm.rollFork(123_000_000); // Roll the fork to generate some rewards
-
-    for (uint256 i; i < rewardTokens.length; ++i) {
-      // Remove reward tokens from recipient, only to avoid to save previous rewards balance
-      _setBalance(rewardTokens[i], recipient, 0);
-    }
+    // Roll the fork to generate some rewards
+    vm.rollFork(123_000_000);
   }
 }
 
@@ -103,4 +109,49 @@ contract AaveV3ConnectorInstance is BaseConnectorInstance, AaveV3Connector {
   )
     AaveV3Connector(__vault, __asset, __pool, __rewards)
   { }
+}
+
+contract AaveV3RewardsWithAssetRewardsMock is IAaveV3Rewards {
+  using SafeERC20 for IERC20;
+
+  IAaveV3Rewards internal rewards;
+  IERC20 internal asset;
+
+  constructor(IERC20 __asset, IAaveV3Rewards __rewards) {
+    rewards = __rewards;
+    asset = __asset;
+  }
+
+  function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external override {
+    if (reward == address(asset)) {
+      IERC20(reward).safeTransfer(to, amount);
+      return;
+    }
+    rewards.claimRewards(assets, amount, to, reward);
+  }
+
+  function getRewardsByAsset(address _asset) external view override returns (address[] memory returnRewardsList) {
+    address[] memory rewardsList = rewards.getRewardsByAsset(_asset);
+    returnRewardsList = new address[](rewardsList.length + 1);
+    for (uint256 i = 0; i < rewardsList.length; i++) {
+      returnRewardsList[i] = rewardsList[i];
+    }
+    returnRewardsList[rewardsList.length] = address(asset);
+  }
+
+  function getUserRewards(
+    address[] calldata assets,
+    address user,
+    address reward
+  )
+    external
+    view
+    override
+    returns (uint256)
+  {
+    if (reward == address(asset)) {
+      return IERC20(reward).balanceOf(address(this));
+    }
+    return rewards.getUserRewards(assets, user, reward);
+  }
 }

@@ -73,14 +73,14 @@ contract AaveV3Connector is BaseConnector {
     for (uint256 i = 0; i < rewardsListLength; ++i) {
       address rewardToken = rewardsList[i];
       if (rewardToken != _connector_asset()) {
-        tokens[amountOfValidTokens] = rewardToken;
-        amountOfValidTokens++;
+        tokens[amountOfValidTokens++] = rewardToken;
       }
     }
 
     if (amountOfValidTokens != rewardsListLength + 1) {
       // Resize the array
       // slither-disable-next-line assembly
+      // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(tokens, amountOfValidTokens)
       }
