@@ -61,7 +61,7 @@ abstract contract BaseCompanion is Ownable2Step {
    * @notice Takes the given amount of tokens from the caller and transfers it to the recipient
    * @param token The token to take
    * @param amount The amount to take
-   * @param recipient The transfer's rcipient
+   * @param recipient The transfer's recipient
    */
   function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
     token.safeTransferFrom(msg.sender, recipient, amount);
