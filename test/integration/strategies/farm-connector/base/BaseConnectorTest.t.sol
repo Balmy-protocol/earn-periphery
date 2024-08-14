@@ -19,6 +19,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   function setUp() public {
     _configureFork();
     connector = _buildNewConnector();
+    vm.makePersistent(address(connector));
   }
 
   function testFork_allTokens() public {

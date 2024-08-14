@@ -22,11 +22,13 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
   function testFork_withdraw_immediateWithdrawal() public {
     // Set recipient to 0
     address recipient = address(1);
-    _setBalance(connector.asset(), recipient, 0);
 
     // Deposit tokens
     _give(connector.asset(), address(connector), 10e18);
     connector.deposit(connector.asset(), 10e18);
+
+    // Generate yield if connector handles it
+    _generateYield();
 
     // Check previous state
     address[] memory tokens = connector.allTokens();
@@ -34,7 +36,14 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
 
     // Withdraw
     uint256[] memory toWithdraw = new uint256[](tokens.length);
-    toWithdraw[0] = balancesBefore[0] / 2;
+    for (uint256 i; i < tokens.length; ++i) {
+      toWithdraw[i] = balancesBefore[i] / 2;
+    }
+
+    uint256[] memory recipientBalancesBefore = new uint256[](tokens.length);
+    for (uint256 i; i < tokens.length; ++i) {
+      recipientBalancesBefore[i] = _balance(tokens[i], recipient);
+    }
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(1, tokens, toWithdraw, address(1));
 
     // Check result
@@ -45,7 +54,12 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();
-    assertEq(_balance(connector.asset(), recipient), toWithdraw[0]);
-    assertAlmostEq(toWithdraw[0], balancesBefore[0] - balancesAfter[0], 1);
+    for (uint256 i; i < tokens.length; ++i) {
+      assertEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i]);
+      assertAlmostEq(toWithdraw[i], balancesBefore[i] - balancesAfter[i], 1);
+    }
   }
+
+  // solhint-disable no-empty-blocks
+  function _generateYield() internal virtual { }
 }

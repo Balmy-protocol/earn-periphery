@@ -74,7 +74,9 @@ contract AaveV2Connector is BaseConnector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
+  function _connector_isSpecialWithdrawalSupported(
+    SpecialWithdrawalCode withdrawalCode
+  )
     internal
     pure
     override
