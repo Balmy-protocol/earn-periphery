@@ -10,7 +10,7 @@ import {
 
 import { DelayedWithdrawalAdapterMock } from "test/mocks/delayed-withdrawal-adapter/DelayedWithdrawalAdapterMock.sol";
 
-/// @notice An implementation of IEarnBalmyStrategy that returns balances by reading token's state 
+/// @notice An implementation of IEarnBalmyStrategy that returns balances by reading token's state
 contract EarnBalmyStrategyStateBalanceMock is EarnStrategyStateBalanceMock, IEarnBalmyStrategy {
   mapping(address token => IDelayedWithdrawalAdapter adapter) public override delayedWithdrawalAdapter;
 
