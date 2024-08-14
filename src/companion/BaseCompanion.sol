@@ -42,4 +42,28 @@ abstract contract BaseCompanion is Ownable2Step {
 
   // slither-disable-next-line locked-ether TODO: remove once send function is added
   receive() external payable { }
+
+  /**
+   * @notice Returns the contract's balance of the given token
+   * @dev We are making this public because it could help with simulations
+   * @param token The token to check
+   * @return The balance of the token
+   */
+  function balanceOf(address token) public view returns (uint256) {
+    return token == NATIVE_TOKEN ? address(this).balance : IERC20(token).balanceOf(address(this));
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  ///////////////////////////// TAKE FUNCTIONS ///////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @notice Takes the given amount of tokens from the caller and transfers it to the recipient
+   * @param token The token to take
+   * @param amount The amount to take
+   * @param recipient The transfer's recipient
+   */
+  function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
+    token.safeTransferFrom(msg.sender, recipient, amount);
+  }
 }
