@@ -8,7 +8,7 @@ import { IPermit2 } from "../interfaces/external/IPermit2.sol";
 
 /**
  * @notice This contract will work as base companion for all our contracts. It will extend the capabilities of our
- *          companion contracts so that they can execute multicalls, swaps, and more
+ *         companion contracts so that they can execute multicalls, swaps, and more
  * @dev All public functions are payable, so that they can be multicalled together with other payable functions when
  *      msg.value > 0
  */
