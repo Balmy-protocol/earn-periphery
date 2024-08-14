@@ -5,8 +5,9 @@ import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissio
 import {
   IDelayedWithdrawalManager, IEarnVault, IEarnStrategyRegistry
 } from "../interfaces/IDelayedWithdrawalManager.sol";
-import { IDelayedWithdrawalAdapter } from "@balmy/earn-core/interfaces/IDelayedWithdrawalAdapter.sol";
+import { IDelayedWithdrawalAdapter } from "../interfaces/IDelayedWithdrawalAdapter.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
+import { IEarnBalmyStrategy, IEarnStrategy } from "../interfaces/IEarnBalmyStrategy.sol";
 // solhint-disable-next-line no-unused-import
 import { RegisteredAdapter, RegisteredAdaptersLibrary, PositionIdTokenKey } from "./types/RegisteredAdapters.sol";
 
@@ -170,7 +171,9 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager {
   function _revertIfNotCurrentStrategyAdapter(uint256 positionId, address token) internal view {
     StrategyId strategyId = VAULT.positionsStrategy(positionId);
     if (strategyId == StrategyIdConstants.NO_STRATEGY) revert AdapterMismatch();
-    IDelayedWithdrawalAdapter adapter = STRATEGY_REGISTRY.getStrategy(strategyId).delayedWithdrawalAdapter(token);
+    IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
+    if (!strategy.supportsInterface(type(IEarnBalmyStrategy).interfaceId)) revert AdapterMismatch();
+    IDelayedWithdrawalAdapter adapter = IEarnBalmyStrategy(address(strategy)).delayedWithdrawalAdapter(token);
     if (address(adapter) != msg.sender) revert AdapterMismatch();
   }
 }

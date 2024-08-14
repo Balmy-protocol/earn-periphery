@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: TBD
 pragma solidity >=0.8.22;
 
-import { IDelayedWithdrawalAdapter } from "@balmy/earn-core/interfaces/IDelayedWithdrawalAdapter.sol";
+import { IDelayedWithdrawalAdapter } from "src/interfaces/IDelayedWithdrawalAdapter.sol";
 
 struct RegisteredAdapter {
   IDelayedWithdrawalAdapter adapter;

@@ -27,7 +27,7 @@
 
 "@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git":
   version "0.0.0"
-  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#c5a9d675843f34835784a3ff80a77ec9dfa0f7ab"
+  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#a7f6a0ef14ebca7ae6094baff96a434b3903edec"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"

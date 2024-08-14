@@ -7,31 +7,33 @@ import { EarnVault, IEarnVault, StrategyId, IEarnNFTDescriptor } from "@balmy/ea
 import {
   EarnStrategyRegistry, IEarnStrategyRegistry
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+
+import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import {
   DelayedWithdrawalManager,
   IDelayedWithdrawalManager,
   IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+} from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { INFTPermissions, IERC721 } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
 import { EarnStrategyStateBalanceMock } from "@balmy/earn-core-test/mocks/strategies/EarnStrategyStateBalanceMock.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { StrategyUtils } from "@balmy/earn-core-test/utils/StrategyUtils.sol";
+import { BalmyStrategyUtils } from "../../utils/BalmyStrategyUtils.sol";
+
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
 
 contract DelayedWithdrawalManagerTest is PRBTest {
   event DelayedWithdrawalRegistered(uint256 positionId, address token, address adapter);
   event WithdrawnFunds(uint256 positionId, address token, address recipient, uint256 withdrawn);
 
-  using StrategyUtils for IEarnStrategyRegistry;
+  using BalmyStrategyUtils for IEarnStrategyRegistry;
 
   DelayedWithdrawalManager private delayedWithdrawalManager;
 
   uint256[] private positions;
   mapping(uint256 position => address token) private tokenByPosition;
-  IEarnStrategy private strategy;
+  IEarnBalmyStrategy private strategy;
   StrategyId private strategyId;
   address[] private tokens = new address[](2);
   address private owner = address(3);
@@ -54,7 +56,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
     tokens[1] = address(erc20);
 
     uint256 position;
-    (strategyId, strategy) = strategyRegistry.deployStateStrategy(tokens);
+    (strategyId, strategy) = strategyRegistry.deployBalmyStrategy(tokens);
 
     (position,) = vault.createPosition{ value: amountToDeposit1 }(
       strategyId, tokens[0], amountToDeposit1, owner, PermissionUtils.buildEmptyPermissionSet(), "", ""
@@ -176,7 +178,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
 
     // Update strategy to register a new adapter
     IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.STRATEGY_REGISTRY();
-    IEarnStrategy newStrategy = StrategyUtils.deployStateStrategy(tokens);
+    IEarnBalmyStrategy newStrategy = BalmyStrategyUtils.deployBalmyStrategy(tokens);
     strategyRegistry.proposeStrategyUpdate(strategyId, newStrategy, "0x");
     vm.warp(block.timestamp + strategyRegistry.STRATEGY_UPDATE_DELAY()); //Waiting for the delay...
     strategyRegistry.updateStrategy(strategyId, "0x");
@@ -252,7 +254,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
 
     // Update strategy to register a new adapter
     IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.VAULT().STRATEGY_REGISTRY();
-    IEarnStrategy newStrategy = StrategyUtils.deployStateStrategy(tokens);
+    IEarnBalmyStrategy newStrategy = BalmyStrategyUtils.deployBalmyStrategy(tokens);
     strategyRegistry.proposeStrategyUpdate(strategyId, newStrategy, "0x");
     vm.warp(block.timestamp + strategyRegistry.STRATEGY_UPDATE_DELAY()); //Waiting for the delay...
     strategyRegistry.updateStrategy(strategyId, "0x");
