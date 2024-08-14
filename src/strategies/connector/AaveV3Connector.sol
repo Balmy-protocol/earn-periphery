@@ -46,7 +46,8 @@ contract AaveV3Connector is BaseConnector {
     _asset.forceApprove(address(_pool), type(uint256).max);
   }
 
-  /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and deposits them
+  /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and
+  /// deposits them
   function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);
