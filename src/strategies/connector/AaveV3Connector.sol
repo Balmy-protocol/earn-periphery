@@ -46,7 +46,7 @@ contract AaveV3Connector is BaseConnector {
     _asset.forceApprove(address(_pool), type(uint256).max);
   }
 
-  // slither-disable-next-line naming-convention,dead-code
+  /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and deposits them
   function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
     address[] memory asset = new address[](1);
     asset[0] = address(_vault);
@@ -213,7 +213,7 @@ contract AaveV3Connector is BaseConnector {
         _rewards.claimRewards(asset, amountToWithdraw, recipient, tokens[i]);
       }
     }
-    return _connector_supportedWithdrawals();
+    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
 
   // slither-disable-next-line naming-convention,dead-code

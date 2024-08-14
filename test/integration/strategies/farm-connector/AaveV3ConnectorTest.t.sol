@@ -45,7 +45,7 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     // Give rewards to the rewards controller for the asset
     _give(address(aAaveV3Asset), address(aAaveV3RewardsControllerMock), 10e10);
 
-    AaveV3ConnectorInstance aveV3Connector =
+    AaveV3ConnectorInstance aaveV3Connector =
       new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
     address[] memory asset = new address[](1);
     asset[0] = address(aAaveV3Vault);
@@ -53,15 +53,15 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     uint256 amountToClaimBefore =
       aAaveV3RewardsControllerMock.getUserRewards(asset, address(connector), connector.asset());
 
-    (, uint256[] memory totalBalancesBefore) = aveV3Connector.totalBalances();
-    uint256 amountClaimed = aveV3Connector.claimAndDepositAssetRewards();
-    (, uint256[] memory totalBalancesAfter) = aveV3Connector.totalBalances();
+    (, uint256[] memory totalBalancesBefore) = aaveV3Connector.totalBalances();
+    uint256 amountClaimed = aaveV3Connector.claimAndDepositAssetRewards();
+    (, uint256[] memory totalBalancesAfter) = aaveV3Connector.totalBalances();
 
     uint256 amountToClaimAfter =
       aAaveV3RewardsControllerMock.getUserRewards(asset, address(connector), connector.asset());
 
     assertEq(totalBalancesAfter[0] - totalBalancesBefore[0], amountClaimed);
-    assertEq(amountToClaimAfter, amountClaimed - amountToClaimBefore);
+    assertEq(amountToClaimAfter, 0);
     assertEq(amountClaimed, amountToClaimBefore);
   }
 
@@ -81,20 +81,7 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     }
   }
 
-  function _rewardTokens() internal view virtual returns (address[] memory) {
-    address[] memory tokens = connector.allTokens();
-    address[] memory rewardsList = new address[](tokens.length - 1);
-    for (uint256 i = 1; i < tokens.length; i++) {
-      rewardsList[i - 1] = tokens[i];
-    }
-    return rewardsList;
-  }
-
   function _generateYield() internal virtual override {
-    // Deposit tokens that generate rewards
-    _give(_farmToken(), address(connector), 10e18);
-    connector.deposit(_farmToken(), 10e18);
-
     // Roll the fork to generate some rewards
     vm.rollFork(123_000_000);
   }
