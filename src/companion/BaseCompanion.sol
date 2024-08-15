@@ -66,4 +66,31 @@ abstract contract BaseCompanion is Ownable2Step {
   function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
     token.safeTransferFrom(msg.sender, recipient, amount);
   }
+
+  ////////////////////////////////////////////////////////////////////////
+  ///////////////////////////// SEND FUNCTIONS ///////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @notice Sends the specified amount of the given token to the recipient
+   * @param token The token to transfer
+   * @param amount The amount to transfer. If it's max(uint256), then all balance will be sent
+   * @param recipient The recipient of the token balance. If it's address(0), then the sender will receive the tokens
+   */
+  function sendToRecipient(address token, uint256 amount, address recipient) public payable {
+    if (amount == type(uint256).max) {
+      amount = balanceOf(token);
+    }
+    if (amount == 0) {
+      return;
+    }
+    if (recipient == address(0)) {
+      recipient = msg.sender;
+    }
+    if (token == NATIVE_TOKEN) {
+      payable(recipient).sendValue(amount);
+    } else {
+      IERC20(token).safeTransfer(recipient, amount);
+    }
+  }
 }
