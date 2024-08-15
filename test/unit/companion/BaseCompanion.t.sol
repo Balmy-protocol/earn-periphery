@@ -49,7 +49,7 @@ contract BaseCompanionTest is Test {
     assertEq(token.balanceOf(address(this)), 0);
     assertEq(token.balanceOf(recipient), amount);
   }
-  
+
   function test_permitTakeFromCaller() public {
     address token_ = address(token);
     uint256 amount = 10e18;
