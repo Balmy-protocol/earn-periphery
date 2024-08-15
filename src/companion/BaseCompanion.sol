@@ -66,6 +66,69 @@ abstract contract BaseCompanion is Ownable2Step {
   function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
     token.safeTransferFrom(msg.sender, recipient, amount);
   }
+  
+  /**
+   * @notice Takes the given amount of tokens from the caller with Permit2 and transfers it to the recipient
+   * @param token The token to take
+   * @param amount The amount to take
+   * @param nonce The signed nonce
+   * @param deadline The signature's deadline
+   * @param signature The owner's signature
+   * @param recipient The address that will receive the funds
+   */
+  function permitTakeFromCaller(
+    address token,
+    uint256 amount,
+    uint256 nonce,
+    uint256 deadline,
+    bytes calldata signature,
+    address recipient
+  )
+    external
+    payable
+  {
+    PERMIT2.permitTransferFrom(
+      IPermit2.PermitTransferFrom({
+        permitted: IPermit2.TokenPermissions({ token: token, amount: amount }),
+        nonce: nonce,
+        deadline: deadline
+      }),
+      IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: amount }),
+      msg.sender,
+      signature
+    );
+  }
+
+  /**
+   * @notice Takes the a batch of tokens from the caller with Permit2 and transfers it to the recipient
+   * @param tokens The tokens to take
+   * @param nonce The signed nonce
+   * @param deadline The signature's deadline
+   * @param signature The owner's signature
+   * @param recipient The address that will receive the funds
+   */
+  function batchPermitTakeFromCaller(
+    IPermit2.TokenPermissions[] calldata tokens,
+    uint256 nonce,
+    uint256 deadline,
+    bytes calldata signature,
+    address recipient
+  )
+    external
+    payable
+  {
+    IPermit2.SignatureTransferDetails[] memory details = new IPermit2.SignatureTransferDetails[](tokens.length);
+    for (uint256 i; i < details.length; ++i) {
+      details[i] = IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: tokens[i].amount });
+    }
+
+    PERMIT2.permitTransferFrom(
+      IPermit2.PermitBatchTransferFrom({ permitted: tokens, nonce: nonce, deadline: deadline }),
+      details,
+      msg.sender,
+      signature
+    );
+  }
 
   ////////////////////////////////////////////////////////////////////////
   ///////////////////////////// SEND FUNCTIONS ///////////////////////////

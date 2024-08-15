@@ -3,12 +3,9 @@ pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {
-  StrategyId,
-  IEarnStrategy,
-  SpecialWithdrawalCode,
-  IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 import { BaseConnector } from "./base/BaseConnector.sol";
 

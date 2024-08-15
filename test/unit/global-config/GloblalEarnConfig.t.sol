@@ -3,7 +3,7 @@ pragma solidity >=0.8.22;
 
 // solhint-disable no-unused-import
 import { PRBTest } from "@prb/test/PRBTest.sol";
-import { GlobalEarnConfig, IGlobalEarnConfig } from "@balmy/earn-core/global-config/GlobalEarnConfig.sol";
+import { GlobalEarnConfig, IGlobalEarnConfig } from "src/global-config/GlobalEarnConfig.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 

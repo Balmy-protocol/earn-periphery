@@ -49,6 +49,58 @@ contract BaseCompanionTest is Test {
     assertEq(token.balanceOf(address(this)), 0);
     assertEq(token.balanceOf(recipient), amount);
   }
+  
+  function test_permitTakeFromCaller() public {
+    address token_ = address(token);
+    uint256 amount = 10e18;
+    uint256 nonce = 11_223_344_556_677;
+    uint256 deadline = 1_234_567_890;
+    bytes memory signature = "my signature";
+    address recipient = address(1);
+
+    vm.expectCall(
+      address(companion.PERMIT2()),
+      abi.encodeWithSelector(
+        0x30f28b7a, // This is the selector
+        IPermit2.PermitTransferFrom({
+          permitted: IPermit2.TokenPermissions({ token: token_, amount: amount }),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: amount }),
+        address(this),
+        signature
+      )
+    );
+    companion.permitTakeFromCaller(token_, amount, nonce, deadline, signature, recipient);
+  }
+
+  function test_batchPermitTakeFromCaller() public {
+    address token_ = address(token);
+    uint256 amount = 10e18;
+    uint256 nonce = 11_223_344_556_677;
+    uint256 deadline = 1_234_567_890;
+    bytes memory signature = "my signature";
+    address recipient = address(1);
+
+    IPermit2.TokenPermissions[] memory tokens = new IPermit2.TokenPermissions[](1);
+    tokens[0] = IPermit2.TokenPermissions({ token: token_, amount: amount });
+
+    IPermit2.SignatureTransferDetails[] memory details = new IPermit2.SignatureTransferDetails[](1);
+    details[0] = IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: tokens[0].amount });
+
+    vm.expectCall(
+      address(companion.PERMIT2()),
+      abi.encodeWithSelector(
+        0xedd9444b, // This is the selector
+        IPermit2.PermitBatchTransferFrom({ permitted: tokens, nonce: nonce, deadline: deadline }),
+        details,
+        address(this),
+        signature
+      )
+    );
+    companion.batchPermitTakeFromCaller(tokens, nonce, deadline, signature, recipient);
+  }
 
   function test_sendToRecipient_native() public {
     uint256 totalAmount = 10e18;
@@ -117,7 +169,6 @@ contract Permit2 is IPermit2 {
     bytes calldata signature
   )
     external
-    override
   { }
 
   // solhint-disable no-empty-blocks
@@ -128,7 +179,6 @@ contract Permit2 is IPermit2 {
     bytes calldata signature
   )
     external
-    override
   { }
 }
 

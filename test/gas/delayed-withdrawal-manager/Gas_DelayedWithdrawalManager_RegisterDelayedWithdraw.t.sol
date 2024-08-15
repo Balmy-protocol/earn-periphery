@@ -12,18 +12,19 @@ import {
   DelayedWithdrawalManager,
   IDelayedWithdrawalManager,
   IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+} from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { INFTPermissions, IERC721 } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
 import { EarnStrategyStateBalanceMock } from "@balmy/earn-core-test/mocks/strategies/EarnStrategyStateBalanceMock.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { StrategyUtils } from "@balmy/earn-core-test/utils/StrategyUtils.sol";
+import { BalmyStrategyUtils } from "../../utils/BalmyStrategyUtils.sol";
+
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
 import { BaseDelayedWithdrawalGasTest } from "./BaseDelayedWithdrawalGasTest.sol";
 
 contract GasDelayedWithdrawalManagerRegisterDelayedWithdraw is BaseDelayedWithdrawalGasTest {
-  using StrategyUtils for IEarnStrategyRegistry;
+  using BalmyStrategyUtils for IEarnStrategyRegistry;
 
   function setUp() public virtual override {
     super.setUp();
