@@ -5,6 +5,7 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { Ownable2Step, Ownable } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IPermit2 } from "../interfaces/external/IPermit2.sol";
+import { PayableMulticall } from "./PayableMulticall.sol";
 
 /**
  * @notice This contract will work as base companion for all our contracts. It will extend the capabilities of our
@@ -12,7 +13,7 @@ import { IPermit2 } from "../interfaces/external/IPermit2.sol";
  * @dev All public functions are payable, so that they can be multicalled together with other payable functions when
  *      msg.value > 0
  */
-abstract contract BaseCompanion is Ownable2Step {
+abstract contract BaseCompanion is Ownable2Step, PayableMulticall {
   using SafeERC20 for IERC20;
   using Address for address;
   using Address for address payable;
