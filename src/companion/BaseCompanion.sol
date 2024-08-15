@@ -14,6 +14,8 @@ import { PayableMulticall } from "./PayableMulticall.sol";
  *      msg.value > 0
  */
 abstract contract BaseCompanion is Ownable2Step, PayableMulticall {
+  event SwapperChanged(address newSwapper, address newAllowanceTarget);
+
   using SafeERC20 for IERC20;
   using Address for address;
   using Address for address payable;
@@ -28,11 +30,9 @@ abstract contract BaseCompanion is Ownable2Step, PayableMulticall {
   // slither-disable-end naming-convention
 
   /// @notice The address of the swapper
-  // slither-disable-next-line immutable-states TODO: remove once used
   address public swapper;
 
   /// @notice The address of the allowance target
-  // slither-disable-next-line immutable-states TODO: remove once used
   address public allowanceTarget;
 
   constructor(address swapper_, address allowanceTarget_, address owner_, IPermit2 permit2) Ownable(owner_) {
@@ -181,5 +181,21 @@ abstract contract BaseCompanion is Ownable2Step, PayableMulticall {
       IERC20(allowanceToken).forceApprove(allowanceTarget, type(uint256).max);
     }
     return swapper.functionCallWithValue(swapData, value);
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  //////////////////////////// ADMIN FUNCTIONS ///////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+  /**
+   * @notice Sets a new swapper and allowance target
+   * @dev Can only be called by the owner
+   * @param newSwapper The address of the new swapper
+   * @param newAllowanceTarget The address of the new allowance target
+   */
+  // slither-disable-next-line missing-zero-check
+  function setSwapper(address newSwapper, address newAllowanceTarget) external onlyOwner {
+    swapper = newSwapper;
+    allowanceTarget = newAllowanceTarget;
+    emit SwapperChanged(newSwapper, newAllowanceTarget);
   }
 }
