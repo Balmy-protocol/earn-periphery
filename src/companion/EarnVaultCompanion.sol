@@ -59,6 +59,7 @@ contract EarnVaultCompanion is BaseCompanion {
     verifyPermission(vault, positionId, WITHDRAW_PERMISSION)
     returns (uint256[] memory, IEarnStrategy.WithdrawalType[] memory)
   {
+    // slither-disable-next-line unused-return (not sure why this is necessary)
     return vault.withdraw({
       positionId: positionId,
       tokensToWithdraw: tokensToWithdraw,
