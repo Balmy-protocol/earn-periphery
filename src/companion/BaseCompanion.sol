@@ -40,7 +40,6 @@ abstract contract BaseCompanion is Ownable2Step {
     PERMIT2 = permit2;
   }
 
-  // slither-disable-next-line locked-ether TODO: remove once send function is added
   receive() external payable { }
 
   /**
@@ -156,5 +155,30 @@ abstract contract BaseCompanion is Ownable2Step {
     } else {
       IERC20(token).safeTransfer(recipient, amount);
     }
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  ///////////////////////////// SWAP FUNCTIONS ///////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @notice Executes a swap against the swapper
+   * @param allowanceToken The token to set allowance for (can be set to zero address to ignore)
+   * @param value The value to send to the swapper as part of the swap
+   * @param swapData The swap data
+   */
+  function runSwap(
+    address allowanceToken,
+    uint256 value,
+    bytes calldata swapData
+  )
+    external
+    payable
+    returns (bytes memory)
+  {
+    if (allowanceToken != address(0)) {
+      IERC20(allowanceToken).forceApprove(allowanceTarget, type(uint256).max);
+    }
+    return swapper.functionCallWithValue(swapData, value);
   }
 }

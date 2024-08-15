@@ -139,6 +139,27 @@ contract BaseCompanionTest is Test {
     // Make sure it never was called
     vm.expectCall(address(token), abi.encodeWithSelector(IERC20.transfer.selector), 0);
   }
+
+  function test_runSwap() public {
+    uint256 amount = 10e18;
+    deal(address(this), amount);
+
+    bytes memory result =
+      companion.runSwap{ value: amount }(address(0), amount, abi.encodeWithSelector(swapper.swap.selector));
+    uint256 resultUint = abi.decode(result, (uint256));
+
+    assertEq(resultUint, amount);
+    assertEq(address(swapper).balance, amount);
+  }
+
+  function test_runSwap_withAllowanceToken() public {
+    vm.expectCall(address(token), abi.encodeWithSelector(token.approve.selector, address(swapper), type(uint256).max));
+    bytes memory result = companion.runSwap(address(token), 0, abi.encodeWithSelector(swapper.swap.selector));
+    uint256 resultUint = abi.decode(result, (uint256));
+
+    assertEq(resultUint, 0);
+    assertEq(address(swapper).balance, 0);
+  }
 }
 
 contract BaseCompanionInstance is BaseCompanion {
@@ -153,8 +174,9 @@ contract BaseCompanionInstance is BaseCompanion {
 }
 
 contract Swapper {
-  // solhint-disable no-empty-blocks
-  function swap(address tokenIn, address tokenOut) external payable { }
+  function swap() external payable returns (uint256) {
+    return msg.value;
+  }
 }
 
 contract Permit2 is IPermit2 {
