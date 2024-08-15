@@ -5,16 +5,18 @@ import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {
   IEarnStrategy,
   SpecialWithdrawalCode,
-  IDelayedWithdrawalAdapter,
   StrategyId,
   IEarnVault,
   IEarnStrategyRegistry,
   IERC165
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnBalmyStrategy } from "../interfaces/IEarnBalmyStrategy.sol";
+import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+
 import { ERC4626Connector } from "./connector/ERC4626Connector.sol";
 import { TOSCreationValidation } from "./creation-validation/TOSCreationValidation.sol";
 
-contract ERC4626TOSStrategy is IEarnStrategy, ERC4626Connector, TOSCreationValidation {
+contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreationValidation {
   error OnlyVault();
   error OnlyStrategyRegistry();
 
@@ -47,7 +49,8 @@ contract ERC4626TOSStrategy is IEarnStrategy, ERC4626Connector, TOSCreationValid
 
   /// @inheritdoc IERC165
   function supportsInterface(bytes4 interfaceId) public view override(IERC165, TOSCreationValidation) returns (bool) {
-    return interfaceId == type(IEarnStrategy).interfaceId || TOSCreationValidation.supportsInterface(interfaceId);
+    return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
+      || TOSCreationValidation.supportsInterface(interfaceId);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -95,7 +98,7 @@ contract ERC4626TOSStrategy is IEarnStrategy, ERC4626Connector, TOSCreationValid
     return _connector_maxWithdraw();
   }
 
-  /// @inheritdoc IEarnStrategy
+  /// @inheritdoc IEarnBalmyStrategy
   function delayedWithdrawalAdapter(address token) external view returns (IDelayedWithdrawalAdapter) {
     return _connector_delayedWithdrawalAdapter(token);
   }

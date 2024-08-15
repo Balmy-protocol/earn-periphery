@@ -7,23 +7,25 @@ import { EarnVault, IEarnVault, StrategyId } from "@balmy/earn-core/vault/EarnVa
 import {
   EarnStrategyRegistry, IEarnStrategyRegistry
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
+
 import {
   DelayedWithdrawalManager,
   IDelayedWithdrawalManager,
   IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+} from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { INFTPermissions, IERC721 } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
 import { EarnStrategyStateBalanceMock } from "@balmy/earn-core-test/mocks/strategies/EarnStrategyStateBalanceMock.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { StrategyUtils } from "@balmy/earn-core-test/utils/StrategyUtils.sol";
+import { BalmyStrategyUtils } from "../../utils/BalmyStrategyUtils.sol";
+
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
 import { BaseDelayedWithdrawalGasTest } from "./BaseDelayedWithdrawalGasTest.sol";
 
 contract GasDelayedWithdrawalManagerRegisterDelayedWithdraw is BaseDelayedWithdrawalGasTest {
-  using StrategyUtils for IEarnStrategyRegistry;
+  using BalmyStrategyUtils for IEarnStrategyRegistry;
 
   function setUp() public virtual override {
     super.setUp();
@@ -35,7 +37,7 @@ contract GasDelayedWithdrawalManagerRegisterDelayedWithdraw is BaseDelayedWithdr
 
     // Update strategy to register a new adapter
     IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.STRATEGY_REGISTRY();
-    IEarnStrategy newStrategy = StrategyUtils.deployStateStrategy(tokens);
+    IEarnBalmyStrategy newStrategy = BalmyStrategyUtils.deployBalmyStrategy(tokens);
     strategyRegistry.proposeStrategyUpdate(strategyId, newStrategy, "0x");
     vm.warp(block.timestamp + strategyRegistry.STRATEGY_UPDATE_DELAY()); //Waiting for the delay...
     strategyRegistry.updateStrategy(strategyId, "0x");

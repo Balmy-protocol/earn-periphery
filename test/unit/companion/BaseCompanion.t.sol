@@ -51,6 +51,117 @@ contract BaseCompanionTest is Test {
     assertEq(token.balanceOf(address(this)), 0);
     assertEq(token.balanceOf(recipient), amount);
   }
+  
+  function test_permitTakeFromCaller() public {
+    address token_ = address(token);
+    uint256 amount = 10e18;
+    uint256 nonce = 11_223_344_556_677;
+    uint256 deadline = 1_234_567_890;
+    bytes memory signature = "my signature";
+    address recipient = address(1);
+
+    vm.expectCall(
+      address(companion.PERMIT2()),
+      abi.encodeWithSelector(
+        0x30f28b7a, // This is the selector
+        IPermit2.PermitTransferFrom({
+          permitted: IPermit2.TokenPermissions({ token: token_, amount: amount }),
+          nonce: nonce,
+          deadline: deadline
+        }),
+        IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: amount }),
+        address(this),
+        signature
+      )
+    );
+    companion.permitTakeFromCaller(token_, amount, nonce, deadline, signature, recipient);
+  }
+
+  function test_batchPermitTakeFromCaller() public {
+    address token_ = address(token);
+    uint256 amount = 10e18;
+    uint256 nonce = 11_223_344_556_677;
+    uint256 deadline = 1_234_567_890;
+    bytes memory signature = "my signature";
+    address recipient = address(1);
+
+    IPermit2.TokenPermissions[] memory tokens = new IPermit2.TokenPermissions[](1);
+    tokens[0] = IPermit2.TokenPermissions({ token: token_, amount: amount });
+
+    IPermit2.SignatureTransferDetails[] memory details = new IPermit2.SignatureTransferDetails[](1);
+    details[0] = IPermit2.SignatureTransferDetails({ to: recipient, requestedAmount: tokens[0].amount });
+
+    vm.expectCall(
+      address(companion.PERMIT2()),
+      abi.encodeWithSelector(
+        0xedd9444b, // This is the selector
+        IPermit2.PermitBatchTransferFrom({ permitted: tokens, nonce: nonce, deadline: deadline }),
+        details,
+        address(this),
+        signature
+      )
+    );
+    companion.batchPermitTakeFromCaller(tokens, nonce, deadline, signature, recipient);
+  }
+
+  function test_sendToRecipient_native() public {
+    uint256 totalAmount = 10e18;
+    uint256 amount = totalAmount / 2;
+    address recipient = address(1);
+    uint256 recipientInitialBalance = recipient.balance;
+    deal(address(companion), totalAmount);
+
+    companion.sendToRecipient(companion.NATIVE_TOKEN(), amount, recipient);
+    assertEq(address(companion).balance, totalAmount - amount);
+    assertEq(recipient.balance - recipientInitialBalance, amount);
+  }
+
+  function test_sendToRecipient_max() public {
+    uint256 amount = 10e18;
+    address recipient = address(1);
+    deal(address(token), address(companion), amount);
+
+    companion.sendToRecipient(address(token), type(uint256).max, recipient);
+    assertEq(token.balanceOf(address(companion)), 0);
+    assertEq(token.balanceOf(recipient), amount);
+  }
+
+  function test_sendToRecipient_zeroAddressRecipient() public {
+    uint256 amount = 10e18;
+    deal(address(token), address(companion), amount);
+
+    companion.sendToRecipient(address(token), amount, address(0));
+    assertEq(token.balanceOf(address(companion)), 0);
+    assertEq(token.balanceOf(address(this)), amount);
+  }
+
+  function test_sendToRecipient_zeroAmount() public {
+    companion.sendToRecipient(address(token), type(uint256).max, address(0));
+
+    // Make sure it never was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.transfer.selector), 0);
+  }
+
+  function test_runSwap() public {
+    uint256 amount = 10e18;
+    deal(address(this), amount);
+
+    bytes memory result =
+      companion.runSwap{ value: amount }(address(0), amount, abi.encodeWithSelector(swapper.swap.selector));
+    uint256 resultUint = abi.decode(result, (uint256));
+
+    assertEq(resultUint, amount);
+    assertEq(address(swapper).balance, amount);
+  }
+
+  function test_runSwap_withAllowanceToken() public {
+    vm.expectCall(address(token), abi.encodeWithSelector(token.approve.selector, address(swapper), type(uint256).max));
+    bytes memory result = companion.runSwap(address(token), 0, abi.encodeWithSelector(swapper.swap.selector));
+    uint256 resultUint = abi.decode(result, (uint256));
+
+    assertEq(resultUint, 0);
+    assertEq(address(swapper).balance, 0);
+  }
 
   function test_setSwapper() public {
     address newSwapper = address(1);
@@ -81,8 +192,9 @@ contract BaseCompanionInstance is BaseCompanion {
 }
 
 contract Swapper {
-  // solhint-disable no-empty-blocks
-  function swap(address tokenIn, address tokenOut) external payable { }
+  function swap() external payable returns (uint256) {
+    return msg.value;
+  }
 }
 
 contract Permit2 is IPermit2 {
@@ -97,7 +209,6 @@ contract Permit2 is IPermit2 {
     bytes calldata signature
   )
     external
-    override
   { }
 
   // solhint-disable no-empty-blocks
@@ -108,7 +219,6 @@ contract Permit2 is IPermit2 {
     bytes calldata signature
   )
     external
-    override
   { }
 }
 

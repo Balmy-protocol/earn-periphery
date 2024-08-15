@@ -25,9 +25,9 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
-"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git":
+"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git":
   version "0.0.0"
-  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#c5a9d675843f34835784a3ff80a77ec9dfa0f7ab"
+  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#dd49a5460e5af7e22468e9b26ca191a60c77cec7"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
@@ -88,9 +88,9 @@ ansi-styles@^4.0.0, ansi-styles@^4.1.0:
     color-convert "^2.0.1"
 
 antlr4@^4.11.0:
-  version "4.13.1"
-  resolved "https://registry.yarnpkg.com/antlr4/-/antlr4-4.13.1.tgz#1e0a1830a08faeb86217cb2e6c34716004e4253d"
-  integrity sha512-kiXTspaRYvnIArgE97z5YVVf/cDVQABr3abFRR6mE7yesLMkgu4ujuyV/sgxafQ8wgve0DJQUJ38Z8tkgA2izA==
+  version "4.13.2"
+  resolved "https://registry.yarnpkg.com/antlr4/-/antlr4-4.13.2.tgz#0d084ad0e32620482a9c3a0e2470c02e72e4006d"
+  integrity sha512-QiVbZhyy4xAZ17UPEuG3YTOt8ZaoeOR1CvEAqrEsDBsOqINslaB147i9xqljZqoyf5S+EUlGStaj+t22LT9MOg==
 
 antlr4ts@^0.5.0-alpha.4:
   version "0.5.0-alpha.4"
@@ -257,9 +257,9 @@ has-flag@^4.0.0:
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
 ignore@^5.2.4:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.3.1.tgz#5073e554cd42c5b33b394375f538b8593e34d4ef"
-  integrity sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==
+  version "5.3.2"
+  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.3.2.tgz#3cd40e729f3643fd87cb04e50bf0eb722bc596f5"
+  integrity sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==
 
 import-fresh@^3.3.0:
   version "3.3.0"
