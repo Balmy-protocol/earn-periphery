@@ -3,9 +3,11 @@ pragma solidity >=0.8.22;
 
 import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Test } from "forge-std/Test.sol";
-import { BaseCompanion, IPermit2 } from "src/companion/BaseCompanion.sol";
+import { BaseCompanion, IPermit2, Ownable } from "src/companion/BaseCompanion.sol";
 
 contract BaseCompanionTest is Test {
+  event SwapperChanged(address newSwapper, address newAllowanceTarget);
+
   BaseCompanionInstance private companion;
   Swapper private swapper;
   address private owner = address(1);
@@ -48,6 +50,22 @@ contract BaseCompanionTest is Test {
     companion.takeFromCaller(token, amount, recipient);
     assertEq(token.balanceOf(address(this)), 0);
     assertEq(token.balanceOf(recipient), amount);
+  }
+
+  function test_setSwapper() public {
+    address newSwapper = address(1);
+    address newAllowanceTarget = address(2);
+    vm.expectEmit();
+    emit SwapperChanged(newSwapper, newAllowanceTarget);
+    vm.prank(owner);
+    companion.setSwapper(newSwapper, newAllowanceTarget);
+    assertEq(companion.swapper(), newSwapper);
+    assertEq(companion.allowanceTarget(), newAllowanceTarget);
+  }
+
+  function test_setSwapper_revertWhen_notOwner() public {
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
+    companion.setSwapper(address(1), address(1));
   }
 }
 

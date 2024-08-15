@@ -13,6 +13,8 @@ import { IPermit2 } from "../interfaces/external/IPermit2.sol";
  *      msg.value > 0
  */
 abstract contract BaseCompanion is Ownable2Step {
+  event SwapperChanged(address newSwapper, address newAllowanceTarget);
+
   using SafeERC20 for IERC20;
   using Address for address;
   using Address for address payable;
@@ -65,5 +67,20 @@ abstract contract BaseCompanion is Ownable2Step {
    */
   function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
     token.safeTransferFrom(msg.sender, recipient, amount);
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  //////////////////////////// ADMIN FUNCTIONS ///////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+  /**
+   * @notice Sets a new swapper and allowance target
+   * @dev Can only be called by the owner
+   * @param newSwapper The address of the new swapper
+   * @param newAllowanceTarget The address of the new allowance target
+   */
+  function setSwapper(address newSwapper, address newAllowanceTarget) external onlyOwner {
+    swapper = newSwapper;
+    allowanceTarget = newAllowanceTarget;
+    emit SwapperChanged(newSwapper, newAllowanceTarget);
   }
 }
