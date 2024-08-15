@@ -27,11 +27,11 @@ abstract contract BaseCompanion is Ownable2Step {
   // slither-disable-end naming-convention
 
   /// @notice The address of the swapper
-  // slither-disable-next-line immutable-states
+  // slither-disable-next-line immutable-states TODO: remove once used
   address public swapper;
 
   /// @notice The address of the allowance target
-  // slither-disable-next-line immutable-states
+  // slither-disable-next-line immutable-states TODO: remove once used
   address public allowanceTarget;
 
   constructor(address swapper_, address allowanceTarget_, address owner_, IPermit2 permit2) Ownable(owner_) {
@@ -40,7 +40,6 @@ abstract contract BaseCompanion is Ownable2Step {
     PERMIT2 = permit2;
   }
 
-  // slither-disable-next-line locked-ether
   receive() external payable { }
 
   /**
