@@ -144,6 +144,7 @@ abstract contract BaseCompanion is Ownable2Step {
     if (amount == type(uint256).max) {
       amount = balanceOf(token);
     }
+    // slither-disable-next-line incorrect-equality
     if (amount == 0) {
       return;
     }
