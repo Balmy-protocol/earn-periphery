@@ -65,7 +65,7 @@ abstract contract BaseCompanion is Ownable2Step {
   function takeFromCaller(IERC20 token, uint256 amount, address recipient) external payable {
     token.safeTransferFrom(msg.sender, recipient, amount);
   }
-  
+
   /**
    * @notice Takes the given amount of tokens from the caller with Permit2 and transfers it to the recipient
    * @param token The token to take
@@ -191,6 +191,7 @@ abstract contract BaseCompanion is Ownable2Step {
    * @param newSwapper The address of the new swapper
    * @param newAllowanceTarget The address of the new allowance target
    */
+  // slither-disable-next-line missing-zero-check
   function setSwapper(address newSwapper, address newAllowanceTarget) external onlyOwner {
     swapper = newSwapper;
     allowanceTarget = newAllowanceTarget;
