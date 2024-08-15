@@ -5,30 +5,33 @@ pragma solidity >=0.8.22;
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { EarnVault, IEarnVault, StrategyId, IEarnNFTDescriptor } from "@balmy/earn-core/vault/EarnVault.sol";
 import {
-  EarnStrategyRegistry, IEarnStrategyRegistry
+  EarnStrategyRegistry,
+  IEarnStrategyRegistry,
+  IEarnStrategy
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import {
   DelayedWithdrawalManager,
   IDelayedWithdrawalManager,
   IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+} from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { INFTPermissions, IERC721 } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
-import { EarnStrategyStateBalanceMock } from "@balmy/earn-core-test/mocks/strategies/EarnStrategyStateBalanceMock.sol";
+import { EarnBalmyStrategyStateBalanceMock } from "../../mocks/strategies/EarnBalmyStrategyStateBalanceMock.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { StrategyUtils } from "@balmy/earn-core-test/utils/StrategyUtils.sol";
+import { BalmyStrategyUtils } from "../../utils/BalmyStrategyUtils.sol";
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
+import { ERC4626TOSStrategy } from "src/strategies/ERC4626TOSStrategy.sol";
 
 contract BaseDelayedWithdrawalGasTest is PRBTest {
-  using StrategyUtils for IEarnStrategyRegistry;
+  using BalmyStrategyUtils for IEarnStrategyRegistry;
 
   DelayedWithdrawalManager public delayedWithdrawalManager;
 
   uint256[] public positions;
   mapping(uint256 position => address token) public tokenByPosition;
-  IEarnStrategy public strategy;
+  IEarnBalmyStrategy public strategy;
   StrategyId public strategyId;
   address[] public tokens = new address[](2);
   address public owner = address(3);
@@ -49,7 +52,7 @@ contract BaseDelayedWithdrawalGasTest is PRBTest {
     tokens[0] = Token.NATIVE_TOKEN;
     tokens[1] = address(erc20);
     uint256 position;
-    (strategyId, strategy) = strategyRegistry.deployStateStrategy(tokens);
+    (strategyId, strategy) = strategyRegistry.deployBalmyStrategy(tokens);
 
     (position,) = vault.createPosition{ value: amountToDeposit1 }(
       strategyId, tokens[0], amountToDeposit1, owner, PermissionUtils.buildEmptyPermissionSet(), "", ""

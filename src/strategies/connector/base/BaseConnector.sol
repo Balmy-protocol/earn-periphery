@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: TBD
 pragma solidity >=0.8.22;
 
-import {
-  StrategyId,
-  IEarnStrategy,
-  SpecialWithdrawalCode,
-  IDelayedWithdrawalAdapter
-} from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+
+import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 
 abstract contract BaseConnector {
   error InvalidDepositToken(address invalidToken);
