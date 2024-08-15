@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IEarnVault, INFTPermissions } from "@balmy/earn-core/interfaces/IEarnVault.sol";
+import { IEarnVault, INFTPermissions, IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IPermit2 } from "../interfaces/external/IPermit2.sol";
 import { BaseCompanion } from "./BaseCompanion.sol";
 
@@ -44,6 +44,26 @@ contract EarnVaultCompanion is BaseCompanion {
       positionId: positionId,
       depositToken: depositToken,
       depositAmount: depositAmount
+    });
+  }
+
+  function withdraw(
+    IEarnVault vault,
+    uint256 positionId,
+    address[] calldata tokensToWithdraw,
+    uint256[] calldata intendedWithdraw,
+    address recipient
+  )
+    external
+    payable
+    verifyPermission(vault, positionId, WITHDRAW_PERMISSION)
+    returns (uint256[] memory, IEarnStrategy.WithdrawalType[] memory)
+  {
+    return vault.withdraw({
+      positionId: positionId,
+      tokensToWithdraw: tokensToWithdraw,
+      intendedWithdraw: intendedWithdraw,
+      recipient: recipient
     });
   }
 
