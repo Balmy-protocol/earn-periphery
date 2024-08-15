@@ -101,6 +101,44 @@ contract BaseCompanionTest is Test {
     );
     companion.batchPermitTakeFromCaller(tokens, nonce, deadline, signature, recipient);
   }
+
+  function test_sendToRecipient_native() public {
+    uint256 totalAmount = 10e18;
+    uint256 amount = totalAmount / 2;
+    address recipient = address(1);
+    uint256 recipientInitialBalance = recipient.balance;
+    deal(address(companion), totalAmount);
+
+    companion.sendToRecipient(companion.NATIVE_TOKEN(), amount, recipient);
+    assertEq(address(companion).balance, totalAmount - amount);
+    assertEq(recipient.balance - recipientInitialBalance, amount);
+  }
+
+  function test_sendToRecipient_max() public {
+    uint256 amount = 10e18;
+    address recipient = address(1);
+    deal(address(token), address(companion), amount);
+
+    companion.sendToRecipient(address(token), type(uint256).max, recipient);
+    assertEq(token.balanceOf(address(companion)), 0);
+    assertEq(token.balanceOf(recipient), amount);
+  }
+
+  function test_sendToRecipient_zeroAddressRecipient() public {
+    uint256 amount = 10e18;
+    deal(address(token), address(companion), amount);
+
+    companion.sendToRecipient(address(token), amount, address(0));
+    assertEq(token.balanceOf(address(companion)), 0);
+    assertEq(token.balanceOf(address(this)), amount);
+  }
+
+  function test_sendToRecipient_zeroAmount() public {
+    companion.sendToRecipient(address(token), type(uint256).max, address(0));
+
+    // Make sure it never was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.transfer.selector), 0);
+  }
 }
 
 contract BaseCompanionInstance is BaseCompanion {
