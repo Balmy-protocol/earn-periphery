@@ -16,6 +16,20 @@ contract EarnVaultCompanionTest is Test {
     token = new MyToken();
   }
 
+  function test_permissionPermit() public {
+    INFTPermissions.PositionPermissions[] memory permissions = new INFTPermissions.PositionPermissions[](0);
+    uint256 deadline = block.timestamp + 1000;
+    bytes memory signature = "signature";
+
+    vm.mockCall(address(vault), abi.encodeWithSelector(INFTPermissions.permissionPermit.selector), "");
+    // Make sure permissionPermit was called correctly
+    vm.expectCall(
+      address(vault),
+      abi.encodeWithSelector(INFTPermissions.permissionPermit.selector, permissions, deadline, signature)
+    );
+    companion.permissionPermit(vault, permissions, deadline, signature);
+  }
+
   function test_increasePosition_revertWhen_NoPermission() public {
     uint256 positionId = 2;
     uint256 depositAmount = 10e18;
