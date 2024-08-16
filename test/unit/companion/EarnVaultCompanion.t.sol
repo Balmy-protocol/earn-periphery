@@ -8,7 +8,8 @@ import {
   IPermit2,
   IEarnVault,
   INFTPermissions,
-  IEarnStrategy
+  IEarnStrategy,
+  SpecialWithdrawalCode
 } from "src/companion/EarnVaultCompanion.sol";
 
 contract EarnVaultCompanionTest is Test {
@@ -139,6 +140,57 @@ contract EarnVaultCompanionTest is Test {
     assertEq(withdrawn, expectedWithdrawn);
     assertEq(types.length, expectedTypes.length);
     assertTrue(types[0] == expectedTypes[0]);
+  }
+
+  function test_specialWithdraw_revertWhen_NoPermission() public {
+    // Simulate has no permissions
+    vm.mockCall(address(vault), abi.encodeWithSelector(INFTPermissions.hasPermission.selector), abi.encode(false));
+    vm.expectRevert(abi.encodeWithSelector(EarnVaultCompanion.UnauthorizedCaller.selector));
+    companion.specialWithdraw(vault, 2, SpecialWithdrawalCode.wrap(1), "", address(1));
+  }
+
+  function test_specialWithdraw() public {
+    uint256 positionId = 2;
+    SpecialWithdrawalCode code = SpecialWithdrawalCode.wrap(10);
+    bytes memory data = "data";
+    address recipient = address(1);
+
+    address[] memory expectedTokens = new address[](1);
+    expectedTokens[0] = address(token);
+    uint256[] memory expectedWithdrawn = new uint256[](1);
+    expectedWithdrawn[0] = 12_345;
+    IEarnStrategy.WithdrawalType[] memory expectedTypes = new IEarnStrategy.WithdrawalType[](1);
+    bytes memory expectedResult = "result";
+
+    // Simulate has permissions
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(
+        INFTPermissions.hasPermission.selector, positionId, address(this), companion.WITHDRAW_PERMISSION()
+      ),
+      abi.encode(true)
+    );
+    // Simulate special withdrawal
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(IEarnVault.specialWithdraw.selector),
+      abi.encode(expectedTokens, expectedWithdrawn, expectedTypes, expectedResult)
+    );
+    // Make sure special withdrawal was called correctly
+    vm.expectCall(
+      address(vault), abi.encodeWithSelector(IEarnVault.specialWithdraw.selector, positionId, code, data, recipient)
+    );
+    (
+      address[] memory tokens,
+      uint256[] memory withdrawn,
+      IEarnStrategy.WithdrawalType[] memory types,
+      bytes memory result
+    ) = companion.specialWithdraw(vault, positionId, code, data, recipient);
+    assertEq(tokens, expectedTokens);
+    assertEq(withdrawn, expectedWithdrawn);
+    assertEq(types.length, expectedTypes.length);
+    assertTrue(types[0] == expectedTypes[0]);
+    assertEq(result, expectedResult);
   }
 }
 
