@@ -2,6 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import { Test } from "forge-std/Test.sol";
 import {
   EarnVaultCompanion,
@@ -9,16 +10,22 @@ import {
   IEarnVault,
   INFTPermissions,
   IEarnStrategy,
-  SpecialWithdrawalCode
+  SpecialWithdrawalCode,
+  StrategyId,
+  IERC1271
 } from "src/companion/EarnVaultCompanion.sol";
 
 contract EarnVaultCompanionTest is Test {
   IEarnVault private vault;
+  IEarnStrategyRegistry private registry;
+  IEarnStrategy private strategy;
   EarnVaultCompanion private companion;
   IERC20 private token;
 
   function setUp() public virtual {
     vault = IEarnVault(address(1));
+    registry = IEarnStrategyRegistry(address(2));
+    strategy = IEarnStrategy(address(3));
     companion = new EarnVaultCompanion(address(0), address(0), address(1), IPermit2(address(0)));
     token = new MyToken();
   }
@@ -35,6 +42,113 @@ contract EarnVaultCompanionTest is Test {
       abi.encodeWithSelector(INFTPermissions.permissionPermit.selector, permissions, deadline, signature)
     );
     companion.permissionPermit(vault, permissions, deadline, signature);
+  }
+
+  function test_createPosition_native() public {
+    StrategyId strategyId = StrategyId.wrap(3);
+    uint256 depositAmount = 10e18;
+    address depositToken = companion.NATIVE_TOKEN();
+    address owner = address(9);
+    INFTPermissions.PermissionSet[] memory permissions = new INFTPermissions.PermissionSet[](0);
+    bytes memory validationData = "data";
+    bytes memory misc = "misc";
+    uint256 expectedPositionId = 4;
+    uint256 expectedDeposited = 90_415;
+    deal(address(this), depositAmount);
+
+    // Simulate calls
+    vm.mockCall(address(vault), abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector), abi.encode(registry));
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+    vm.mockCall(address(strategy), abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector), "");
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(IEarnVault.createPosition.selector),
+      abi.encode(expectedPositionId, expectedDeposited)
+    );
+    // Make sure approve never was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.approve.selector), 0);
+    // Make sure strategy was called correctly
+    vm.expectCall(
+      address(strategy),
+      abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector, address(this), validationData)
+    );
+    // Make sure increase was called correctly, with value
+    vm.expectCall(
+      address(vault),
+      depositAmount,
+      abi.encodeWithSelector(
+        IEarnVault.createPosition.selector,
+        strategyId,
+        depositToken,
+        depositAmount,
+        owner,
+        permissions,
+        abi.encode(address(strategy)),
+        misc
+      )
+    );
+    (uint256 positionId, uint256 assetsDeposited) = companion.createPosition{ value: depositAmount }(
+      vault, strategyId, depositToken, depositAmount, owner, permissions, validationData, misc, false
+    );
+    assertEq(positionId, expectedPositionId);
+    assertEq(assetsDeposited, expectedDeposited);
+  }
+
+  function test_createPosition_erc20() public {
+    StrategyId strategyId = StrategyId.wrap(3);
+    uint256 depositAmount = 10e18;
+    address depositToken = address(token);
+    address owner = address(9);
+    INFTPermissions.PermissionSet[] memory permissions = new INFTPermissions.PermissionSet[](0);
+    bytes memory validationData = "data";
+    bytes memory misc = "misc";
+    uint256 expectedPositionId = 4;
+    uint256 expectedDeposited = 90_415;
+
+    // Simulate calls
+    vm.mockCall(address(vault), abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector), abi.encode(registry));
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+    vm.mockCall(address(strategy), abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector), "");
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(IEarnVault.createPosition.selector),
+      abi.encode(expectedPositionId, expectedDeposited)
+    );
+    // Make sure max approve was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.approve.selector, address(vault), type(uint256).max));
+    // Make sure strategy was called correctly
+    vm.expectCall(
+      address(strategy),
+      abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector, address(this), validationData)
+    );
+    // Make sure increase was called correctly, with no value
+    vm.expectCall(
+      address(vault),
+      0,
+      abi.encodeWithSelector(
+        IEarnVault.createPosition.selector,
+        strategyId,
+        depositToken,
+        depositAmount,
+        owner,
+        permissions,
+        abi.encode(address(strategy)),
+        misc
+      )
+    );
+    (uint256 positionId, uint256 assetsDeposited) = companion.createPosition(
+      vault, strategyId, depositToken, depositAmount, owner, permissions, validationData, misc, true
+    );
+    assertEq(positionId, expectedPositionId);
+    assertEq(assetsDeposited, expectedDeposited);
   }
 
   function test_increasePosition_revertWhen_NoPermission() public {
@@ -191,6 +305,20 @@ contract EarnVaultCompanionTest is Test {
     assertEq(types.length, expectedTypes.length);
     assertTrue(types[0] == expectedTypes[0]);
     assertEq(result, expectedResult);
+  }
+
+  function test_isValidSignature_valid() public {
+    bytes32 hash;
+    bytes memory signature = abi.encode(address(this));
+    bytes4 result = companion.isValidSignature(hash, signature);
+    assertEq(result, IERC1271.isValidSignature.selector);
+  }
+
+  function test_isValidSignature_invalid() public {
+    bytes32 hash;
+    bytes memory signature = abi.encode(10);
+    bytes4 result = companion.isValidSignature(hash, signature);
+    assertNotEq(result, IERC1271.isValidSignature.selector);
   }
 }
 

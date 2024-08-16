@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: TBD
 pragma solidity >=0.8.22;
 
+import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {
-  IEarnVault, INFTPermissions, IEarnStrategy, SpecialWithdrawalCode
+  StrategyId,
+  IEarnVault,
+  INFTPermissions,
+  IEarnStrategy,
+  SpecialWithdrawalCode
 } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IPermit2 } from "../interfaces/external/IPermit2.sol";
 import { BaseCompanion } from "./BaseCompanion.sol";
 
-contract EarnVaultCompanion is BaseCompanion {
+contract EarnVaultCompanion is BaseCompanion, IERC1271 {
   error UnauthorizedCaller();
 
   using SafeERC20 for IERC20;
@@ -35,6 +40,44 @@ contract EarnVaultCompanion is BaseCompanion {
     payable
   {
     vault.permissionPermit(permissions, deadline, signature);
+  }
+
+  function createPosition(
+    IEarnVault vault,
+    StrategyId strategyId,
+    address depositToken,
+    uint256 depositAmount,
+    address owner_,
+    INFTPermissions.PermissionSet[] calldata permissions,
+    bytes calldata strategyValidationData,
+    bytes calldata misc,
+    bool maxApprove
+  )
+    external
+    payable
+    returns (uint256 positionId, uint256 assetsDeposited)
+  {
+    // Validate position creation against strategy
+    IEarnStrategy strategy = vault.STRATEGY_REGISTRY().getStrategy(strategyId);
+    strategy.validatePositionCreation(msg.sender, strategyValidationData);
+
+    if (maxApprove) {
+      IERC20(depositToken).forceApprove(address(vault), type(uint256).max);
+    }
+
+    // We will pass the strategy's address as the validation data so that we can verify it in `isValidSignature`
+    bytes memory newValidationData = abi.encode(strategy);
+    uint256 value = depositToken == NATIVE_TOKEN ? depositAmount : 0;
+    // slither-disable-next-line arbitrary-send-eth,unused-return (not sure why this is necessary)
+    return vault.createPosition{ value: value }({
+      strategyId: strategyId,
+      depositToken: depositToken,
+      depositAmount: depositAmount,
+      owner: owner_,
+      permissions: permissions,
+      strategyValidationData: newValidationData,
+      misc: misc
+    });
   }
 
   function increasePosition(
@@ -111,5 +154,11 @@ contract EarnVaultCompanion is BaseCompanion {
   modifier verifyPermission(IEarnVault vault, uint256 positionId, INFTPermissions.Permission _permission) {
     if (!vault.hasPermission(positionId, msg.sender, _permission)) revert UnauthorizedCaller();
     _;
+  }
+
+  function isValidSignature(bytes32, bytes memory signature) external view override returns (bytes4) {
+    // We will only consider a signature valid if it is the address of the sender
+    address strategy = abi.decode(signature, (address));
+    return strategy == msg.sender ? IERC1271.isValidSignature.selector : bytes4(0);
   }
 }
