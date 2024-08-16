@@ -23,6 +23,18 @@ contract EarnVaultCompanion is BaseCompanion {
     BaseCompanion(swapper_, allowanceTarget_, owner_, permit2)
   { }
 
+  function permissionPermit(
+    IEarnVault vault,
+    INFTPermissions.PositionPermissions[] calldata permissions,
+    uint256 deadline,
+    bytes calldata signature
+  )
+    external
+    payable
+  {
+    vault.permissionPermit(permissions, deadline, signature);
+  }
+
   function increasePosition(
     IEarnVault vault,
     uint256 positionId,
