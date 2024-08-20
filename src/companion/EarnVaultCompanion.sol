@@ -65,9 +65,15 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
       IERC20(depositToken).forceApprove(address(vault), type(uint256).max);
     }
 
+    uint256 value = 0;
+    if (depositToken == NATIVE_TOKEN) {
+      if (depositAmount == type(uint256).max) {
+        depositAmount = balanceOf(NATIVE_TOKEN);
+      }
+      value = depositAmount;
+    }
     // We will pass the strategy's address as the validation data so that we can verify it in `isValidSignature`
     bytes memory newValidationData = abi.encode(strategy);
-    uint256 value = depositToken == NATIVE_TOKEN ? depositAmount : 0;
     // slither-disable-next-line arbitrary-send-eth,unused-return (not sure why this is necessary)
     return vault.createPosition{ value: value }({
       strategyId: strategyId,
@@ -95,7 +101,13 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     if (maxApprove) {
       IERC20(depositToken).forceApprove(address(vault), type(uint256).max);
     }
-    uint256 value = depositToken == NATIVE_TOKEN ? depositAmount : 0;
+    uint256 value = 0;
+    if (depositToken == NATIVE_TOKEN) {
+      if (depositAmount == type(uint256).max) {
+        depositAmount = balanceOf(NATIVE_TOKEN);
+      }
+      value = depositAmount;
+    }
     // slither-disable-next-line arbitrary-send-eth
     return vault.increasePosition{ value: value }({
       positionId: positionId,

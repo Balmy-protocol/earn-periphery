@@ -76,7 +76,7 @@ contract EarnVaultCompanionTest is Test {
       address(strategy),
       abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector, address(this), validationData)
     );
-    // Make sure increase was called correctly, with value
+    // Make sure create was called correctly, with value
     vm.expectCall(
       address(vault),
       depositAmount,
@@ -93,6 +93,60 @@ contract EarnVaultCompanionTest is Test {
     );
     (uint256 positionId, uint256 assetsDeposited) = companion.createPosition{ value: depositAmount }(
       vault, strategyId, depositToken, depositAmount, owner, permissions, validationData, misc, false
+    );
+    assertEq(positionId, expectedPositionId);
+    assertEq(assetsDeposited, expectedDeposited);
+  }
+
+  function test_createPosition_native_max() public {
+    StrategyId strategyId = StrategyId.wrap(3);
+    uint256 depositAmount = 10e18;
+    address depositToken = companion.NATIVE_TOKEN();
+    address owner = address(9);
+    INFTPermissions.PermissionSet[] memory permissions = new INFTPermissions.PermissionSet[](0);
+    bytes memory validationData = "data";
+    bytes memory misc = "misc";
+    uint256 expectedPositionId = 4;
+    uint256 expectedDeposited = 90_415;
+    deal(address(this), depositAmount);
+
+    // Simulate calls
+    vm.mockCall(address(vault), abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector), abi.encode(registry));
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+    vm.mockCall(address(strategy), abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector), "");
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(IEarnVault.createPosition.selector),
+      abi.encode(expectedPositionId, expectedDeposited)
+    );
+    // Make sure approve never was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.approve.selector), 0);
+    // Make sure strategy was called correctly
+    vm.expectCall(
+      address(strategy),
+      abi.encodeWithSelector(IEarnStrategy.validatePositionCreation.selector, address(this), validationData)
+    );
+    // Make sure create was called correctly, with value
+    vm.expectCall(
+      address(vault),
+      depositAmount,
+      abi.encodeWithSelector(
+        IEarnVault.createPosition.selector,
+        strategyId,
+        depositToken,
+        depositAmount,
+        owner,
+        permissions,
+        abi.encode(address(strategy)),
+        misc
+      )
+    );
+    (uint256 positionId, uint256 assetsDeposited) = companion.createPosition{ value: depositAmount }(
+      vault, strategyId, depositToken, type(uint256).max, owner, permissions, validationData, misc, false
     );
     assertEq(positionId, expectedPositionId);
     assertEq(assetsDeposited, expectedDeposited);
@@ -187,6 +241,35 @@ contract EarnVaultCompanionTest is Test {
     );
     uint256 depositedAssets =
       companion.increasePosition{ value: depositAmount }(vault, positionId, depositToken, depositAmount, false);
+    assertEq(depositedAssets, depositAmount);
+  }
+
+  function test_increasePosition_native_max() public {
+    uint256 positionId = 2;
+    uint256 depositAmount = 10e18;
+    address depositToken = companion.NATIVE_TOKEN();
+    deal(address(this), depositAmount);
+
+    // Simulate has permissions
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(
+        INFTPermissions.hasPermission.selector, positionId, address(this), companion.INCREASE_PERMISSION()
+      ),
+      abi.encode(true)
+    );
+    // Simulate increase
+    vm.mockCall(address(vault), abi.encodeWithSelector(IEarnVault.increasePosition.selector), abi.encode(depositAmount));
+    // Make sure approve never was called
+    vm.expectCall(address(token), abi.encodeWithSelector(IERC20.approve.selector), 0);
+    // Make sure increase was called correctly, with value
+    vm.expectCall(
+      address(vault),
+      depositAmount,
+      abi.encodeWithSelector(IEarnVault.increasePosition.selector, positionId, depositToken, depositAmount)
+    );
+    uint256 depositedAssets =
+      companion.increasePosition{ value: depositAmount }(vault, positionId, depositToken, type(uint256).max, false);
     assertEq(depositedAssets, depositAmount);
   }
 
