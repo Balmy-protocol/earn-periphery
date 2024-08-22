@@ -40,6 +40,7 @@ contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreation
     address[] memory tosAdmins
   )
     TOSCreationValidation(tos, tosAdmins)
+    initializer
   {
     vault = vault_;
     description = description_;

@@ -172,7 +172,7 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
     // We convert the assets to shares with rounding up
     // This way we make sure that the correct amount is withdrawn
     uint256 shares = _convertAssetsToShares(vault, assets);
-    beefyVault().withdraw(shares);
+    vault.withdraw(shares);
 
     uint256 balance = asset.balanceOf(address(this));
     // If we have less assets than requested, we transfer the maximum
