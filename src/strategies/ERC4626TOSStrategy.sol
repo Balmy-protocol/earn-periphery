@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: TBD
 pragma solidity >=0.8.22;
 
-import { IERC4626 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {
   IEarnStrategy,
   SpecialWithdrawalCode,
@@ -25,6 +25,10 @@ contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreation
   /// @inheritdoc IEarnStrategy
   string public description;
 
+  // slither-disable-next-line naming-convention
+  IERC4626 internal immutable _ERC4626Vault;
+  IERC20 internal immutable _vaultAsset;
+
   constructor(
     // General
     IEarnVault vault_,
@@ -35,11 +39,22 @@ contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreation
     bytes memory tos,
     address[] memory tosAdmins
   )
-    ERC4626Connector(farmVault)
     TOSCreationValidation(tos, tosAdmins)
   {
     vault = vault_;
     description = description_;
+    _ERC4626Vault = farmVault;
+    _vaultAsset = IERC20(farmVault.asset());
+    _connector_init();
+  }
+
+  // slither-disable-next-line naming-convention
+  function ERC4626Vault() public view override returns (IERC4626) {
+    return _ERC4626Vault;
+  }
+
+  function _asset() internal view override returns (IERC20) {
+    return _vaultAsset;
   }
 
   /// @inheritdoc IEarnStrategy

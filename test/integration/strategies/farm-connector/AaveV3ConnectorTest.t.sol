@@ -88,14 +88,34 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
 }
 
 contract AaveV3ConnectorInstance is BaseConnectorInstance, AaveV3Connector {
-  constructor(
-    IERC20 __vault,
-    IERC20 __asset,
-    IAaveV3Pool __pool,
-    IAaveV3Rewards __rewards
-  )
-    AaveV3Connector(__vault, __asset, __pool, __rewards)
-  { }
+  IERC20 internal immutable _vault;
+  IERC20 internal immutable _vaultAsset;
+  IAaveV3Pool internal immutable _pool;
+  IAaveV3Rewards internal immutable _rewards;
+
+  constructor(IERC20 __vault, IERC20 __asset, IAaveV3Pool __pool, IAaveV3Rewards __rewards) initializer {
+    _vault = __vault;
+    _vaultAsset = __asset;
+    _pool = __pool;
+    _rewards = __rewards;
+    _connector_init();
+  }
+
+  function pool() public view override returns (IAaveV3Pool) {
+    return _pool;
+  }
+
+  function vault() public view override returns (IERC20) {
+    return _vault;
+  }
+
+  function _asset() internal view override returns (IERC20) {
+    return _vaultAsset;
+  }
+
+  function rewards() public view override returns (IAaveV3Rewards) {
+    return _rewards;
+  }
 }
 
 contract AaveV3RewardsWithAssetRewardsMock is IAaveV3Rewards {

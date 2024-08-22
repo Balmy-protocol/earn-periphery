@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { BeefyConnector, IBeefyVault } from "src/strategies/connector/BeefyConnector.sol";
+import { BeefyConnector, IBeefyVault, IERC20 } from "src/strategies/connector/BeefyConnector.sol";
 import { BaseConnectorInstance } from "./base/BaseConnectorTest.t.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
@@ -28,5 +28,18 @@ contract BeefyConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnect
 }
 
 contract BeefyConnectorInstance is BaseConnectorInstance, BeefyConnector {
-  constructor(IBeefyVault _vault) BeefyConnector(_vault) { }
+  IBeefyVault internal immutable _vault;
+
+  constructor(IBeefyVault __vault) initializer {
+    _vault = __vault;
+    _connector_init();
+  }
+
+  function beefyVault() public view override returns (IBeefyVault) {
+    return _vault;
+  }
+
+  function _asset() internal view override returns (IERC20) {
+    return _vault.want();
+  }
 }

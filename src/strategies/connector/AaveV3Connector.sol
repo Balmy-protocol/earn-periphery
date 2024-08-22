@@ -8,6 +8,7 @@ import {
   IDelayedWithdrawalAdapter,
   StrategyId
 } from "./base/BaseConnector.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
@@ -24,49 +25,50 @@ interface IAaveV3Rewards {
 }
 
 // The AaveV3Connector is an implementation based on AaveV3ERC4626 to interact directly with Aave's Vaults (aTokens)
-contract AaveV3Connector is BaseConnector {
+abstract contract AaveV3Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  IERC20 internal immutable _vault;
-  IERC20 internal immutable _asset;
-  IAaveV3Pool internal immutable _pool;
-  IAaveV3Rewards internal immutable _rewards;
-
-  constructor(IERC20 vault, IERC20 asset, IAaveV3Pool pool, IAaveV3Rewards rewards) {
-    _vault = vault;
-    _asset = asset;
-    _pool = pool;
-    _rewards = rewards;
-    maxApprovePool();
-  }
+  /// @notice Returns the pool's address
+  function pool() public view virtual returns (IAaveV3Pool);
+  /// @notice Returns the vault's address
+  function vault() public view virtual returns (IERC20);
+  /// @notice Returns the rewards contractt's address
+  function rewards() public view virtual returns (IAaveV3Rewards);
+  function _asset() internal view virtual returns (IERC20);
 
   /// @notice Performs a max approve to the pool, so that we can deposit without any worries
   function maxApprovePool() public {
-    _asset.forceApprove(address(_pool), type(uint256).max);
+    _asset().forceApprove(address(pool()), type(uint256).max);
   }
 
   /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and
   /// deposits them
   function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
+    IAaveV3Rewards rewards_ = rewards();
     address[] memory asset = new address[](1);
-    asset[0] = address(_vault);
-    amountToClaim = _rewards.getUserRewards(asset, address(this), _connector_asset());
+    asset[0] = address(vault());
+    amountToClaim = rewards_.getUserRewards(asset, address(this), _connector_asset());
     if (amountToClaim > 0) {
-      _rewards.claimRewards(asset, amountToClaim, address(this), _connector_asset());
-      _pool.supply(_connector_asset(), amountToClaim, address(this), 0);
+      rewards_.claimRewards(asset, amountToClaim, address(this), _connector_asset());
+      pool().supply(_connector_asset(), amountToClaim, address(this), 0);
     }
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function _connector_init() internal onlyInitializing {
+    maxApprovePool();
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
-    return address(_asset);
+    return address(_asset());
   }
 
   // slither-disable-start assembly
   // slither-disable-next-line naming-convention,dead-code,assembly
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
-    address[] memory rewardsList = _rewards.getRewardsByAsset(address(_vault));
+    address[] memory rewardsList = rewards().getRewardsByAsset(address(vault()));
 
     uint256 rewardsListLength = rewardsList.length;
     tokens = new address[](rewardsListLength + 1);
@@ -91,14 +93,14 @@ contract AaveV3Connector is BaseConnector {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(_vault);
+    return depositToken == _connector_asset() || depositToken == address(vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
-    supported[1] = address(_vault);
+    supported[1] = address(vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -156,13 +158,15 @@ contract AaveV3Connector is BaseConnector {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
+    IERC20 vault_ = vault();
+    IAaveV3Rewards rewards_ = rewards();
     tokens = _connector_allTokens();
     balances = new uint256[](tokens.length);
-    balances[0] = _vault.balanceOf(address(this));
+    balances[0] = vault_.balanceOf(address(this));
     address[] memory asset = new address[](1);
-    asset[0] = address(_vault);
+    asset[0] = address(vault_);
     for (uint256 i = 1; i < tokens.length; ++i) {
-      balances[i] = _rewards.getUserRewards(asset, address(this), tokens[i]);
+      balances[i] = rewards_.getUserRewards(asset, address(this), tokens[i]);
     }
   }
 
@@ -181,9 +185,9 @@ contract AaveV3Connector is BaseConnector {
     returns (uint256 assetsDeposited)
   {
     if (depositToken == _connector_asset()) {
-      _pool.supply(depositToken, depositAmount, address(this), 0);
+      pool().supply(depositToken, depositAmount, address(this), 0);
       return depositAmount;
-    } else if (depositToken == address(_vault)) {
+    } else if (depositToken == address(vault())) {
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
@@ -201,17 +205,18 @@ contract AaveV3Connector is BaseConnector {
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
+    IAaveV3Rewards rewards_ = rewards();
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
       // slither-disable-next-line unused-return
-      _pool.withdraw(address(_asset), assets, recipient);
+      pool().withdraw(address(_asset()), assets, recipient);
     }
     address[] memory asset = new address[](1);
-    asset[0] = address(_vault);
+    asset[0] = address(vault());
     for (uint256 i = 1; i < tokens.length; ++i) {
       uint256 amountToWithdraw = toWithdraw[i];
       if (amountToWithdraw > 0) {
-        _rewards.claimRewards(asset, amountToWithdraw, recipient, tokens[i]);
+        rewards_.claimRewards(asset, amountToWithdraw, recipient, tokens[i]);
       }
     }
     return new IEarnStrategy.WithdrawalType[](tokens.length);
@@ -235,7 +240,7 @@ contract AaveV3Connector is BaseConnector {
       withdrawalTypes = _connector_supportedWithdrawals();
       withdrawn = new uint256[](withdrawalTypes.length);
       uint256 assets = abi.decode(withdrawData, (uint256));
-      IERC20(_vault).safeTransfer(recipient, assets);
+      vault().safeTransfer(recipient, assets);
       withdrawn[0] = assets;
       result = abi.encode(assets);
     } else {
@@ -252,8 +257,9 @@ contract AaveV3Connector is BaseConnector {
     override
     returns (bytes memory)
   {
-    uint256 balance = _vault.balanceOf(address(this));
-    IERC20(_vault).safeTransfer(address(newStrategy), balance);
+    IERC20 vault_ = vault();
+    uint256 balance = vault_.balanceOf(address(this));
+    vault_.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
   }
 
