@@ -3,10 +3,11 @@ pragma solidity >=0.8.22;
 
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { BaseCreationValidation } from "./base/BaseCreationValidation.sol";
 
-abstract contract TOSCreationValidation is BaseCreationValidation, AccessControl {
+abstract contract TOSCreationValidation is BaseCreationValidation, AccessControl, Initializable {
   /**
    * @notice Emitted when the TOS is updated
    * @param tos The new TOS
@@ -25,7 +26,8 @@ abstract contract TOSCreationValidation is BaseCreationValidation, AccessControl
   /// @notice The hash of the current TOS
   bytes32 public tosHash;
 
-  constructor(bytes memory tos, address[] memory admins) {
+  // slither-disable-next-line naming-convention,dead-code
+  function _creationValidation_init(bytes memory tos, address[] memory admins) internal onlyInitializing {
     _setTOS(tos);
     for (uint256 i; i < admins.length; ++i) {
       _grantRole(TOS_UPDATE_ROLE, admins[i]);
