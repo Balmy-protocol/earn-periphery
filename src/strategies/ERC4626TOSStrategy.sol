@@ -38,15 +38,13 @@ contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreation
     // TOS validation
     bytes memory tos,
     address[] memory tosAdmins
-  )
-    TOSCreationValidation(tos, tosAdmins)
-    initializer
-  {
+  ) {
     vault = vault_;
     description = description_;
     _ERC4626Vault = farmVault;
     _vaultAsset = IERC20(farmVault.asset());
     _connector_init();
+    _creationValidation_init(tos, tosAdmins);
   }
 
   // slither-disable-next-line naming-convention

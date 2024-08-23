@@ -75,7 +75,9 @@ contract TOSCreationValidationTest is Test {
 }
 
 contract TOSCreationValidationInstance is TOSCreationValidation {
-  constructor(bytes memory tos, address[] memory admins) TOSCreationValidation(tos, admins) { }
+  constructor(bytes memory tos, address[] memory admins) initializer {
+    _creationValidation_init(tos, admins);
+  }
 
   function validate(address sender, bytes calldata signature) external view {
     _creationValidation_validate(sender, signature);
