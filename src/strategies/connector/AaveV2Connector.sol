@@ -9,6 +9,7 @@ import {
   StrategyId
 } from "./base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 
@@ -17,29 +18,29 @@ interface IAaveV2Pool {
   function withdraw(address asset, uint256 amount, address to) external returns (uint256);
 }
 
-contract AaveV2Connector is BaseConnector {
+abstract contract AaveV2Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  IERC20 internal immutable _vault;
-  IERC20 internal immutable _asset;
-  IAaveV2Pool internal immutable _pool;
-
-  constructor(IERC20 vault, IERC20 asset, IAaveV2Pool pool) {
-    _vault = vault;
-    _asset = asset;
-    _pool = pool;
-    maxApprovePool();
-  }
+  /// @notice Returns the pool's address
+  function pool() public view virtual returns (IAaveV2Pool);
+  /// @notice Returns the vault's address
+  function vault() public view virtual returns (IERC20);
+  function _asset() internal view virtual returns (IERC20);
 
   /// @notice Performs a max approve to the pool, so that we can deposit without any worries
   function maxApprovePool() public {
-    _asset.forceApprove(address(_pool), type(uint256).max);
+    _asset().forceApprove(address(pool()), type(uint256).max);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_init() internal onlyInitializing {
+    maxApprovePool();
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
-    return address(_asset);
+    return address(_asset());
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -50,14 +51,14 @@ contract AaveV2Connector is BaseConnector {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(_vault);
+    return depositToken == _connector_asset() || depositToken == address(vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
-    supported[1] = address(_vault);
+    supported[1] = address(vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -118,7 +119,7 @@ contract AaveV2Connector is BaseConnector {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = _vault.balanceOf(address(this));
+    balances[0] = vault().balanceOf(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -136,9 +137,9 @@ contract AaveV2Connector is BaseConnector {
     returns (uint256 assetsDeposited)
   {
     if (depositToken == _connector_asset()) {
-      _pool.deposit(depositToken, depositAmount, address(this), 0);
+      pool().deposit(depositToken, depositAmount, address(this), 0);
       return depositAmount;
-    } else if (depositToken == address(_vault)) {
+    } else if (depositToken == address(vault())) {
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
@@ -158,7 +159,7 @@ contract AaveV2Connector is BaseConnector {
   {
     uint256 assets = toWithdraw[0];
     // slither-disable-next-line unused-return
-    _pool.withdraw(address(_asset), assets, recipient);
+    pool().withdraw(address(_asset()), assets, recipient);
     return _connector_supportedWithdrawals();
   }
 
@@ -180,7 +181,7 @@ contract AaveV2Connector is BaseConnector {
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
       uint256 assets = abi.decode(withdrawData, (uint256));
-      IERC20(_vault).safeTransfer(recipient, assets);
+      vault().safeTransfer(recipient, assets);
       withdrawn[0] = assets;
       result = abi.encode(assets);
     } else {
@@ -197,8 +198,9 @@ contract AaveV2Connector is BaseConnector {
     override
     returns (bytes memory)
   {
-    uint256 balance = _vault.balanceOf(address(this));
-    IERC20(_vault).safeTransfer(address(newStrategy), balance);
+    IERC20 vault_ = vault();
+    uint256 balance = vault_.balanceOf(address(this));
+    vault_.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
   }
 

@@ -49,5 +49,26 @@ contract AaveV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
 }
 
 contract AaveV2ConnectorInstance is BaseConnectorInstance, AaveV2Connector {
-  constructor(IERC20 __vault, IERC20 __asset, IAaveV2Pool __pool) AaveV2Connector(__vault, __asset, __pool) { }
+  IERC20 internal immutable _vault;
+  IERC20 internal immutable _vaultAsset;
+  IAaveV2Pool internal immutable _pool;
+
+  constructor(IERC20 __vault, IERC20 __asset, IAaveV2Pool __pool) initializer {
+    _vault = __vault;
+    _vaultAsset = __asset;
+    _pool = __pool;
+    _connector_init();
+  }
+
+  function pool() public view override returns (IAaveV2Pool) {
+    return _pool;
+  }
+
+  function vault() public view override returns (IERC20) {
+    return _vault;
+  }
+
+  function _asset() internal view override returns (IERC20) {
+    return _vaultAsset;
+  }
 }

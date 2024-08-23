@@ -3,35 +3,35 @@ pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { StrategyId, IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 import { BaseConnector } from "./base/BaseConnector.sol";
 
-abstract contract ERC4626Connector is BaseConnector {
+abstract contract ERC4626Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using SafeERC20 for IERC4626;
 
   /// @notice Returns the address of the ERC4626 vault
   // slither-disable-next-line naming-convention
-  IERC4626 public immutable ERC4626Vault;
-  address internal immutable _assetToken;
-
-  constructor(IERC4626 vault) {
-    ERC4626Vault = vault;
-    _assetToken = vault.asset();
-    maxApproveVault();
-  }
+  function ERC4626Vault() public view virtual returns (IERC4626);
+  function _asset() internal view virtual returns (IERC20);
 
   /// @notice Performs a max approve to the vault, so that we can deposit without any worries
   function maxApproveVault() public {
-    IERC20(_connector_asset()).forceApprove(address(ERC4626Vault), type(uint256).max);
+    _asset().forceApprove(address(ERC4626Vault()), type(uint256).max);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_init() internal onlyInitializing {
+    maxApproveVault();
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view override returns (address) {
-    return _assetToken;
+    return address(_asset());
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -53,21 +53,22 @@ abstract contract ERC4626Connector is BaseConnector {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(ERC4626Vault);
+    return depositToken == _connector_asset() || depositToken == address(ERC4626Vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view virtual override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
-    supported[1] = address(ERC4626Vault);
+    supported[1] = address(ERC4626Vault());
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
+    IERC4626 vault = ERC4626Vault();
     if (depositToken == _connector_asset()) {
-      return ERC4626Vault.maxDeposit(address(this));
-    } else if (depositToken == address(ERC4626Vault)) {
+      return vault.maxDeposit(address(this));
+    } else if (depositToken == address(vault)) {
       return type(uint256).max;
     } else {
       revert InvalidDepositToken(depositToken);
@@ -82,10 +83,11 @@ abstract contract ERC4626Connector is BaseConnector {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
+    IERC4626 vault = ERC4626Vault();
     tokens = new address[](1);
     tokens[0] = _connector_asset();
     balances = new uint256[](1);
-    balances[0] = ERC4626Vault.previewRedeem(ERC4626Vault.balanceOf(address(this)));
+    balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -126,7 +128,7 @@ abstract contract ERC4626Connector is BaseConnector {
     tokens = new address[](1);
     tokens[0] = _connector_asset();
     withdrawable = new uint256[](1);
-    withdrawable[0] = ERC4626Vault.maxWithdraw(address(this));
+    withdrawable[0] = ERC4626Vault().maxWithdraw(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -151,13 +153,14 @@ abstract contract ERC4626Connector is BaseConnector {
     override
     returns (uint256 assetsDeposited)
   {
+    IERC4626 vault = ERC4626Vault();
     if (depositToken == _connector_asset()) {
-      uint256 shares = ERC4626Vault.deposit(depositAmount, address(this));
+      uint256 shares = vault.deposit(depositAmount, address(this));
       // Note: there might be slippage or a deposit fee, so we will re-calculate the amount of assets deposited
       //       based on the amount of shares minted
-      return ERC4626Vault.previewRedeem(shares);
-    } else if (depositToken == address(ERC4626Vault)) {
-      return ERC4626Vault.previewRedeem(depositAmount);
+      return vault.previewRedeem(shares);
+    } else if (depositToken == address(vault)) {
+      return vault.previewRedeem(depositAmount);
     } else {
       revert InvalidDepositToken(depositToken);
     }
@@ -177,7 +180,7 @@ abstract contract ERC4626Connector is BaseConnector {
   {
     // Note: we assume params are consistent and valid because they were validated by the EarnVault
     // slither-disable-next-line unused-return
-    ERC4626Vault.withdraw(toWithdraw[0], recipient, address(this));
+    ERC4626Vault().withdraw(toWithdraw[0], recipient, address(this));
     return _connector_supportedWithdrawals();
   }
 
@@ -193,19 +196,20 @@ abstract contract ERC4626Connector is BaseConnector {
     override
     returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
   {
+    IERC4626 vault = ERC4626Vault();
     withdrawn = new uint256[](1);
     withdrawalTypes = new IEarnStrategy.WithdrawalType[](1);
 
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = abi.decode(withdrawData, (uint256));
-      uint256 assets = ERC4626Vault.previewRedeem(shares);
-      ERC4626Vault.safeTransfer(recipient, shares);
+      uint256 assets = vault.previewRedeem(shares);
+      vault.safeTransfer(recipient, shares);
       withdrawn[0] = assets;
       result = abi.encode(assets);
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
       uint256 assets = abi.decode(withdrawData, (uint256));
-      uint256 shares = ERC4626Vault.previewWithdraw(assets);
-      ERC4626Vault.safeTransfer(recipient, shares);
+      uint256 shares = vault.previewWithdraw(assets);
+      vault.safeTransfer(recipient, shares);
       withdrawn[0] = assets;
       result = abi.encode(shares);
     } else {
@@ -223,8 +227,9 @@ abstract contract ERC4626Connector is BaseConnector {
     override
     returns (bytes memory)
   {
-    uint256 balance = ERC4626Vault.balanceOf(address(this));
-    ERC4626Vault.safeTransfer(address(newStrategy), balance);
+    IERC4626 vault = ERC4626Vault();
+    uint256 balance = vault.balanceOf(address(this));
+    vault.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
   }
 
