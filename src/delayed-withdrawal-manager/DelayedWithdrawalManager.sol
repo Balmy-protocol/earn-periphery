@@ -37,8 +37,12 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager {
 
   /// @inheritdoc IDelayedWithdrawalManager
   function estimatedPendingFunds(uint256 positionId, address token) public view returns (uint256 pendingFunds) {
+    for (uint256 i = 0; i < 1000; i++) {
+      _registeredAdapters.get(positionId, token);
+    }
     mapping(uint256 index => RegisteredAdapter registeredAdapter) storage registeredAdapters =
       _registeredAdapters.get(positionId, token);
+
     uint256 i = 0;
 
     bool shouldContinue = true;
