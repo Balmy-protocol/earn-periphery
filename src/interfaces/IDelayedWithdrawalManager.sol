@@ -78,9 +78,7 @@ interface IDelayedWithdrawalManager {
    * @return estimatedPending The estimated amount of funds that are pending for withdrawal
    * @return withdrawable The amount of funds that are available for withdrawal
    */
-  function allPositionFunds(
-    uint256 positionId
-  )
+  function allPositionFunds(uint256 positionId)
     external
     view
     returns (address[] memory tokens, uint256[] memory estimatedPending, uint256[] memory withdrawable);

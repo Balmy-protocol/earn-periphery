@@ -117,9 +117,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(
-    SpecialWithdrawalCode withdrawalCode
-  )
+  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
     internal
     pure
     override

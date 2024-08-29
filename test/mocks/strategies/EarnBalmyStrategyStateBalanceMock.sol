@@ -25,9 +25,7 @@ contract EarnBalmyStrategyStateBalanceMock is EarnStrategyStateBalanceMock, IEar
     }
   }
 
-  function supportsInterface(
-    bytes4 interfaceId
-  )
+  function supportsInterface(bytes4 interfaceId)
     external
     pure
     override(EarnStrategyStateBalanceMock, IERC165)
