@@ -13,7 +13,6 @@ contract TosManagerTest is PRBTest {
   TOSManager private tosManager;
 
   function setUp() public virtual {
-    vm.expectEmit();
     tosManager = new TOSManager(superAdmin, CommonUtils.arrayOf(manageTosAdmin));
   }
 
