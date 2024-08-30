@@ -28,9 +28,11 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ITOSManager
+  // solhint-disable no-empty-blocks
   function getStrategyTOSHash(StrategyId strategyId) public view returns (bytes32) { }
 
   /// @inheritdoc ITOSManager
+  // solhint-disable no-empty-blocks
   function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view { }
 
   /// @inheritdoc ITOSManager
@@ -41,5 +43,6 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ITOSManager
+  // solhint-disable no-empty-blocks
   function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external { }
 }

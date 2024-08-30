@@ -12,7 +12,7 @@ contract TosManagerTest is PRBTest {
   event TOSUpdated(bytes32 group, bytes tos);
   event StrategyAssignedToGroup(StrategyId strategyId, bytes32 group);
 
-  bytes32 private constant group1 = keccak256("group1");
+  bytes32 private constant GROUP_1 = keccak256("group1");
   address private superAdmin = address(1);
   address private manageTosAdmin = address(2);
   TOSManager private tosManager;
@@ -37,20 +37,20 @@ contract TosManagerTest is PRBTest {
   function test_updateTOS() public {
     vm.prank(manageTosAdmin);
     vm.expectEmit();
-    emit TOSUpdated(group1, "new tos");
-    tosManager.updateTOS(group1, "new tos");
-    assertEq(tosManager.getGroupTOSHash(group1), MessageHashUtils.toEthSignedMessageHash(bytes("new tos")));
+    emit TOSUpdated(GROUP_1, "new tos");
+    tosManager.updateTOS(GROUP_1, "new tos");
+    assertEq(tosManager.getGroupTOSHash(GROUP_1), MessageHashUtils.toEthSignedMessageHash(bytes("new tos")));
   }
 
   function test_updateTOS_clearTOS() public {
     // Set a TOS
-    vm.prank(manageTosAdmin);    
-    tosManager.updateTOS(group1, "new tos");
+    vm.prank(manageTosAdmin);
+    tosManager.updateTOS(GROUP_1, "new tos");
 
     // Clear it
-    vm.prank(manageTosAdmin);    
-    tosManager.updateTOS(group1, "");
-    assertEq(tosManager.getGroupTOSHash(group1), bytes32(0));
+    vm.prank(manageTosAdmin);
+    tosManager.updateTOS(GROUP_1, "");
+    assertEq(tosManager.getGroupTOSHash(GROUP_1), bytes32(0));
   }
 
   function test_updateTOS_revertWhen_calledWithoutRole() public {
@@ -59,6 +59,6 @@ contract TosManagerTest is PRBTest {
         IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), tosManager.MANAGE_TOS_ROLE()
       )
     );
-    tosManager.updateTOS(group1, "new tos");
+    tosManager.updateTOS(GROUP_1, "new tos");
   }
 }
