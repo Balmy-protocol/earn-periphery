@@ -42,6 +42,17 @@ contract TosManagerTest is PRBTest {
     assertEq(tosManager.getGroupTOSHash(group1), MessageHashUtils.toEthSignedMessageHash(bytes("new tos")));
   }
 
+  function test_updateTOS_clearTOS() public {
+    // Set a TOS
+    vm.prank(manageTosAdmin);    
+    tosManager.updateTOS(group1, "new tos");
+
+    // Clear it
+    vm.prank(manageTosAdmin);    
+    tosManager.updateTOS(group1, "");
+    assertEq(tosManager.getGroupTOSHash(group1), bytes32(0));
+  }
+
   function test_updateTOS_revertWhen_calledWithoutRole() public {
     vm.expectRevert(
       abi.encodeWithSelector(
