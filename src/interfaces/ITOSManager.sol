@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.8;
 
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
 /**
  * @title TOS Manager Interface
@@ -23,6 +23,13 @@ interface ITOSManager {
    */
   // slither-disable-next-line naming-convention
   function MANAGE_TOS_ROLE() external view returns (bytes32);
+
+  /**
+   * @notice Returns the address of the strategy registry
+   * @return The address of the strategy registry
+   */
+  // slither-disable-next-line naming-convention
+  function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
 
   /// @notice Returns the strategy's TOS hash. If empty, then the strategy does not have TOS assigned
   function getStrategyTOSHash(StrategyId strategyId) external view returns (bytes32);
