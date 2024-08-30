@@ -27,11 +27,19 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
     }
   }
 
+  /// @inheritdoc ITOSManager
   function getStrategyTOSHash(StrategyId strategyId) public view returns (bytes32) { }
 
+  /// @inheritdoc ITOSManager
   function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view { }
 
-  function updateTOS(bytes32 group, bytes calldata tos) external { }
+  /// @inheritdoc ITOSManager
+  function updateTOS(bytes32 group, bytes calldata tos) external onlyRole(MANAGE_TOS_ROLE) {
+    bytes32 tosHash = tos.length == 0 ? bytes32(0) : tos.toEthSignedMessageHash();
+    getGroupTOSHash[group] = tosHash;
+    emit TOSUpdated(group, tos);
+  }
 
+  /// @inheritdoc ITOSManager
   function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external { }
 }
