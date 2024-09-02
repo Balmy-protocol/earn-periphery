@@ -13,6 +13,7 @@ contract TosManagerTest is PRBTest {
   event StrategyAssignedToGroup(StrategyId strategyId, bytes32 group);
 
   bytes32 private constant GROUP_1 = keccak256("group1");
+  bytes32 private constant GROUP_2 = keccak256("group2");
   address private superAdmin = address(1);
   address private manageTosAdmin = address(2);
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(3));
@@ -95,11 +96,18 @@ contract TosManagerTest is PRBTest {
       address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector), abi.encode(strategy)
     );
 
+    vm.startPrank(strategy);
     vm.expectEmit();
     emit StrategyAssignedToGroup(strategyId, GROUP_1);
-    vm.prank(strategy);
     tosManager.assignStrategyToGroup(strategyId, GROUP_1);
     assertEq(tosManager.getStrategyGroup(strategyId), GROUP_1);
+
+    // Now try updating it again
+    vm.expectEmit();
+    emit StrategyAssignedToGroup(strategyId, GROUP_2);
+    tosManager.assignStrategyToGroup(strategyId, GROUP_2);
+    assertEq(tosManager.getStrategyGroup(strategyId), GROUP_2);
+    vm.stopPrank();
   }
 
   function test_assignStrategyToGroup_revertWhen_calledWithoutRoleAndCallerIsNotStrategy() public {
