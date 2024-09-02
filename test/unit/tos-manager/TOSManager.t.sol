@@ -2,13 +2,16 @@
 pragma solidity >=0.8.22;
 
 // solhint-disable no-unused-import
-import { PRBTest } from "@prb/test/PRBTest.sol";
-import { TOSManager, StrategyId, IEarnStrategyRegistry } from "src/tos-manager/TOSManager.sol";
+import { Test } from "forge-std/Test.sol";
+import { ITOSManager, TOSManager, StrategyId, IEarnStrategyRegistry } from "src/tos-manager/TOSManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
+
+import { VmSafe } from "forge-std/Vm.sol";
+import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-contract TosManagerTest is PRBTest {
+contract TosManagerTest is Test {
   event TOSUpdated(bytes32 group, bytes tos);
   event StrategyAssignedToGroup(StrategyId strategyId, bytes32 group);
 
@@ -18,6 +21,7 @@ contract TosManagerTest is PRBTest {
   address private manageTosAdmin = address(2);
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(3));
   TOSManager private tosManager;
+  VmSafe.Wallet private alice = vm.createWallet("alice");
 
   function setUp() public virtual {
     tosManager = new TOSManager(registry, superAdmin, CommonUtils.arrayOf(manageTosAdmin));
@@ -49,6 +53,47 @@ contract TosManagerTest is PRBTest {
     vm.prank(manageTosAdmin);
     tosManager.updateTOS(GROUP_1, "tos");
     assertEq(tosManager.getStrategyTOSHash(strategyId), MessageHashUtils.toEthSignedMessageHash(bytes("tos")));
+  }
+
+  function test_validate_tosIsSet_signature() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.startPrank(manageTosAdmin);
+    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+    tosManager.updateTOS(GROUP_1, "tos");
+    vm.stopPrank();
+
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(alice, tosManager.getStrategyTOSHash(strategyId));
+    bytes memory signature = abi.encodePacked(r, s, v);
+    tosManager.validatePositionCreation(strategyId, alice.addr, signature);
+  }
+
+  function test_validate_tosIsSet_ERC1271() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.startPrank(manageTosAdmin);
+    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+    tosManager.updateTOS(GROUP_1, "tos");
+    vm.stopPrank();
+
+    bytes memory signature = "my signature";
+    MyContract caller = new MyContract(tosManager.getStrategyTOSHash(strategyId), signature);
+    tosManager.validatePositionCreation(strategyId, address(caller), signature);
+  }
+
+  function test_validate_tosIsNotSet() public view {
+    // Since TOS is empty, signature can be anything
+    StrategyId strategyId = StrategyId.wrap(1);
+    tosManager.validatePositionCreation(strategyId, address(0), "");
+  }
+
+  function test_validate_revertWhen_signatureIsInvalid() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.startPrank(manageTosAdmin);
+    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+    tosManager.updateTOS(GROUP_1, "tos");
+    vm.stopPrank();
+
+    vm.expectRevert(abi.encodeWithSelector(ITOSManager.InvalidTOSSignature.selector));
+    tosManager.validatePositionCreation(strategyId, alice.addr, "");
   }
 
   function test_updateTOS() public {
@@ -114,5 +159,20 @@ contract TosManagerTest is PRBTest {
     StrategyId strategyId = StrategyId.wrap(1);
     vm.expectRevert(abi.encodeWithSelector(TOSManager.UnauthorizedCaller.selector));
     tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+  }
+}
+
+contract MyContract is IERC1271 {
+  bytes32 private _expectedHash;
+  bytes private _expectedSignature;
+
+  constructor(bytes32 expectedHash, bytes memory expectedSignature) {
+    _expectedHash = expectedHash;
+    _expectedSignature = expectedSignature;
+  }
+
+  function isValidSignature(bytes32 hash, bytes memory signature) external view override returns (bytes4 magicValue) {
+    return
+      hash == _expectedHash && keccak256(signature) == keccak256(_expectedSignature) ? bytes4(0x1626ba7e) : bytes4(0x0);
   }
 }
