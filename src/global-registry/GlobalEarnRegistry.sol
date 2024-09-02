@@ -5,12 +5,12 @@ import { Ownable2Step, Ownable } from "@openzeppelin/contracts/access/Ownable2St
 import { IGlobalEarnRegistry } from "../interfaces/IGlobalEarnRegistry.sol";
 
 contract GlobalEarnRegistry is IGlobalEarnRegistry, Ownable2Step {
-  mapping(bytes32 id => address contractAddress) private _addresses;
+  mapping(bytes32 id => address contractAddress) public getAddress;
 
   constructor(address owner_) Ownable(owner_) { }
 
-  function getAddress(bytes32 id) external view returns (address) {
-    address contractAddress = _addresses[id];
+  function getAddressOrFail(bytes32 id) external view returns (address) {
+    address contractAddress = getAddress[id];
     if (contractAddress == address(0)) {
       revert AddressNotSet(id);
     }
@@ -18,7 +18,7 @@ contract GlobalEarnRegistry is IGlobalEarnRegistry, Ownable2Step {
   }
 
   function setAddress(bytes32 id, address contractAddress) external onlyOwner {
-    _addresses[id] = contractAddress;
+    getAddress[id] = contractAddress;
     emit AddressSet(id, contractAddress);
   }
 }

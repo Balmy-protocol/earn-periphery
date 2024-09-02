@@ -17,9 +17,13 @@ contract GlobalEarnRegistryTest is PRBTest {
     globalRegistry = new GlobalEarnRegistry(owner);
   }
 
-  function test_getAddress_RevertWhen_NotSet() public {
+  function test_getAddress_NotSet() public {
+    assertEq(globalRegistry.getAddress(ID_1), address(0));
+  }
+
+  function test_getAddressOrFail_RevertWhen_NotSet() public {
     vm.expectRevert(abi.encodeWithSelector(IGlobalEarnRegistry.AddressNotSet.selector, ID_1));
-    globalRegistry.getAddress(ID_1);
+    globalRegistry.getAddressOrFail(ID_1);
   }
 
   function test_setAddress_RevertWhen_CalledByNonOwner() public {
