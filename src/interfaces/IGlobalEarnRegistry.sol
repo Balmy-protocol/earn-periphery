@@ -14,11 +14,18 @@ interface IGlobalEarnRegistry {
 
   /**
    * @notice Returns the address of the contract with the given id
+   * @param id The id of the contract
+   * @return The address of the contract (or zero address if not set)
+   */
+  function getAddress(bytes32 id) external view returns (address);
+
+  /**
+   * @notice Returns the address of the contract with the given id
    * @dev Will revert if the contract has not been registered
    * @param id The id of the contract
    * @return The address of the contract
    */
-  function getAddress(bytes32 id) external view returns (address);
+  function getAddressOrFail(bytes32 id) external view returns (address);
 
   /**
    * @notice Sets the address of the contract with the given id
