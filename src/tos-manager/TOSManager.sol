@@ -4,6 +4,7 @@ pragma solidity >=0.8.22;
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { ITOSManager, IEarnStrategyRegistry, StrategyId } from "../interfaces/ITOSManager.sol";
 
 contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
@@ -42,8 +43,12 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ITOSManager
-  // solhint-disable no-empty-blocks
-  function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view { }
+  function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view {
+    bytes32 tosHash = getStrategyTOSHash(strategyId);
+    if (tosHash != bytes32(0) && !SignatureChecker.isValidSignatureNow(sender, tosHash, signature)) {
+      revert InvalidTOSSignature();
+    }
+  }
 
   /// @inheritdoc ITOSManager
   function updateTOS(bytes32 group, bytes calldata tos) external onlyRole(MANAGE_TOS_ROLE) {
