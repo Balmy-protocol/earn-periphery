@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { Test } from "forge-std/Test.sol";
 import { VmSafe } from "forge-std/Vm.sol";
 import {
@@ -88,20 +85,5 @@ contract ExternalTOSCreationValidationInstance is ExternalTOSCreationValidation 
 
   function strategyId() public view virtual override returns (StrategyId) {
     return _strategyId;
-  }
-}
-
-contract MyContract is IERC1271 {
-  bytes32 private _expectedHash;
-  bytes private _expectedSignature;
-
-  constructor(bytes32 expectedHash, bytes memory expectedSignature) {
-    _expectedHash = expectedHash;
-    _expectedSignature = expectedSignature;
-  }
-
-  function isValidSignature(bytes32 hash, bytes memory signature) external view override returns (bytes4 magicValue) {
-    return
-      hash == _expectedHash && keccak256(signature) == keccak256(_expectedSignature) ? bytes4(0x1626ba7e) : bytes4(0x0);
   }
 }
