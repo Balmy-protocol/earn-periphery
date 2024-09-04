@@ -13,9 +13,9 @@ import {
 contract ExternalTOSCreationValidationTest is Test {
   bytes32 private constant GROUP_1 = keccak256("group1");
   ExternalTOSCreationValidationInstance private tosValidation;
-  IGlobalEarnRegistry registry = IGlobalEarnRegistry(address(1));
-  ITOSManager manager = ITOSManager(address(2));
-  StrategyId strategyId = StrategyId.wrap(1);
+  IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
+  ITOSManager private manager = ITOSManager(address(2));
+  StrategyId private strategyId = StrategyId.wrap(1);
   VmSafe.Wallet private alice = vm.createWallet("alice");
 
   function setUp() public virtual {
