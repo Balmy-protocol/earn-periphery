@@ -15,15 +15,17 @@ interface IFeeManager {
   /**
    * @notice Emitted when a new default fees are set
    * @param fees The new fees
+   * @param recipient The fees recipient
    */
-  event DefaultFeesChanged(Fees fees);
+  event DefaultFeesChanged(Fees fees, address recipient);
 
   /**
    * @notice Emitted when a new strategy fees are set
    * @param strategy The strategy
    * @param fees The new fees
+   * @param recipient The fees recipient
    */
-  event StrategyFeesChanged(StrategyId strategy, Fees fees);
+  event StrategyFeesChanged(StrategyId strategy, Fees fees, address recipient);
 
   /**
    * @notice Returns the role in charge of managing fees
@@ -44,20 +46,21 @@ interface IFeeManager {
    * @param strategyId The strategy to get the fees for
    * @return The strategy fees
    */
-  function getFees(StrategyId strategyId) external view returns (Fees memory);
+  function getFees(StrategyId strategyId) external view returns (Fees memory, address recipient);
 
   /**
    * @notice Updates the fees for a strategy
    * @param strategyId The strategy to update the fees for
    * @param newFees The new fees
+   * @param recipient The fees recipient
    */
-  function updateFees(StrategyId strategyId, Fees memory newFees) external;
+  function updateFees(StrategyId strategyId, Fees memory newFees, address recipient) external;
 
   /**
    * @notice Returns the default fees
    * @return The default fees
    */
-  function defaultFees() external view returns (Fees memory);
+  function defaultFees() external view returns (Fees memory, address recipient);
 
   /**
    * @notice Sets the fees for a strategy to the default fees
@@ -69,7 +72,7 @@ interface IFeeManager {
    * @notice Sets the default fees
    * @param newFees The new default fees
    */
-  function setDefaultFees(Fees memory newFees) external;
+  function setDefaultFees(Fees memory newFees, address recipient) external;
 
   /**
    * @notice Checks if a strategy has default fees
