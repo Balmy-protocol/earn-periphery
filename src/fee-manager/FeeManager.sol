@@ -11,11 +11,11 @@ struct StrategyFees {
   Fees fees;
   address recipient;
 }
+
 struct DefaultFees {
   Fees fees;
   address recipient;
 }
-
 
 contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   /// @inheritdoc IFeeManager
@@ -50,9 +50,17 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
-  function updateFees(StrategyId strategyId, Fees memory newFees, address recipient) external override onlyRole(MANAGE_FEES_ROLE) {
+  function updateFees(
+    StrategyId strategyId,
+    Fees memory newFees,
+    address recipient
+  )
+    external
+    override
+    onlyRole(MANAGE_FEES_ROLE)
+  {
     _revertIfNewFeesGreaterThanMaximum(newFees);
-    _fees[strategyId] = StrategyFees({isSet: true, fees: newFees, recipient: recipient});
+    _fees[strategyId] = StrategyFees({ isSet: true, fees: newFees, recipient: recipient });
     emit StrategyFeesChanged(strategyId, newFees, recipient);
   }
 
@@ -73,7 +81,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
 
   function _setDefaultFees(Fees memory newFees, address recipient) internal {
     _revertIfNewFeesGreaterThanMaximum(newFees);
-    defaultFees = DefaultFees({fees: newFees, recipient: recipient});
+    defaultFees = DefaultFees({ fees: newFees, recipient: recipient });
     emit DefaultFeesChanged(newFees, recipient);
   }
 

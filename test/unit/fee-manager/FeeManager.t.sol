@@ -43,7 +43,8 @@ contract FeeManagerTest is PRBTest {
 
   function test_constructor_RevertWhen_FeeGreaterThanMaximum() public {
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
-    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), Fees(10_000, 300, 200, 100), defaultRecipient);
+    feeManager =
+      new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), Fees(10_000, 300, 200, 100), defaultRecipient);
   }
 
   function test_setDefaultFees() public {
