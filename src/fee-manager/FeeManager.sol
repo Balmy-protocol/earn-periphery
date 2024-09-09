@@ -9,12 +9,6 @@ import { Fees } from "../types/Fees.sol";
 struct StrategyFees {
   bool isSet;
   Fees fees;
-  address recipient;
-}
-
-struct DefaultFees {
-  Fees fees;
-  address recipient;
 }
 
 contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
@@ -23,45 +17,40 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
 
   /// @inheritdoc IFeeManager
   uint16 public constant MAX_FEE = 5000; // 50%
-  /// @inheritdoc IFeeManager
-  DefaultFees public defaultFees;
+
   mapping(StrategyId strategy => StrategyFees fees) internal _fees;
+  Fees internal _defaultFees;
 
   constructor(
     address superAdmin,
     address[] memory initialManageFeeAdmins,
-    Fees memory initialDefaultFees,
-    address initialDefaultFeesRecipient
+    Fees memory initialDefaultFees
   )
     AccessControlDefaultAdminRules(3 days, superAdmin)
   {
     _assignRoles(MANAGE_FEES_ROLE, initialManageFeeAdmins);
-    _setDefaultFees(initialDefaultFees, initialDefaultFeesRecipient);
+    _setDefaultFees(initialDefaultFees);
   }
 
   /// @inheritdoc IFeeManager
-  function getFees(StrategyId strategyId) external view override returns (Fees memory, address recipient) {
+  function getFees(StrategyId strategyId) external view override returns (Fees memory) {
     StrategyFees memory strategyFees = _fees[strategyId];
     if (strategyFees.isSet) {
-      return (strategyFees.fees, strategyFees.recipient);
+      return strategyFees.fees;
     }
-    DefaultFees memory defaultFees_ = defaultFees;
-    return (defaultFees_.fees, defaultFees_.recipient);
+    return _defaultFees;
   }
 
   /// @inheritdoc IFeeManager
-  function updateFees(
-    StrategyId strategyId,
-    Fees memory newFees,
-    address recipient
-  )
-    external
-    override
-    onlyRole(MANAGE_FEES_ROLE)
-  {
+  function updateFees(StrategyId strategyId, Fees memory newFees) external override onlyRole(MANAGE_FEES_ROLE) {
     _revertIfNewFeesGreaterThanMaximum(newFees);
-    _fees[strategyId] = StrategyFees({ isSet: true, fees: newFees, recipient: recipient });
-    emit StrategyFeesChanged(strategyId, newFees, recipient);
+    _fees[strategyId] = StrategyFees(true, newFees);
+    emit StrategyFeesChanged(strategyId, newFees);
+  }
+
+  /// @inheritdoc IFeeManager
+  function defaultFees() external view override returns (Fees memory) {
+    return _defaultFees;
   }
 
   /// @inheritdoc IFeeManager
@@ -75,14 +64,14 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
-  function setDefaultFees(Fees memory newFees, address recipient) external override onlyRole(MANAGE_FEES_ROLE) {
-    _setDefaultFees(newFees, recipient);
+  function setDefaultFees(Fees memory newFees) external override onlyRole(MANAGE_FEES_ROLE) {
+    _setDefaultFees(newFees);
   }
 
-  function _setDefaultFees(Fees memory newFees, address recipient) internal {
+  function _setDefaultFees(Fees memory newFees) internal {
     _revertIfNewFeesGreaterThanMaximum(newFees);
-    defaultFees = DefaultFees({ fees: newFees, recipient: recipient });
-    emit DefaultFeesChanged(newFees, recipient);
+    _defaultFees = newFees;
+    emit DefaultFeesChanged(newFees);
   }
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {

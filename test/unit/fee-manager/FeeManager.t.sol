@@ -8,19 +8,18 @@ import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
 contract FeeManagerTest is PRBTest {
-  event DefaultFeesChanged(Fees newFees, address recipient);
-  event StrategyFeesChanged(StrategyId strategyId, Fees newFees, address recipient);
+  event DefaultFeesChanged(Fees newFees);
+  event StrategyFeesChanged(StrategyId strategyId, Fees newFees);
 
   address private superAdmin = address(1);
   address private manageFeeAdmin = address(2);
   Fees private defaultFees = Fees(400, 300, 200, 100);
-  address private defaultRecipient = address(3);
   FeeManager private feeManager;
 
   function setUp() public virtual {
     vm.expectEmit();
-    emit DefaultFeesChanged(defaultFees, defaultRecipient);
-    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), defaultFees, defaultRecipient);
+    emit DefaultFeesChanged(defaultFees);
+    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), defaultFees);
   }
 
   function test_constants() public {
@@ -36,29 +35,23 @@ contract FeeManagerTest is PRBTest {
     assertEq(feeManager.owner(), superAdmin);
     assertEq(feeManager.defaultAdmin(), superAdmin);
 
-    (Fees memory fees, address recipient) = feeManager.defaultFees();
-    assertTrue(fees.equals(defaultFees));
-    assertEq(recipient, defaultRecipient);
+    assertTrue(feeManager.defaultFees().equals(defaultFees));
   }
 
   function test_constructor_RevertWhen_FeeGreaterThanMaximum() public {
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
-    feeManager =
-      new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), Fees(10_000, 300, 200, 100), defaultRecipient);
+    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), Fees(10_000, 300, 200, 100));
   }
 
   function test_setDefaultFees() public {
     Fees memory newDefaultFees = Fees(5, 1, 2, 3);
-    address newDefaultRecipient = address(10);
 
     vm.prank(manageFeeAdmin);
     vm.expectEmit();
-    emit DefaultFeesChanged(newDefaultFees, newDefaultRecipient);
-    feeManager.setDefaultFees(newDefaultFees, newDefaultRecipient);
+    emit DefaultFeesChanged(newDefaultFees);
+    feeManager.setDefaultFees(newDefaultFees);
 
-    (Fees memory fees, address recipient) = feeManager.defaultFees();
-    assertTrue(fees.equals(newDefaultFees));
-    assertEq(recipient, newDefaultRecipient);
+    assertTrue(feeManager.defaultFees().equals(newDefaultFees));
   }
 
   function test_setDefaultFee_RevertWhen_CalledWithoutRole() public {
@@ -67,26 +60,23 @@ contract FeeManagerTest is PRBTest {
         IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), feeManager.MANAGE_FEES_ROLE()
       )
     );
-    feeManager.setDefaultFees(Fees(200, 300, 200, 100), defaultRecipient);
+    feeManager.setDefaultFees(Fees(200, 300, 200, 100));
   }
 
   function test_setDefaultFee_RevertWhen_FeeGreaterThanMaximum() public {
     vm.prank(manageFeeAdmin);
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
-    feeManager.setDefaultFees(Fees(10_000, 300, 200, 100), defaultRecipient);
+    feeManager.setDefaultFees(Fees(10_000, 300, 200, 100));
   }
 
   function test_updateFees() public {
     vm.prank(manageFeeAdmin);
     StrategyId strategyId = StrategyId.wrap(1);
     Fees memory newFees = Fees(5, 1, 2, 3);
-    address newRecipient = address(20);
     vm.expectEmit();
-    emit StrategyFeesChanged(strategyId, newFees, newRecipient);
-    feeManager.updateFees(strategyId, newFees, newRecipient);
-    (Fees memory fees, address recipient) = feeManager.getFees(strategyId);
-    assertTrue(fees.equals(newFees));
-    assertEq(recipient, newRecipient);
+    emit StrategyFeesChanged(strategyId, newFees);
+    feeManager.updateFees(strategyId, newFees);
+    assertTrue(feeManager.getFees(strategyId).equals(newFees));
   }
 
   function test_updateFees_RevertWhen_CalledWithoutRole() public {
@@ -97,7 +87,7 @@ contract FeeManagerTest is PRBTest {
         IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), feeManager.MANAGE_FEES_ROLE()
       )
     );
-    feeManager.updateFees(strategyId, newFees, defaultRecipient);
+    feeManager.updateFees(strategyId, newFees);
   }
 
   function test_updateFees_RevertWhen_FeeGreaterThanMaximum() public {
@@ -105,33 +95,25 @@ contract FeeManagerTest is PRBTest {
     StrategyId strategyId = StrategyId.wrap(1);
     Fees memory newFees = Fees(10_000, 1, 2, 3);
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
-    feeManager.updateFees(strategyId, newFees, defaultRecipient);
+    feeManager.updateFees(strategyId, newFees);
   }
 
   function test_getFees() public {
     StrategyId strategyId = StrategyId.wrap(1);
-
-    (Fees memory fees, address recipient) = feeManager.getFees(strategyId);
-    assertTrue(fees.equals(defaultFees));
-    assertEq(recipient, defaultRecipient);
+    assertTrue(feeManager.getFees(strategyId).equals(defaultFees));
   }
 
   function test_setToDefault() public {
     StrategyId strategyId = StrategyId.wrap(1);
     Fees memory newFees = Fees(5, 1, 2, 3);
-    address newRecipient = address(40);
     vm.prank(manageFeeAdmin);
     vm.expectEmit();
-    emit StrategyFeesChanged(strategyId, newFees, newRecipient);
-    feeManager.updateFees(strategyId, newFees, newRecipient);
-    (Fees memory fees, address recipient) = feeManager.getFees(strategyId);
-    assertTrue(fees.equals(newFees));
-    assertEq(recipient, newRecipient);
+    emit StrategyFeesChanged(strategyId, newFees);
+    feeManager.updateFees(strategyId, newFees);
+    assertTrue(feeManager.getFees(strategyId).equals(newFees));
     vm.prank(manageFeeAdmin);
     feeManager.setToDefault(strategyId);
-    (fees, recipient) = feeManager.defaultFees();
-    assertTrue(fees.equals(defaultFees));
-    assertEq(recipient, defaultRecipient);
+    assertTrue(feeManager.getFees(strategyId).equals(defaultFees));
   }
 
   function test_setToDefault_RevertWhen_CalledWithoutRole() public {
@@ -149,9 +131,8 @@ contract FeeManagerTest is PRBTest {
     assertTrue(feeManager.hasDefaultFees(strategyId));
 
     Fees memory newFees = Fees(5, 1, 2, 3);
-    address newRecipient = address(50);
     vm.prank(manageFeeAdmin);
-    feeManager.updateFees(strategyId, newFees, newRecipient);
+    feeManager.updateFees(strategyId, newFees);
 
     assertFalse(feeManager.hasDefaultFees(strategyId));
 
