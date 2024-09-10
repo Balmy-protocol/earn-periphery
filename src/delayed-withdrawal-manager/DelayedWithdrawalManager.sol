@@ -10,8 +10,9 @@ import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/Strategy
 import { IEarnBalmyStrategy, IEarnStrategy } from "../interfaces/IEarnBalmyStrategy.sol";
 // solhint-disable-next-line no-unused-import
 import { RegisteredAdapter, RegisteredAdaptersLibrary, PositionIdTokenKey } from "./types/RegisteredAdapters.sol";
+import { PayableMulticall } from "../companion/PayableMulticall.sol";
 
-contract DelayedWithdrawalManager is IDelayedWithdrawalManager {
+contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall {
   using RegisteredAdaptersLibrary for mapping(uint256 => mapping(address => mapping(uint256 => RegisteredAdapter)));
   using RegisteredAdaptersLibrary for mapping(uint256 => RegisteredAdapter);
 
@@ -75,7 +76,9 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager {
   }
 
   /// @inheritdoc IDelayedWithdrawalManager
-  function allPositionFunds(uint256 positionId)
+  function allPositionFunds(
+    uint256 positionId
+  )
     external
     view
     returns (address[] memory tokens, uint256[] memory estimatedPending, uint256[] memory withdrawable)
