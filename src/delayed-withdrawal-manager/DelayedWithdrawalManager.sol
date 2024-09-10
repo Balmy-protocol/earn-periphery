@@ -76,9 +76,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
   }
 
   /// @inheritdoc IDelayedWithdrawalManager
-  function allPositionFunds(
-    uint256 positionId
-  )
+  function allPositionFunds(uint256 positionId)
     external
     view
     returns (address[] memory tokens, uint256[] memory estimatedPending, uint256[] memory withdrawable)
