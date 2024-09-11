@@ -242,7 +242,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
       IERC20 aaveVault = vault();
-      balanceChanges = new uint256[](1);
+      balanceChanges = new uint256[](_connector_allTokens().length);
       actualWithdrawnTokens = new address[](1);
       actualWithdrawnAmounts = new uint256[](1);
       result = "";

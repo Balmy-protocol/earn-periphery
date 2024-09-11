@@ -53,6 +53,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertEq(actualWithdrawnTokens.length, 1);
     assertEq(actualWithdrawnAmounts.length, 1);
     assertEq(actualWithdrawnTokens[0], _farmToken());
+    assertEq(actualWithdrawnAmounts[0], amountToWithdraw);
 
     // Check result
     assertTrue(result.length == 0);
