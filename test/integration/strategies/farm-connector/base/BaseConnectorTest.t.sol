@@ -89,7 +89,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   function testFork_specialWithdraw_RevertWhen_InvalidCode() public {
     SpecialWithdrawalCode code = SpecialWithdrawalCode.wrap(type(uint256).max);
     vm.expectRevert(abi.encodeWithSelector(BaseConnector.InvalidSpecialWithdrawalCode.selector, code));
-    connector.specialWithdraw(1, code, "", address(this));
+    connector.specialWithdraw(1, code, new uint256[](0), "", address(this));
   }
 
   function testFork_totalBalances() public {

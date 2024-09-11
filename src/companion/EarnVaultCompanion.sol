@@ -141,6 +141,7 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     IEarnVault vault,
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
     bytes calldata withdrawalData,
     address recipient
   )
@@ -149,8 +150,9 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     verifyPermission(vault, positionId, WITHDRAW_PERMISSION)
     returns (
       address[] memory tokens,
-      uint256[] memory withdrawn,
-      IEarnStrategy.WithdrawalType[] memory withdrawalTypes,
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
   {
@@ -158,6 +160,7 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     return vault.specialWithdraw({
       positionId: positionId,
       withdrawalCode: withdrawalCode,
+      toWithdraw: toWithdraw,
       withdrawalData: withdrawalData,
       recipient: recipient
     });

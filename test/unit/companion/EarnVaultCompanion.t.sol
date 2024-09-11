@@ -343,7 +343,7 @@ contract EarnVaultCompanionTest is Test {
     // Simulate has no permissions
     vm.mockCall(address(vault), abi.encodeWithSelector(INFTPermissions.hasPermission.selector), abi.encode(false));
     vm.expectRevert(abi.encodeWithSelector(EarnVaultCompanion.UnauthorizedCaller.selector));
-    companion.specialWithdraw(vault, 2, SpecialWithdrawalCode.wrap(1), "", address(1));
+    companion.specialWithdraw(vault, 2, SpecialWithdrawalCode.wrap(1), new uint256[](0), "", address(1));
   }
 
   function test_specialWithdraw() public {
@@ -351,12 +351,17 @@ contract EarnVaultCompanionTest is Test {
     SpecialWithdrawalCode code = SpecialWithdrawalCode.wrap(10);
     bytes memory data = "data";
     address recipient = address(1);
+    uint256[] memory toWithdraw = new uint256[](1);
+    toWithdraw[0] = 256;
 
     address[] memory expectedTokens = new address[](1);
     expectedTokens[0] = address(token);
-    uint256[] memory expectedWithdrawn = new uint256[](1);
-    expectedWithdrawn[0] = 12_345;
-    IEarnStrategy.WithdrawalType[] memory expectedTypes = new IEarnStrategy.WithdrawalType[](1);
+    uint256[] memory expectedBalanceChanges = new uint256[](1);
+    expectedBalanceChanges[0] = 67_890;
+    address[] memory expectedWithdrawnTokens = new address[](1);
+    expectedWithdrawnTokens[0] = address(token);
+    uint256[] memory expectedWithdrawnAmounts = new uint256[](1);
+    expectedWithdrawnAmounts[0] = 12_345;
     bytes memory expectedResult = "result";
 
     // Simulate has permissions
@@ -371,22 +376,26 @@ contract EarnVaultCompanionTest is Test {
     vm.mockCall(
       address(vault),
       abi.encodeWithSelector(IEarnVault.specialWithdraw.selector),
-      abi.encode(expectedTokens, expectedWithdrawn, expectedTypes, expectedResult)
+      abi.encode(
+        expectedTokens, expectedBalanceChanges, expectedWithdrawnTokens, expectedWithdrawnAmounts, expectedResult
+      )
     );
     // Make sure special withdrawal was called correctly
     vm.expectCall(
-      address(vault), abi.encodeWithSelector(IEarnVault.specialWithdraw.selector, positionId, code, data, recipient)
+      address(vault),
+      abi.encodeWithSelector(IEarnVault.specialWithdraw.selector, positionId, code, toWithdraw, data, recipient)
     );
     (
       address[] memory tokens,
-      uint256[] memory withdrawn,
-      IEarnStrategy.WithdrawalType[] memory types,
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
       bytes memory result
-    ) = companion.specialWithdraw(vault, positionId, code, data, recipient);
+    ) = companion.specialWithdraw(vault, positionId, code, toWithdraw, data, recipient);
     assertEq(tokens, expectedTokens);
-    assertEq(withdrawn, expectedWithdrawn);
-    assertEq(types.length, expectedTypes.length);
-    assertTrue(types[0] == expectedTypes[0]);
+    assertEq(balanceChanges, expectedBalanceChanges);
+    assertEq(actualWithdrawnTokens, expectedWithdrawnTokens);
+    assertEq(actualWithdrawnAmounts, expectedWithdrawnAmounts);
     assertEq(result, expectedResult);
   }
 

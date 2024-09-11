@@ -28,27 +28,34 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     address recipient = address(1);
     uint256 originalConnectorBalance = 10e18;
     uint256 amountToWithdraw = 2e18;
+    uint256[] memory toWithdraw = new uint256[](1);
+    toWithdraw[0] = amountToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
     _setBalance(_farmToken(), address(connector), originalConnectorBalance);
 
-    (address[] memory tokens, uint256[] memory balancesBefore) = connector.totalBalances();
+    (, uint256[] memory balancesBefore) = connector.totalBalances();
 
-    (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory withdrawData) =
-    connector.specialWithdraw(
-      1, SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT, abi.encode(amountToWithdraw), recipient
-    );
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = connector.specialWithdraw(1, SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT, toWithdraw, "", recipient);
 
     (, uint256[] memory balancesAfter) = connector.totalBalances();
 
     // Check assets
-    uint256 assetsWithdrawn = abi.decode(withdrawData, (uint256));
-    assertEq(withdrawn.length, balancesBefore.length);
-    assertEq(withdrawn[0], assetsWithdrawn);
+    uint256 assetsWithdrawn = balanceChanges[0];
+    assertEq(balanceChanges.length, balancesBefore.length);
     assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 1);
 
-    // Check withdrawal type
-    assertEq(withdrawalTypes.length, tokens.length);
-    assertTrue(withdrawalTypes[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    // Check actual tokens and amounts
+    assertEq(actualWithdrawnTokens.length, 1);
+    assertEq(actualWithdrawnAmounts.length, 1);
+    assertEq(actualWithdrawnTokens[0], _farmToken());
+
+    // Check result
+    assertTrue(result.length == 0);
 
     // Check transfer
     assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 1);
@@ -59,29 +66,39 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     address recipient = address(1);
     uint256 originalConnectorBalance = 10e18;
     uint256 assetsToWithdraw = 2e18;
+    uint256[] memory toWithdraw = new uint256[](1);
+    toWithdraw[0] = assetsToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
     _setBalance(_farmToken(), address(connector), originalConnectorBalance);
 
-    (address[] memory tokens, uint256[] memory balancesBefore) = connector.totalBalances();
+    (, uint256[] memory balancesBefore) = connector.totalBalances();
 
-    (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory withdrawData) =
-    connector.specialWithdraw(
-      1, SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT, abi.encode(assetsToWithdraw), recipient
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = connector.specialWithdraw(
+      1, SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT, toWithdraw, "", recipient
     );
 
     (, uint256[] memory balancesAfter) = connector.totalBalances();
 
     // Check assets
-    assertEq(withdrawn.length, balancesBefore.length);
-    assertEq(withdrawn[0], assetsToWithdraw);
+    assertEq(balanceChanges.length, balancesBefore.length);
+    assertEq(balanceChanges[0], assetsToWithdraw);
     assertAlmostEq(assetsToWithdraw, balancesBefore[0] - balancesAfter[0], 1);
 
-    // Check withdrawal type
-    assertEq(withdrawalTypes.length, tokens.length);
-    assertTrue(withdrawalTypes[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    // Check actual tokens and amounts
+    assertEq(actualWithdrawnTokens.length, 1);
+    assertEq(actualWithdrawnAmounts.length, 1);
+    assertEq(actualWithdrawnTokens[0], _farmToken());
+
+    // Check result
+    assertTrue(result.length == 0);
 
     // Check transfer
-    uint256 sharesWithdrawn = abi.decode(withdrawData, (uint256));
+    uint256 sharesWithdrawn = actualWithdrawnAmounts[0];
     assertAlmostEq(_balance(_farmToken(), recipient), sharesWithdrawn, 1);
     assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - sharesWithdrawn, 1);
   }

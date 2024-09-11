@@ -184,30 +184,39 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
-    bytes calldata withdrawData,
+    uint256[] calldata toWithdraw,
+    bytes calldata,
     address recipient
   )
     internal
-    virtual
     override
-    returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
   {
     IERC4626 vault = ERC4626Vault();
-    withdrawn = new uint256[](1);
-    withdrawalTypes = new IEarnStrategy.WithdrawalType[](1);
+    balanceChanges = new uint256[](1);
+    actualWithdrawnTokens = new address[](1);
+    actualWithdrawnAmounts = new uint256[](1);
+    result = "";
 
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
-      uint256 shares = abi.decode(withdrawData, (uint256));
+      uint256 shares = toWithdraw[0];
       uint256 assets = vault.previewRedeem(shares);
       vault.safeTransfer(recipient, shares);
-      withdrawn[0] = assets;
-      result = abi.encode(assets);
+      balanceChanges[0] = assets;
+      actualWithdrawnTokens[0] = address(vault);
+      actualWithdrawnAmounts[0] = shares;
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
-      uint256 assets = abi.decode(withdrawData, (uint256));
+      uint256 assets = toWithdraw[0];
       uint256 shares = vault.previewWithdraw(assets);
       vault.safeTransfer(recipient, shares);
-      withdrawn[0] = assets;
-      result = abi.encode(shares);
+      balanceChanges[0] = assets;
+      actualWithdrawnTokens[0] = address(vault);
+      actualWithdrawnAmounts[0] = shares;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);
     }
