@@ -224,23 +224,33 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
-    bytes calldata withdrawData,
+    uint256[] calldata toWithdraw,
+    bytes calldata,
     address recipient
   )
     internal
     override
-    returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
   {
     if (
       withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
-      withdrawalTypes = _connector_supportedWithdrawals();
-      withdrawn = new uint256[](withdrawalTypes.length);
-      uint256 assets = abi.decode(withdrawData, (uint256));
-      vault().safeTransfer(recipient, assets);
-      withdrawn[0] = assets;
-      result = abi.encode(assets);
+      IERC20 aaveVault = vault();
+      balanceChanges = new uint256[](_connector_allTokens().length);
+      actualWithdrawnTokens = new address[](1);
+      actualWithdrawnAmounts = new uint256[](1);
+      result = "";
+      uint256 assets = toWithdraw[0];
+      aaveVault.safeTransfer(recipient, assets);
+      balanceChanges[0] = assets;
+      actualWithdrawnTokens[0] = address(aaveVault);
+      actualWithdrawnAmounts[0] = assets;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);
     }

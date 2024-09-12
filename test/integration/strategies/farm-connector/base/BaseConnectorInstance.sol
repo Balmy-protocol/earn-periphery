@@ -73,13 +73,19 @@ abstract contract BaseConnectorInstance is BaseConnector {
   function specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
     bytes calldata withdrawData,
     address recipient
   )
     external
-    returns (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory withdrawalTypes, bytes memory result)
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
   {
-    return _connector_specialWithdraw(positionId, withdrawalCode, withdrawData, recipient);
+    return _connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
   function migrateToNewStrategy(

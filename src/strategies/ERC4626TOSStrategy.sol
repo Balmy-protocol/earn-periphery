@@ -163,14 +163,19 @@ contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreation
   function specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
-    bytes calldata withdrawData,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawalData,
     address recipient
   )
     external
-    onlyVault
-    returns (uint256[] memory, IEarnStrategy.WithdrawalType[] memory, bytes memory)
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
   {
-    return _connector_specialWithdraw(positionId, withdrawalCode, withdrawData, recipient);
+    return _connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawalData, recipient);
   }
 
   /// @inheritdoc IEarnStrategy
