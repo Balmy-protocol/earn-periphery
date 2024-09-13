@@ -3,7 +3,15 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import { VmSafe } from "forge-std/Vm.sol";
-import { SpecialWithdrawalCode, IFeeManager, ExternalFees, IGlobalEarnRegistry, StrategyId, Fees, IEarnStrategy } from "src/strategies/fees/ExternalFees.sol";
+import {
+  SpecialWithdrawalCode,
+  IFeeManager,
+  ExternalFees,
+  IGlobalEarnRegistry,
+  StrategyId,
+  Fees,
+  IEarnStrategy
+} from "src/strategies/fees/ExternalFees.sol";
 
 contract ExternalFeesTest is Test {
   ExternalFeesInstance private fees;
@@ -63,19 +71,27 @@ contract ExternalFeesInstance is ExternalFees {
     view
     override
     returns (address[] memory tokens, uint256[] memory balances)
-  {}
+  { }
 
   function _fees_underlying_deposited(
     address depositToken,
     uint256 depositAmount
-  ) internal override returns (uint256 assetsDeposited) {}
+  )
+    internal
+    override
+    returns (uint256 assetsDeposited)
+  { }
 
   function _fees_underlying_withdraw(
     uint256 positionId,
     address[] memory tokens,
     uint256[] memory toWithdraw,
     address recipient
-  ) internal override returns (IEarnStrategy.WithdrawalType[] memory) {}
+  )
+    internal
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  { }
 
   function _fees_underlying_specialWithdraw(
     uint256 positionId,
@@ -92,5 +108,5 @@ contract ExternalFeesInstance is ExternalFees {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
-  {}
+  { }
 }
