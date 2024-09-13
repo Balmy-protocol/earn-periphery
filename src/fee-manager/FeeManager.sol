@@ -83,7 +83,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   function _revertIfNewFeesGreaterThanMaximum(Fees memory newFees) internal pure {
     if (
       newFees.depositFee > MAX_FEE || newFees.withdrawFee > MAX_FEE || newFees.performanceFee > MAX_FEE
-        || newFees.saveFee > MAX_FEE
+        || newFees.rescueFee > MAX_FEE
     ) {
       revert FeesGreaterThanMaximum();
     }
