@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
-import { BaseConnectorTest, IEarnStrategy, SpecialWithdrawalCode } from "./BaseConnectorTest.t.sol";
+import { BaseConnectorTest, SpecialWithdrawalCode } from "./BaseConnectorTest.t.sol";
 
 /// @notice A test for connector that have use a farm token directly
 abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
