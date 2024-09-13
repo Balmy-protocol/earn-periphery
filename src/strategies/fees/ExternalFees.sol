@@ -87,7 +87,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
     Fees memory fees = _getFees();
     if (fees.performanceFee == 0) {
       // If performance fee is 0, we will need to clear the last balance. Otherwise, once it's turned on again,
-      // we won't be able to understand different between balance changes and yield
+      // we won't be able to understand difference between balance changes and yield
       address asset = _fees_underlying_asset();
       _clearBalanceIfSet(asset);
       return _fees_underlying_deposited(depositToken, depositAmount);
@@ -154,7 +154,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
       uint256 fee = (yield * performanceFee) / 10_000;
       return fee + perfData.performanceFees;
     }
-    return 0;
+    return perfData.performanceFees;
   }
 
   // slither-disable-next-line dead-code

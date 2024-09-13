@@ -81,6 +81,39 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
   }
 
+  function test_deposited_loss() public {
+    _setFee(500); // 5%
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 150k (so yield was 50k)
+    fees.setBalance(asset, 150_000);
+
+    (address[] memory tokens, uint256[] memory collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 2500);
+    assertEq(collected[1], 0);
+
+    // Deposit another 100k (balance is now 250k)
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 200k, there was a loss
+    fees.setBalance(asset, 200_000);
+
+    // Make sure fees remain the same
+    (tokens, collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 2500);
+    assertEq(collected[1], 0);
+  }
+
   function _setFee(uint16 bps) private {
     vm.mockCall(
       address(manager),
