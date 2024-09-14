@@ -33,7 +33,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
-  // solhint-disable no-empty-blocks
+  // solhint-disable-next-line no-empty-blocks
   function strategySelfConfigure(bytes calldata data) external override {
     // Does nothing, we we want to have this function for future fee manager implementations
   }
