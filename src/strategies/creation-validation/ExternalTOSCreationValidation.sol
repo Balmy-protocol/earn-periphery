@@ -17,11 +17,8 @@ abstract contract ExternalTOSCreationValidation is BaseCreationValidation, Initi
   function strategyId() public view virtual returns (StrategyId);
 
   // slither-disable-next-line naming-convention,dead-code
-  function _creationValidation_init(bytes32 tosGroup) internal onlyInitializing {
-    // We will only assign a group if it has been set
-    if (tosGroup != bytes32(0)) {
-      _getTOSManager().strategySelfConfigure(abi.encode(tosGroup));
-    }
+  function _creationValidation_init(bytes calldata data) internal onlyInitializing {
+    _getTOSManager().strategySelfConfigure(data);
   }
 
   // slither-disable-next-line naming-convention,dead-code
