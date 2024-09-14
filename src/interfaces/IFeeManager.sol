@@ -33,6 +33,13 @@ interface IFeeManager {
   function MANAGE_FEES_ROLE() external view returns (bytes32);
 
   /**
+   * @notice Returns the role in charge of withdrawing fees
+   * @return The role in charge of withdrawing fees
+   */
+  // slither-disable-next-line naming-convention
+  function WITHDRAW_FEES_ROLE() external view returns (bytes32);
+
+  /**
    * @notice Returns the max amount of fee possible
    * @return The max amount of fee possible
    */
@@ -45,6 +52,9 @@ interface IFeeManager {
    * @return The strategy fees
    */
   function getFees(StrategyId strategyId) external view returns (Fees memory);
+
+  /// @notice Returns if the caller can withdraw fees from the strategy
+  function canWithdrawFees(StrategyId strategyId, address caller) external view returns (bool);
 
   /**
    * @notice Updates the fees for a strategy
