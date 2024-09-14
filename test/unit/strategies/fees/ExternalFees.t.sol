@@ -32,6 +32,13 @@ contract ExternalFeesTest is Test {
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("FEE_MANAGER")),
       abi.encode(manager)
     );
+    vm.mockCall(address(manager), abi.encodeWithSelector(IFeeManager.strategySelfConfigure.selector), abi.encode());
+  }
+
+  function test_init() public {
+    bytes memory data = "1234567";
+    vm.expectCall(address(manager), abi.encodeWithSelector(IFeeManager.strategySelfConfigure.selector, data));
+    fees.init(data);
   }
 
   function test_fees() public {
@@ -149,6 +156,10 @@ contract ExternalFeesInstance is ExternalFees {
 
   function strategyId() public view override returns (StrategyId) {
     return _strategyId;
+  }
+
+  function init(bytes calldata data) external initializer {
+    _fees_init(data);
   }
 
   function setBalance(address token, uint256 balance) external {
