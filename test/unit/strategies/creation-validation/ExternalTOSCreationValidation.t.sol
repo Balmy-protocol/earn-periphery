@@ -21,20 +21,10 @@ contract ExternalTOSCreationValidationTest is Test {
   function setUp() public virtual {
     tosValidation = new ExternalTOSCreationValidationInstance(registry, strategyId);
     vm.mockCall(
-      address(registry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector),
-      abi.encode(manager)
+      address(registry), abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector), abi.encode(manager)
     );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector),
-      abi.encode()
-    );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector),
-      abi.encode()
-    );
+    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector), abi.encode());
+    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector), abi.encode());
   }
 
   function test_init() public {
