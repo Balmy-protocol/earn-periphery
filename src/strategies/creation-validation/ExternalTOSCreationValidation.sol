@@ -20,7 +20,7 @@ abstract contract ExternalTOSCreationValidation is BaseCreationValidation, Initi
   function _creationValidation_init(bytes32 tosGroup) internal onlyInitializing {
     // We will only assign a group if it has been set
     if (tosGroup != bytes32(0)) {
-      _getTOSManager().assignStrategyToGroup(strategyId(), tosGroup);
+      _getTOSManager().strategySelfConfigure(abi.encode(tosGroup));
     }
   }
 

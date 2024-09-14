@@ -39,14 +39,14 @@ contract ExternalTOSCreationValidationTest is Test {
 
   function test_init_emptyGroup() public {
     // When group is empty, no TOS manager is not called
-    vm.expectCall(address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector), 0);
+    vm.expectCall(address(manager), abi.encodeWithSelector(ITOSManager.strategySelfConfigure.selector), 0);
     tosValidation.init(bytes32(0));
   }
 
   function test_init() public {
     // When group is set, TOS manager is called
     vm.expectCall(
-      address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector, strategyId, GROUP_1)
+      address(manager), abi.encodeWithSelector(ITOSManager.strategySelfConfigure.selector, abi.encode(GROUP_1))
     );
     tosValidation.init(GROUP_1);
   }

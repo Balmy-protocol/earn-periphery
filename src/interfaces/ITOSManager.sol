@@ -48,9 +48,13 @@ interface ITOSManager {
 
   /**
    * @notice Assigns a strategy to a group
-   * @dev The caller must be have the manage role, or must be the strategy
    * @param strategyId The strategy to assign
    * @param group The group to assign the strategy to
    */
   function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external;
+
+  /**
+   * @notice Allow the strategy to call the manager, for self-configuration
+   */
+  function strategySelfConfigure(bytes calldata data) external;
 }
