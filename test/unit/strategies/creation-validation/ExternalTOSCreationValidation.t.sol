@@ -22,17 +22,17 @@ contract ExternalTOSCreationValidationTest is Test {
     tosValidation = new ExternalTOSCreationValidationInstance(registry, strategyId);
     vm.mockCall(
       address(registry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("TOS_MANAGER")),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector),
       abi.encode(manager)
     );
     vm.mockCall(
       address(manager),
-      abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector, keccak256("TOS_MANAGER")),
+      abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector),
       abi.encode()
     );
     vm.mockCall(
       address(manager),
-      abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector, keccak256("TOS_MANAGER")),
+      abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector),
       abi.encode()
     );
   }
