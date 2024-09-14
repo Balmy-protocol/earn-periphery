@@ -110,14 +110,38 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _fees_withdraw(
     uint256 positionId,
-    address[] memory tokens,
-    uint256[] memory toWithdraw,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
     address recipient
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
-  { }
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    Fees memory fees = _getFees();
+    if (fees.performanceFee == 0) {
+      for (uint256 i; i < tokens.length; ++i) {
+        _clearBalanceIfSet(tokens[i]);
+      }
+      return _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+    }
+
+    (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+    for (uint256 i; i < tokens.length; ++i) {
+      // If there is nothing being withdrawn, we can skip fee update, since balance didn't change
+      if (toWithdraw[0] == 0) continue;
+
+      uint256 performanceFees = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
+      _performanceData[tokens[i]] = PerformanceData({
+        // Note: there might be a small wei difference here, but we can ignore it an avoid adding it as part of the fee
+        lastBalance: (currentBalances[i] - toWithdraw[i]).toUint128(),
+        performanceFees: performanceFees.toUint120(),
+        isSet: true
+      });
+    }
+
+    return _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _fees_specialWithdraw(

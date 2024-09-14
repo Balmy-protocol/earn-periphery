@@ -12,6 +12,7 @@ import {
   Fees,
   IEarnStrategy
 } from "src/strategies/fees/ExternalFees.sol";
+import { CommonUtils } from "../../../utils/CommonUtils.sol";
 
 contract ExternalFeesTest is Test {
   ExternalFeesInstance private fees;
@@ -114,6 +115,48 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
   }
 
+  function test_withdraw() public {
+    uint256 positionId = 1;
+    address recipient = address(0);
+    address[] memory allTokens = CommonUtils.arrayOf(asset, token);
+    _setFee(500); // 5%
+
+    // Set balance to 100k for asset and 50k for reward
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    // Withdraw 50k and 10k
+    fees.withdraw(positionId, allTokens, CommonUtils.arrayOf(50_000, 10_000), recipient);
+
+    // Set balance to 80k for asset and 80k for reward (30k and 40k yield)
+    fees.setBalance(asset, 80_000);
+    fees.setBalance(token, 80_000);
+
+    (address[] memory tokens, uint256[] memory collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 1500);
+    assertEq(collected[1], 2000);
+
+    // Withdraw another 10k and 20k
+    fees.withdraw(positionId, tokens, CommonUtils.arrayOf(10_000, 20_000), recipient);
+
+    // Set balance to 100k for asset and 50k for reward
+    // There was a loss, total yield was 60k and 40k
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    (tokens, collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 3000);
+    assertEq(collected[1], 2000);
+  }
+
   function _setFee(uint16 bps) private {
     vm.mockCall(
       address(manager),
@@ -141,6 +184,18 @@ contract ExternalFeesInstance is ExternalFees {
 
   function deposited(address token, uint256 amount) external returns (uint256) {
     return _fees_deposited(token, amount);
+  }
+
+  function withdraw(
+    uint256 positionId,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
+    address recipient
+  )
+    external
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function globalRegistry() public view override returns (IGlobalEarnRegistry) {
@@ -181,15 +236,18 @@ contract ExternalFeesInstance is ExternalFees {
   }
 
   function _fees_underlying_withdraw(
-    uint256 positionId,
-    address[] memory tokens,
-    uint256[] memory toWithdraw,
-    address recipient
+    uint256,
+    address[] calldata tokens,
+    uint256[] calldata,
+    address
   )
     internal
+    pure
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
-  { }
+  {
+    return new IEarnStrategy.WithdrawalType[](tokens.length);
+  }
 
   function _fees_underlying_specialWithdraw(
     uint256 positionId,

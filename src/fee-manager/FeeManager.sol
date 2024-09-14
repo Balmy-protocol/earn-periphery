@@ -42,7 +42,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
-  function updateFees(StrategyId strategyId, Fees memory newFees) external override onlyRole(MANAGE_FEES_ROLE) {
+  function updateFees(StrategyId strategyId, Fees calldata newFees) external override onlyRole(MANAGE_FEES_ROLE) {
     _revertIfNewFeesGreaterThanMaximum(newFees);
     _fees[strategyId] = StrategyFees(true, newFees);
     emit StrategyFeesChanged(strategyId, newFees);
@@ -64,7 +64,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
-  function setDefaultFees(Fees memory newFees) external override onlyRole(MANAGE_FEES_ROLE) {
+  function setDefaultFees(Fees calldata newFees) external override onlyRole(MANAGE_FEES_ROLE) {
     _setDefaultFees(newFees);
   }
 
