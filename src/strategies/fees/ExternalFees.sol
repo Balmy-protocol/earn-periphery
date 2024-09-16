@@ -5,7 +5,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "../../interfaces/IGlobalEarnRegistry.sol";
-import { IFeeManager, StrategyId, Fees } from "../../interfaces/IFeeManager.sol";
+import { IFeeManagerCore, StrategyId, Fees } from "../../interfaces/IFeeManager.sol";
 import { BaseFees } from "./base/BaseFees.sol";
 
 abstract contract ExternalFees is BaseFees, Initializable {
@@ -47,7 +47,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code,assembly
   function _fees_init(bytes calldata data) internal onlyInitializing {
-    IFeeManager feeManager = _getFeeManager();
+    IFeeManagerCore feeManager = _getFeeManager();
     Fees memory fees = feeManager.getFees(strategyId());
     if (fees.performanceFee > 0) {
       // If performance fees are enabled, then we'll need to initialize the performance data
@@ -234,7 +234,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
   }
 
   // slither-disable-next-line dead-code
-  function _getFeeManager() private view returns (IFeeManager) {
-    return IFeeManager(globalRegistry().getAddressOrFail(FEE_MANAGER));
+  function _getFeeManager() private view returns (IFeeManagerCore) {
+    return IFeeManagerCore(globalRegistry().getAddressOrFail(FEE_MANAGER));
   }
 }

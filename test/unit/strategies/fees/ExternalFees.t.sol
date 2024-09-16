@@ -5,7 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { VmSafe } from "forge-std/Vm.sol";
 import {
   SpecialWithdrawalCode,
-  IFeeManager,
+  IFeeManagerCore,
   ExternalFees,
   IGlobalEarnRegistry,
   StrategyId,
@@ -17,7 +17,7 @@ import { CommonUtils } from "../../../utils/CommonUtils.sol";
 contract ExternalFeesTest is Test {
   ExternalFeesInstance private fees;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
-  IFeeManager private manager = IFeeManager(address(2));
+  IFeeManagerCore private manager = IFeeManagerCore(address(2));
   address private asset = address(3);
   address private token = address(4);
   StrategyId private strategyId = StrategyId.wrap(1);
@@ -33,20 +33,20 @@ contract ExternalFeesTest is Test {
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("FEE_MANAGER")),
       abi.encode(manager)
     );
-    vm.mockCall(address(manager), abi.encodeWithSelector(IFeeManager.strategySelfConfigure.selector), abi.encode());
+    vm.mockCall(address(manager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), abi.encode());
   }
 
   function test_init() public {
     _setFee(500); // 5%
     bytes memory data = "1234567";
-    vm.expectCall(address(manager), abi.encodeWithSelector(IFeeManager.strategySelfConfigure.selector, data));
+    vm.expectCall(address(manager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, data));
     fees.init(data);
   }
 
   function test_fees() public {
     vm.mockCall(
       address(manager),
-      abi.encodeWithSelector(IFeeManager.getFees.selector, strategyId),
+      abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId),
       abi.encode(Fees({ depositFee: 100, withdrawFee: 0, performanceFee: 300, rescueFee: 0 }))
     );
     (IEarnStrategy.FeeType[] memory types, uint16[] memory bps) = fees.fees();
@@ -230,7 +230,7 @@ contract ExternalFeesTest is Test {
   function _setFee(uint16 bps) private {
     vm.mockCall(
       address(manager),
-      abi.encodeWithSelector(IFeeManager.getFees.selector, strategyId),
+      abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId),
       abi.encode(Fees({ depositFee: 0, withdrawFee: 0, performanceFee: bps, rescueFee: 0 }))
     );
   }
