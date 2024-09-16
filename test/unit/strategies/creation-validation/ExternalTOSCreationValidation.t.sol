@@ -21,34 +21,17 @@ contract ExternalTOSCreationValidationTest is Test {
   function setUp() public virtual {
     tosValidation = new ExternalTOSCreationValidationInstance(registry, strategyId);
     vm.mockCall(
-      address(registry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("TOS_MANAGER")),
-      abi.encode(manager)
+      address(registry), abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector), abi.encode(manager)
     );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector, keccak256("TOS_MANAGER")),
-      abi.encode()
-    );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector, keccak256("TOS_MANAGER")),
-      abi.encode()
-    );
-  }
-
-  function test_init_emptyGroup() public {
-    // When group is empty, no TOS manager is not called
-    vm.expectCall(address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector), 0);
-    tosValidation.init(bytes32(0));
+    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector), abi.encode());
+    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector), abi.encode());
   }
 
   function test_init() public {
-    // When group is set, TOS manager is called
     vm.expectCall(
-      address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector, strategyId, GROUP_1)
+      address(manager), abi.encodeWithSelector(ITOSManager.strategySelfConfigure.selector, abi.encode(GROUP_1))
     );
-    tosValidation.init(GROUP_1);
+    tosValidation.init(abi.encode(GROUP_1));
   }
 
   function test_validate() public {
@@ -71,8 +54,8 @@ contract ExternalTOSCreationValidationInstance is ExternalTOSCreationValidation 
     _strategyId = strategyId_;
   }
 
-  function init(bytes32 tosGroup) external initializer {
-    _creationValidation_init(tosGroup);
+  function init(bytes calldata data) external initializer {
+    _creationValidation_init(data);
   }
 
   function validate(address sender, bytes calldata signature) external view {

@@ -124,7 +124,7 @@ contract TosManagerTest is Test {
     tosManager.updateTOS(GROUP_1, "new tos");
   }
 
-  function test_assignStrategyToGroup_hasRole() public {
+  function test_assignStrategyToGroup() public {
     StrategyId strategyId = StrategyId.wrap(1);
     vm.expectEmit();
     emit StrategyAssignedToGroup(strategyId, GROUP_1);
@@ -133,32 +133,55 @@ contract TosManagerTest is Test {
     assertEq(tosManager.getStrategyGroup(strategyId), GROUP_1);
   }
 
-  function test_assignStrategyToGroup_strategy() public {
+  function test_assignStrategyToGroup_revertWhen_calledWithoutRole() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), tosManager.MANAGE_TOS_ROLE()
+      )
+    );
+    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+  }
+
+  function test_strategySelfConfigure_emptyBytes() public {
+    // Nothing happens
+    tosManager.strategySelfConfigure("");
+  }
+
+  function test_strategySelfConfigure() public {
     StrategyId strategyId = StrategyId.wrap(1);
     address strategy = address(4);
 
     vm.mockCall(
-      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector), abi.encode(strategy)
+      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector), abi.encode(strategyId)
     );
 
     vm.startPrank(strategy);
     vm.expectEmit();
     emit StrategyAssignedToGroup(strategyId, GROUP_1);
-    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+    tosManager.strategySelfConfigure(abi.encode(GROUP_1));
     assertEq(tosManager.getStrategyGroup(strategyId), GROUP_1);
 
     // Now try updating it again
     vm.expectEmit();
     emit StrategyAssignedToGroup(strategyId, GROUP_2);
-    tosManager.assignStrategyToGroup(strategyId, GROUP_2);
+    tosManager.strategySelfConfigure(abi.encode(GROUP_2));
     assertEq(tosManager.getStrategyGroup(strategyId), GROUP_2);
     vm.stopPrank();
   }
 
-  function test_assignStrategyToGroup_revertWhen_calledWithoutRoleAndCallerIsNotStrategy() public {
-    StrategyId strategyId = StrategyId.wrap(1);
+  function test_strategySelfConfigure_revertWhen_callerHasNoId() public {
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector),
+      abi.encode(StrategyId.wrap(0))
+    );
+
+    vm.prank(strategy);
     vm.expectRevert(abi.encodeWithSelector(TOSManager.UnauthorizedCaller.selector));
-    tosManager.assignStrategyToGroup(strategyId, GROUP_1);
+    tosManager.strategySelfConfigure(abi.encode(GROUP_1));
   }
 }
 

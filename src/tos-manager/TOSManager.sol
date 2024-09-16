@@ -5,7 +5,9 @@ import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import { ITOSManager, IEarnStrategyRegistry, StrategyId } from "../interfaces/ITOSManager.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
+import { ITOSManager, IEarnStrategyRegistry } from "../interfaces/ITOSManager.sol";
 
 contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   using MessageHashUtils for bytes;
@@ -58,11 +60,28 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ITOSManager
-  function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external {
-    // Note: the caller must either have the manage role, or it must be the actual strategy
-    if (!hasRole(MANAGE_TOS_ROLE, msg.sender) && msg.sender != address(STRATEGY_REGISTRY.getStrategy(strategyId))) {
+  function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external onlyRole(MANAGE_TOS_ROLE) {
+    _assignGroup(strategyId, group);
+  }
+
+  /// @inheritdoc ITOSManager
+  function strategySelfConfigure(bytes calldata data) external {
+    if (data.length == 0) {
+      return;
+    }
+
+    // Find the caller's strategy id
+    StrategyId strategyId = STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender));
+    if (strategyId == StrategyIdConstants.NO_STRATEGY) {
       revert UnauthorizedCaller();
     }
+
+    // Decode the group from the data and assign it to the strategy
+    bytes32 group = abi.decode(data, (bytes32));
+    _assignGroup(strategyId, group);
+  }
+
+  function _assignGroup(StrategyId strategyId, bytes32 group) internal {
     getStrategyGroup[strategyId] = group;
     emit StrategyAssignedToGroup(strategyId, group);
   }
