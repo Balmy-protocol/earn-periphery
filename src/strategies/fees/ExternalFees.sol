@@ -43,6 +43,11 @@ abstract contract ExternalFees is BaseFees, Initializable {
   function _fees_underlying_asset() internal view virtual returns (address asset);
 
   // slither-disable-next-line naming-convention,dead-code,assembly
+  function _fees_init(bytes calldata data) internal onlyInitializing {
+    _getFeeManager().strategySelfConfigure(data);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code,assembly
   function _fees_fees() internal view override returns (IEarnStrategy.FeeType[] memory types, uint16[] memory bps) {
     Fees memory fees = _getFees();
     types = new IEarnStrategy.FeeType[](4);

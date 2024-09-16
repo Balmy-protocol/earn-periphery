@@ -38,6 +38,12 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IFeeManager
+  // solhint-disable-next-line no-empty-blocks
+  function strategySelfConfigure(bytes calldata data) external override {
+    // Does nothing, we we want to have this function for future fee manager implementations
+  }
+
+  /// @inheritdoc IFeeManager
   function getFees(StrategyId strategyId) external view override returns (Fees memory) {
     StrategyFees memory strategyFees = _fees[strategyId];
     if (strategyFees.isSet) {

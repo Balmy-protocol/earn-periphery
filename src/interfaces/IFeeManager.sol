@@ -46,6 +46,9 @@ interface IFeeManager {
   // slither-disable-next-line naming-convention
   function MAX_FEE() external view returns (uint16);
 
+  /// @notice Allow the strategy to call the manager, for self-configuration
+  function strategySelfConfigure(bytes calldata data) external;
+
   /**
    * @notice Returns the strategy fees
    * @param strategyId The strategy to get the fees for
