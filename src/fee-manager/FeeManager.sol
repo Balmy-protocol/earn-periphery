@@ -3,7 +3,7 @@ pragma solidity >=0.8.22;
 
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import { IFeeManager, StrategyId } from "../interfaces/IFeeManager.sol";
+import { IFeeManager, IFeeManagerCore, StrategyId } from "../interfaces/IFeeManager.sol";
 import { Fees } from "../types/Fees.sol";
 
 struct StrategyFees {
@@ -37,13 +37,13 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
     _setDefaultFees(initialDefaultFees);
   }
 
-  /// @inheritdoc IFeeManager
+  /// @inheritdoc IFeeManagerCore
   // solhint-disable-next-line no-empty-blocks
   function strategySelfConfigure(bytes calldata data) external override {
     // Does nothing, we we want to have this function for future fee manager implementations
   }
 
-  /// @inheritdoc IFeeManager
+  /// @inheritdoc IFeeManagerCore
   function getFees(StrategyId strategyId) external view override returns (Fees memory) {
     StrategyFees memory strategyFees = _fees[strategyId];
     if (strategyFees.isSet) {
@@ -79,7 +79,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
     _setDefaultFees(newFees);
   }
 
-  /// @inheritdoc IFeeManager
+  /// @inheritdoc IFeeManagerCore
   function canWithdrawFees(StrategyId, address caller) external view returns (bool) {
     return hasRole(WITHDRAW_FEES_ROLE, caller);
   }

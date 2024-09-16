@@ -3,7 +3,7 @@ pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { IGlobalEarnRegistry } from "../../interfaces/IGlobalEarnRegistry.sol";
-import { ITOSManager, StrategyId } from "../../interfaces/ITOSManager.sol";
+import { ITOSManagerCore, StrategyId } from "../../interfaces/ITOSManager.sol";
 import { BaseCreationValidation } from "./base/BaseCreationValidation.sol";
 
 abstract contract ExternalTOSCreationValidation is BaseCreationValidation, Initializable {
@@ -27,7 +27,7 @@ abstract contract ExternalTOSCreationValidation is BaseCreationValidation, Initi
   }
 
   // slither-disable-next-line dead-code
-  function _getTOSManager() private view returns (ITOSManager) {
-    return ITOSManager(globalRegistry().getAddressOrFail(TOS_MANAGER));
+  function _getTOSManager() private view returns (ITOSManagerCore) {
+    return ITOSManagerCore(globalRegistry().getAddressOrFail(TOS_MANAGER));
   }
 }

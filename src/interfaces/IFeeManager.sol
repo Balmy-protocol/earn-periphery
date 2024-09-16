@@ -4,11 +4,27 @@ pragma solidity >=0.8.8;
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Fees } from "../types/Fees.sol";
 
+/// @notice Interface for the Fee Manager that the strategies call
+interface IFeeManagerCore {
+  /// @notice Allow the strategy to call the manager, for self-configuration
+  function strategySelfConfigure(bytes calldata data) external;
+
+  /**
+   * @notice Returns the strategy fees
+   * @param strategyId The strategy to get the fees for
+   * @return The strategy fees
+   */
+  function getFees(StrategyId strategyId) external view returns (Fees memory);
+
+  /// @notice Returns if the caller can withdraw fees from the strategy
+  function canWithdrawFees(StrategyId strategyId, address caller) external view returns (bool);
+}
+
 /**
  * @title Fee Manager Interface
  * @notice This manager handles fees for the strategies that call it
  */
-interface IFeeManager {
+interface IFeeManager is IFeeManagerCore {
   /// @notice Thrown when trying to set fees greater than the maximum fee
   error FeesGreaterThanMaximum();
 
@@ -45,19 +61,6 @@ interface IFeeManager {
    */
   // slither-disable-next-line naming-convention
   function MAX_FEE() external view returns (uint16);
-
-  /// @notice Allow the strategy to call the manager, for self-configuration
-  function strategySelfConfigure(bytes calldata data) external;
-
-  /**
-   * @notice Returns the strategy fees
-   * @param strategyId The strategy to get the fees for
-   * @return The strategy fees
-   */
-  function getFees(StrategyId strategyId) external view returns (Fees memory);
-
-  /// @notice Returns if the caller can withdraw fees from the strategy
-  function canWithdrawFees(StrategyId strategyId, address caller) external view returns (bool);
 
   /**
    * @notice Updates the fees for a strategy

@@ -4,7 +4,7 @@ pragma solidity >=0.8.22;
 import { Test } from "forge-std/Test.sol";
 import { VmSafe } from "forge-std/Vm.sol";
 import {
-  ITOSManager,
+  ITOSManagerCore,
   ExternalTOSCreationValidation,
   StrategyId,
   IGlobalEarnRegistry
@@ -14,7 +14,7 @@ contract ExternalTOSCreationValidationTest is Test {
   bytes32 private constant GROUP_1 = keccak256("group1");
   ExternalTOSCreationValidationInstance private tosValidation;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
-  ITOSManager private manager = ITOSManager(address(2));
+  ITOSManagerCore private manager = ITOSManagerCore(address(2));
   StrategyId private strategyId = StrategyId.wrap(1);
   VmSafe.Wallet private alice = vm.createWallet("alice");
 
@@ -23,13 +23,14 @@ contract ExternalTOSCreationValidationTest is Test {
     vm.mockCall(
       address(registry), abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector), abi.encode(manager)
     );
-    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.assignStrategyToGroup.selector), abi.encode());
-    vm.mockCall(address(manager), abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector), abi.encode());
+    vm.mockCall(
+      address(manager), abi.encodeWithSelector(ITOSManagerCore.validatePositionCreation.selector), abi.encode()
+    );
   }
 
   function test_init() public {
     vm.expectCall(
-      address(manager), abi.encodeWithSelector(ITOSManager.strategySelfConfigure.selector, abi.encode(GROUP_1))
+      address(manager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, abi.encode(GROUP_1))
     );
     tosValidation.init(abi.encode(GROUP_1));
   }
@@ -39,7 +40,7 @@ contract ExternalTOSCreationValidationTest is Test {
     bytes memory signature = "my signature";
     vm.expectCall(
       address(manager),
-      abi.encodeWithSelector(ITOSManager.validatePositionCreation.selector, strategyId, sender, signature)
+      abi.encodeWithSelector(ITOSManagerCore.validatePositionCreation.selector, strategyId, sender, signature)
     );
     tosValidation.validate(sender, signature);
   }
