@@ -16,6 +16,9 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   bytes32 public constant MANAGE_FEES_ROLE = keccak256("MANAGE_FEES_ROLE");
 
   /// @inheritdoc IFeeManager
+  bytes32 public constant WITHDRAW_FEES_ROLE = keccak256("WITHDRAW_FEES_ROLE");
+
+  /// @inheritdoc IFeeManager
   uint16 public constant MAX_FEE = 5000; // 50%
 
   mapping(StrategyId strategy => StrategyFees fees) internal _fees;
@@ -24,11 +27,13 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   constructor(
     address superAdmin,
     address[] memory initialManageFeeAdmins,
+    address[] memory initialWithdrawFeeAdmins,
     Fees memory initialDefaultFees
   )
     AccessControlDefaultAdminRules(3 days, superAdmin)
   {
     _assignRoles(MANAGE_FEES_ROLE, initialManageFeeAdmins);
+    _assignRoles(WITHDRAW_FEES_ROLE, initialWithdrawFeeAdmins);
     _setDefaultFees(initialDefaultFees);
   }
 
@@ -66,6 +71,11 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   /// @inheritdoc IFeeManager
   function setDefaultFees(Fees memory newFees) external override onlyRole(MANAGE_FEES_ROLE) {
     _setDefaultFees(newFees);
+  }
+
+  /// @inheritdoc IFeeManager
+  function canWithdrawFees(StrategyId, address caller) external view returns (bool) {
+    return hasRole(WITHDRAW_FEES_ROLE, caller);
   }
 
   function _setDefaultFees(Fees memory newFees) internal {

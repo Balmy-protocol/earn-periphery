@@ -13,22 +13,27 @@ contract FeeManagerTest is PRBTest {
 
   address private superAdmin = address(1);
   address private manageFeeAdmin = address(2);
+  address private withdrawFeeAdmin = address(3);
   Fees private defaultFees = Fees(400, 300, 200, 100);
   FeeManager private feeManager;
 
   function setUp() public virtual {
     vm.expectEmit();
     emit DefaultFeesChanged(defaultFees);
-    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), defaultFees);
+    feeManager = new FeeManager(
+      superAdmin, CommonUtils.arrayOf(manageFeeAdmin), CommonUtils.arrayOf(withdrawFeeAdmin), defaultFees
+    );
   }
 
   function test_constants() public {
     assertEq(feeManager.MANAGE_FEES_ROLE(), keccak256("MANAGE_FEES_ROLE"));
+    assertEq(feeManager.WITHDRAW_FEES_ROLE(), keccak256("WITHDRAW_FEES_ROLE"));
     assertEq(feeManager.MAX_FEE(), 5000);
   }
 
   function test_constructor() public {
     assertTrue(feeManager.hasRole(feeManager.MANAGE_FEES_ROLE(), manageFeeAdmin));
+    assertTrue(feeManager.hasRole(feeManager.WITHDRAW_FEES_ROLE(), withdrawFeeAdmin));
 
     // Access control
     assertEq(feeManager.defaultAdminDelay(), 3 days);
@@ -40,7 +45,17 @@ contract FeeManagerTest is PRBTest {
 
   function test_constructor_RevertWhen_FeeGreaterThanMaximum() public {
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
-    feeManager = new FeeManager(superAdmin, CommonUtils.arrayOf(manageFeeAdmin), Fees(10_000, 300, 200, 100));
+    feeManager = new FeeManager(
+      superAdmin,
+      CommonUtils.arrayOf(manageFeeAdmin),
+      CommonUtils.arrayOf(withdrawFeeAdmin),
+      Fees(10_000, 300, 200, 100)
+    );
+  }
+
+  function test_canWithdrawFees() public {
+    assertTrue(feeManager.canWithdrawFees(StrategyId.wrap(1), withdrawFeeAdmin));
+    assertFalse(feeManager.canWithdrawFees(StrategyId.wrap(1), manageFeeAdmin));
   }
 
   function test_setDefaultFees() public {
