@@ -48,7 +48,6 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line naming-convention,dead-code,assembly
   function _fees_init(bytes calldata data) internal onlyInitializing {
     IFeeManager feeManager = _getFeeManager();
-    feeManager.strategySelfConfigure(data);
     Fees memory fees = feeManager.getFees(strategyId());
     if (fees.performanceFee > 0) {
       // If performance fees are enabled, then we'll need to initialize the performance data
@@ -57,6 +56,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
         _performanceData[tokens[i]] = PerformanceData({ lastBalance: 0, isSet: true, performanceFees: 0 });
       }
     }
+    feeManager.strategySelfConfigure(data);
   }
 
   // slither-disable-next-line naming-convention,dead-code,assembly
