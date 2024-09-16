@@ -42,9 +42,21 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line naming-convention
   function _fees_underlying_asset() internal view virtual returns (address asset);
 
+  // slither-disable-next-line naming-convention
+  function _fees_underlying_tokens() internal view virtual returns (address[] memory tokens);
+
   // slither-disable-next-line naming-convention,dead-code,assembly
   function _fees_init(bytes calldata data) internal onlyInitializing {
-    _getFeeManager().strategySelfConfigure(data);
+    IFeeManager feeManager = _getFeeManager();
+    feeManager.strategySelfConfigure(data);
+    Fees memory fees = feeManager.getFees(strategyId());
+    if (fees.performanceFee > 0) {
+      // If performance fees are enabled, then we'll need to initialize the performance data
+      address[] memory tokens = _fees_underlying_tokens();
+      for (uint256 i; i < tokens.length; ++i) {
+        _performanceData[tokens[i]] = PerformanceData({ lastBalance: 0, isSet: true, performanceFees: 0 });
+      }
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code,assembly
@@ -78,7 +90,13 @@ abstract contract ExternalFees is BaseFees, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _fees_totalBalances() internal view override returns (address[] memory tokens, uint256[] memory balances) { }
+  function _fees_totalBalances() internal view override returns (address[] memory tokens, uint256[] memory balances) {
+    Fees memory fees = _getFees();
+    (tokens, balances) = _fees_underlying_totalBalances();
+    for (uint256 i; i < tokens.length; ++i) {
+      balances[i] -= _calculateFees(tokens[i], balances[i], fees.performanceFee);
+    }
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _fees_deposited(

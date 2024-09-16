@@ -37,6 +37,7 @@ contract ExternalFeesTest is Test {
   }
 
   function test_init() public {
+    _setFee(500); // 5%
     bytes memory data = "1234567";
     vm.expectCall(address(manager), abi.encodeWithSelector(IFeeManager.strategySelfConfigure.selector, data));
     fees.init(data);
@@ -55,6 +56,27 @@ contract ExternalFeesTest is Test {
     assertEq(bps.length, 2);
     assertEq(bps[0], 100);
     assertEq(bps[1], 300);
+  }
+
+  function test_totalBalances() public {
+    _setFee(500); // 5%
+    fees.init(""); // Initialize so that performance data is set
+
+    // Deposit 50k
+    fees.deposited(asset, 50_000);
+
+    // Set balance to 100k for asset and 50k for reward
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    (address[] memory tokens, uint256[] memory balances) = fees.totalBalances();
+
+    assertEq(tokens.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(balances.length, 2);
+    assertEq(balances[0], 100_000 - 2500); // 5% fee
+    assertEq(balances[1], 50_000 - 2500); // 5% fee
   }
 
   function test_deposited() public {
@@ -189,6 +211,10 @@ contract ExternalFeesInstance is ExternalFees {
     return _fees_fees();
   }
 
+  function totalBalances() external view returns (address[] memory tokens, uint256[] memory balances) {
+    return _fees_totalBalances();
+  }
+
   function deposited(address token, uint256 amount) external returns (uint256) {
     return _fees_deposited(token, amount);
   }
@@ -279,5 +305,9 @@ contract ExternalFeesInstance is ExternalFees {
 
   function _fees_underlying_asset() internal view override returns (address asset) {
     return _tokens[0];
+  }
+
+  function _fees_underlying_tokens() internal view virtual override returns (address[] memory tokens) {
+    return _tokens;
   }
 }
