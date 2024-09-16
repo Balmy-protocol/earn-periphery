@@ -18,7 +18,7 @@ interface ITOSManagerCore {
  * @title TOS Manager Interface
  * @notice This manager handles TOS for the strategies that call it
  */
-interface ITOSManager {
+interface ITOSManager is ITOSManagerCore {
   /// @notice Emitted when the TOS is updated for a group
   event TOSUpdated(bytes32 group, bytes tos);
 
