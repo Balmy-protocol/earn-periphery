@@ -182,7 +182,31 @@ abstract contract ExternalFees is BaseFees, Initializable {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
-  { }
+  {
+    Fees memory fees = _getFees();
+    if (fees.performanceFee == 0) {
+      address[] memory allTokens = _fees_underlying_tokens();
+      for (uint256 i; i < allTokens.length; ++i) {
+        _clearBalanceIfSet(allTokens[i]);
+      }
+
+      return _fees_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+    }
+
+    (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+
+    (balanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+      _fees_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    for (uint256 i; i < tokens.length; ++i) {
+      _performanceData[tokens[i]] = PerformanceData({
+        // Note: there might be a small wei difference here, but we can ignore it an avoid adding it as part of the fee
+        lastBalance: (currentBalances[i] - balanceChanges[i]).toUint128(),
+        performanceFees: _calculateFees(tokens[i], currentBalances[i], fees.performanceFee).toUint120(),
+        isSet: true
+      });
+    }
+  }
 
   // slither-disable-next-line dead-code
   function _clearBalanceIfSet(address token) private {

@@ -186,6 +186,47 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 2000);
   }
 
+  function test_specialWithdraw() public {
+    uint256 positionId = 1;
+    address recipient = address(0);
+    _setFee(500); // 5%
+
+    // Set balance to 100k for asset and 50k for reward
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    // Withdraw 50k and 10k
+    fees.specialWithdraw(positionId, SpecialWithdrawalCode.wrap(0), CommonUtils.arrayOf(50_000, 10_000), "", recipient);
+
+    // Set balance to 80k for asset and 80k for reward (30k and 40k yield)
+    fees.setBalance(asset, 80_000);
+    fees.setBalance(token, 80_000);
+
+    (address[] memory tokens, uint256[] memory collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 1500);
+    assertEq(collected[1], 2000);
+
+    // Withdraw another 10k and 20k
+    fees.specialWithdraw(positionId, SpecialWithdrawalCode.wrap(0), CommonUtils.arrayOf(10_000, 20_000), "", recipient);
+
+    // Set balance to 100k for asset and 50k for reward
+    // There was a loss, total yield was 60k and 40k
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    (tokens, collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 3000);
+    assertEq(collected[1], 2000);
+  }
+
   function _setFee(uint16 bps) private {
     vm.mockCall(
       address(manager),
@@ -229,6 +270,24 @@ contract ExternalFeesInstance is ExternalFees {
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  function specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    external
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    return _fees_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
   function globalRegistry() public view override returns (IGlobalEarnRegistry) {
@@ -287,13 +346,14 @@ contract ExternalFeesInstance is ExternalFees {
   }
 
   function _fees_underlying_specialWithdraw(
-    uint256 positionId,
-    SpecialWithdrawalCode withdrawalCode,
+    uint256,
+    SpecialWithdrawalCode,
     uint256[] calldata toWithdraw,
-    bytes calldata withdrawData,
-    address recipient
+    bytes calldata,
+    address
   )
     internal
+    pure
     override
     returns (
       uint256[] memory balanceChanges,
@@ -301,7 +361,12 @@ contract ExternalFeesInstance is ExternalFees {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
-  { }
+  {
+    balanceChanges = toWithdraw;
+    actualWithdrawnTokens = new address[](0);
+    actualWithdrawnAmounts = new uint256[](0);
+    result = "";
+  }
 
   function _fees_underlying_asset() internal view override returns (address asset) {
     return _tokens[0];
