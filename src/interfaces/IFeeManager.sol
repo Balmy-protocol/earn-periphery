@@ -64,7 +64,7 @@ interface IFeeManager {
    * @param strategyId The strategy to update the fees for
    * @param newFees The new fees
    */
-  function updateFees(StrategyId strategyId, Fees memory newFees) external;
+  function updateFees(StrategyId strategyId, Fees calldata newFees) external;
 
   /**
    * @notice Returns the default fees
@@ -82,7 +82,7 @@ interface IFeeManager {
    * @notice Sets the default fees
    * @param newFees The new default fees
    */
-  function setDefaultFees(Fees memory newFees) external;
+  function setDefaultFees(Fees calldata newFees) external;
 
   /**
    * @notice Checks if a strategy has default fees

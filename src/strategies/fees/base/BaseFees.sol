@@ -21,8 +21,8 @@ abstract contract BaseFees {
     returns (uint256 assetsDeposited);
   function _fees_underlying_withdraw(
     uint256 positionId,
-    address[] memory tokens,
-    uint256[] memory toWithdraw,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
     address recipient
   )
     internal
@@ -58,8 +58,8 @@ abstract contract BaseFees {
 
   function _fees_withdraw(
     uint256 positionId,
-    address[] memory tokens,
-    uint256[] memory toWithdraw,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
     address recipient
   )
     internal
