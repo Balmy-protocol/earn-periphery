@@ -5,6 +5,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { IEarnStrategy, SpecialWithdrawalCode, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "../../interfaces/IGlobalEarnRegistry.sol";
 import { IGuardianManagerCore } from "../../interfaces/IGuardianManager.sol";
+import { StrategyHelper } from "../libraries/StrategyHelper.sol";
 import { BaseGuardian } from "./base/BaseGuardian.sol";
 
 /**
@@ -13,8 +14,22 @@ import { BaseGuardian } from "./base/BaseGuardian.sol";
  *      A rescue with delayed withdrawals will revert
  */
 abstract contract ExternalGuardian is BaseGuardian, Initializable {
+  enum RescueStatus {
+    OK,
+    OK_WITH_BALANCE_ON_STRATEGY,
+    RESCUE_NEEDS_CONFIRMATION,
+    RESCUED
+  }
+
+  error InvalidRescueStatus();
+  error CallerCantPerformAction();
+  error OnlyImmediateWithdrawalsSupported();
+
   /// @notice The id for the Guardian Manager
   bytes32 public constant GUARDIAN_MANAGER = keccak256("GUARDIAN_MANAGER");
+
+  /// @notice Returns the strategy's current status
+  RescueStatus public rescueStatus;
 
   /// @notice The address of the global registry
   function globalRegistry() public view virtual returns (IGlobalEarnRegistry);
@@ -33,7 +48,44 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    * @return tokens Tokens what were rescued
    * @return rescued Amount that was rescued for each token
    */
-  function rescue(address feeRecipient) external returns (address[] memory tokens, uint256[] memory rescued) { }
+  function rescue(address feeRecipient) external returns (address[] memory tokens, uint256[] memory rescued) {
+    RescueStatus status = rescueStatus;
+    if (status == RescueStatus.RESCUED) {
+      revert InvalidRescueStatus();
+    }
+
+    StrategyId strategyId_ = strategyId();
+    IGuardianManagerCore manager = _getGuardianManager();
+    if (!manager.canStartRescue(strategyId_, msg.sender)) {
+      revert CallerCantPerformAction();
+    }
+
+    if (status != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+      // If we weren't waiting for confirmation before, then set correct status and alert manager
+      rescueStatus = RescueStatus.RESCUE_NEEDS_CONFIRMATION;
+      manager.startRescue(strategyId_, feeRecipient);
+    }
+
+    (tokens, rescued) = _guardian_underlying_maxWithdraw();
+    IEarnStrategy.WithdrawalType[] memory types = _guardian_underlying_withdraw(0, tokens, rescued, address(this));
+    if (!StrategyHelper.areAllImmediate(types)) {
+      revert OnlyImmediateWithdrawalsSupported();
+    }
+  }
+
+  // if already rescued, then revert
+  // if caller cant start rescue, then revert
+  // if ok,
+  //  then manager is called
+  //  withdraw is executed
+  // if already ok with balances, then ok
+  //  then manager is called
+  //  withdraw is executed
+  // if already rescuing, then ok
+  //  then manager is not called
+  //  withdraw is executed
+  // if all are not immediate
+  //   then revert
 
   /**
    * @notice Cancels a rescue process that was started. All withdrawn funds will be re-deposited into the underlying
@@ -54,6 +106,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_init(bytes calldata data) internal onlyInitializing {
+    rescueStatus = RescueStatus.OK;
     IGuardianManagerCore manager = _getGuardianManager();
     manager.strategySelfConfigure(data);
   }
