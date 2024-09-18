@@ -73,20 +73,6 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     }
   }
 
-  // if already rescued, then revert
-  // if caller cant start rescue, then revert
-  // if ok,
-  //  then manager is called
-  //  withdraw is executed
-  // if already ok with balances, then ok
-  //  then manager is called
-  //  withdraw is executed
-  // if already rescuing, then ok
-  //  then manager is not called
-  //  withdraw is executed
-  // if all are not immediate
-  //   then revert
-
   /**
    * @notice Cancels a rescue process that was started. All withdrawn funds will be re-deposited into the underlying
    *         source.
