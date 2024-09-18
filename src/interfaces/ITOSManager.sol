@@ -9,7 +9,7 @@ interface ITOSManagerCore {
   function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view;
 
   /**
-   * @notice Allow the strategy to call the manager, for self-configuration
+   * @notice Allows the strategy to call the manager, for self-configuration
    */
   function strategySelfConfigure(bytes calldata data) external;
 }

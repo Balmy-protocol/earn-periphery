@@ -18,7 +18,7 @@ interface IGuardianManagerCore {
    */
   function canConfirmRescue(StrategyId strategyId, address account) external view returns (bool);
 
-  /// @notice Allow the strategy to call the manager, for self-configuration
+  /// @notice Allows the strategy to call the manager, for self-configuration
   function strategySelfConfigure(bytes calldata data) external;
 
   /**

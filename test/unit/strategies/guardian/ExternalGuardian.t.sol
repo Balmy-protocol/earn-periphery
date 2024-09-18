@@ -2,7 +2,6 @@
 pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
-import { VmSafe } from "forge-std/Vm.sol";
 import {
   SpecialWithdrawalCode,
   IGuardianManagerCore,
@@ -20,7 +19,6 @@ contract ExternalGuardianTest is Test {
   address private asset = address(3);
   address private token = address(4);
   StrategyId private strategyId = StrategyId.wrap(1);
-  VmSafe.Wallet private alice = vm.createWallet("alice");
 
   function setUp() public virtual {
     address[] memory tokens = new address[](2);

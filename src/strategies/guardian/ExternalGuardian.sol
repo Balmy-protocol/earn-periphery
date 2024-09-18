@@ -24,13 +24,11 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
 
   /**
    * @notice Starts a rescue process for this strategy. When a rescue is started, we will try to withdraw all funds from
-   * the underlying source.
-   *         It could happen that not all funds can be withdrawn when the rescue is executed, so this function can be
-   * called multiple times.
-   *         Each time, all possible funds will be withdrawn into the strategy
+   *         the underlying source. It could happen that not all funds can be withdrawn when the rescue is executed, so
+   *         this function can be called multiple times. Each time, all possible funds will be withdrawn into the
+   *         strategy
    * @dev Even though the function can be called multiple times, the recipient set on the first call will be the one
-   * that receives the rescue fee.
-   *      This function can only be called by accounts that have the permission to do so
+   *      that receives the rescue fee. This function can only be called by accounts that have the permission to do so
    * @param feeRecipient The recipient of the rescue fee.
    * @return tokens Tokens what were rescued
    * @return rescued Amount that was rescued for each token
@@ -39,15 +37,14 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
 
   /**
    * @notice Cancels a rescue process that was started. All withdrawn funds will be re-deposited into the underlying
-   * source.
+   *         source.
    * @dev This function can only be called by accounts that have the permission to do so
    */
   function cancelRescue() external { }
 
   /**
    * @notice Confirms a rescue process that was started. When this happens, the rescue fee will be charged and the
-   * rescue process will be completed.
-   *         This means that `rescue` cannot be called anymore
+   *         rescue process will be completed. This means that `rescue` cannot be called anymore
    * @dev This function can only be called by accounts that have the permission to do so
    */
   function confirmRescue() external { }

@@ -16,7 +16,6 @@ contract ExternalTOSCreationValidationTest is Test {
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
   ITOSManagerCore private manager = ITOSManagerCore(address(2));
   StrategyId private strategyId = StrategyId.wrap(1);
-  VmSafe.Wallet private alice = vm.createWallet("alice");
 
   function setUp() public virtual {
     tosValidation = new ExternalTOSCreationValidationInstance(registry, strategyId);

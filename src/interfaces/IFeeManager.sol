@@ -6,7 +6,7 @@ import { Fees } from "../types/Fees.sol";
 
 /// @notice Interface for the Fee Manager that the strategies call
 interface IFeeManagerCore {
-  /// @notice Allow the strategy to call the manager, for self-configuration
+  /// @notice Allows the strategy to call the manager, for self-configuration
   function strategySelfConfigure(bytes calldata data) external;
 
   /**
