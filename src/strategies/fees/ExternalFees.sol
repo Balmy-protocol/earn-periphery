@@ -45,7 +45,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line naming-convention
   function _fees_underlying_tokens() internal view virtual returns (address[] memory tokens);
 
-  // slither-disable-next-line naming-convention,dead-code,assembly
+  // slither-disable-next-line naming-convention,dead-code
   function _fees_init(bytes calldata data) internal onlyInitializing {
     IFeeManagerCore feeManager = _getFeeManager();
     Fees memory fees = feeManager.getFees(strategyId());
