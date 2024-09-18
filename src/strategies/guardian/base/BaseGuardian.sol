@@ -4,9 +4,9 @@ pragma solidity >=0.8.22;
 import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
 /**
- * @notice The base layer for guardian implmntations
- * @dev Ideally we would also overwrite other functions like `maxDeposit` and `maxWithdraw`, but we want to keep the
- * contract as small as possible
+ * @notice The base layer for guardian implementations
+ * @dev Ideally we would also overwrite other strategy functions like `maxDeposit` and `maxWithdraw`, but we want to
+ *      keep the contract as small as possible and those are not as relevant as the currently overwriten functions
  */
 abstract contract BaseGuardian {
   // slither-disable-start naming-convention

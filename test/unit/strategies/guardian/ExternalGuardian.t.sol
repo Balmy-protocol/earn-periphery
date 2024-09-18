@@ -17,14 +17,11 @@ contract ExternalGuardianTest is Test {
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
   IGuardianManagerCore private manager = IGuardianManagerCore(address(2));
   address private asset = address(3);
-  address private token = address(4);
+  address private reward = address(4);
   StrategyId private strategyId = StrategyId.wrap(1);
 
   function setUp() public virtual {
-    address[] memory tokens = new address[](2);
-    tokens[0] = asset;
-    tokens[1] = token;
-    guardian = new ExternalGuardianInstance(registry, strategyId, tokens);
+    guardian = new ExternalGuardianInstance(registry, strategyId, CommonUtils.arrayOf(asset, reward));
     vm.mockCall(
       address(registry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("GUARDIAN_MANAGER")),
