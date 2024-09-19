@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Test } from "forge-std/Test.sol";
 import {
   SpecialWithdrawalCode,
@@ -140,6 +141,72 @@ contract ExternalGuardianTest is Test {
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.OnlyImmediateWithdrawalsSupported.selector));
     guardian.rescue(feeRecipient);
   }
+
+  function test_cancelRescue() public {
+    uint256 balance = 12_345_678;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balance)
+    );
+    vm.mockCall(address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(0));
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.cancelRescue.selector, strategyId));
+    guardian.cancelRescue();
+
+    ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
+    assertEq(deposit.token, asset);
+    assertEq(deposit.amount, balance);
+    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.OK);
+  }
+
+  function test_cancelRescue_withBalances() public {
+    uint256 assetBalance = 12_345_678;
+    uint256 rewardBalance = 987_655;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(assetBalance)
+    );
+    vm.mockCall(
+      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(rewardBalance)
+    );
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.cancelRescue.selector, strategyId));
+    guardian.cancelRescue();
+
+    ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
+    assertEq(deposit.token, asset);
+    assertEq(deposit.amount, assetBalance);
+    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+  }
+
+  function test_cancelRescue_revertWhen_noNeedForConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.cancelRescue();
+  }
+
+  function test_cancelRescue_revertWhen_callerCantCancelRescue() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
+      abi.encode(false)
+    );
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.CallerCantPerformAction.selector));
+    guardian.cancelRescue();
+  }
 }
 
 contract ExternalGuardianInstance is ExternalGuardian {
@@ -149,11 +216,17 @@ contract ExternalGuardianInstance is ExternalGuardian {
     address recipient;
   }
 
+  struct Deposit {
+    address token;
+    uint256 amount;
+  }
+
   IEarnStrategy.WithdrawalType private _withdrawalType = IEarnStrategy.WithdrawalType.IMMEDIATE;
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
   address[] private _tokens;
   Withdrawal private _withdrawal;
+  Deposit private _deposit;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -173,6 +246,10 @@ contract ExternalGuardianInstance is ExternalGuardian {
     _guardian_init(data);
   }
 
+  function deposit() external view returns (Deposit memory) {
+    return _deposit;
+  }
+
   function withdrawal() external view returns (Withdrawal memory) {
     return _withdrawal;
   }
@@ -186,14 +263,14 @@ contract ExternalGuardianInstance is ExternalGuardian {
   }
 
   function _guardian_underlying_deposited(
-    address,
+    address depositToken,
     uint256 depositAmount
   )
     internal
-    pure
     override
     returns (uint256 assetsDeposited)
   {
+    _deposit = Deposit(depositToken, depositAmount);
     return depositAmount;
   }
 
