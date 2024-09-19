@@ -3,6 +3,7 @@ pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { IEarnStrategy, SpecialWithdrawalCode, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IGlobalEarnRegistry } from "../../interfaces/IGlobalEarnRegistry.sol";
 import { IGuardianManagerCore } from "../../interfaces/IGuardianManager.sol";
 import { StrategyHelper } from "../libraries/StrategyHelper.sol";
@@ -24,6 +25,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   error InvalidRescueStatus();
   error CallerCantPerformAction();
   error OnlyImmediateWithdrawalsSupported();
+
+  using Token for address;
 
   /// @notice The id for the Guardian Manager
   bytes32 public constant GUARDIAN_MANAGER = keccak256("GUARDIAN_MANAGER");
@@ -78,7 +81,25 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    *         source.
    * @dev This function can only be called by accounts that have the permission to do so
    */
-  function cancelRescue() external { }
+  function cancelRescue() external {
+    if (rescueStatus != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+      revert InvalidRescueStatus();
+    }
+
+    StrategyId strategyId_ = strategyId();
+    IGuardianManagerCore manager = _getGuardianManager();
+    if (!manager.canCancelRescue(strategyId_, msg.sender)) {
+      revert CallerCantPerformAction();
+    }
+
+    address[] memory tokens = _guardian_underlying_tokens();
+    uint256 assetBalance = tokens[0].balanceOf(address(this));
+    _guardian_underlying_deposited(tokens[0], assetBalance);
+
+    rescueStatus = _isThereRewardBalanceOnContract(tokens) ? RescueStatus.OK_WITH_BALANCE_ON_STRATEGY : RescueStatus.OK;
+
+    manager.cancelRescue(strategyId_);
+  }
 
   /**
    * @notice Confirms a rescue process that was started. When this happens, the rescue fee will be charged and the
@@ -148,5 +169,15 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
     return IGuardianManagerCore(globalRegistry().getAddressOrFail(GUARDIAN_MANAGER));
+  }
+
+  function _isThereRewardBalanceOnContract(address[] memory tokens) private view returns (bool) {
+    for (uint256 i = 1; i < tokens.length; i++) {
+      uint256 balance = tokens[i].balanceOf(address(this));
+      if (balance > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
