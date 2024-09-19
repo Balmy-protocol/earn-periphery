@@ -2,6 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IEarnStrategy, SpecialWithdrawalCode, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IGlobalEarnRegistry } from "../../interfaces/IGlobalEarnRegistry.sol";
@@ -27,6 +28,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   error OnlyImmediateWithdrawalsSupported();
 
   using Token for address;
+  using Math for uint256;
 
   /// @notice The id for the Guardian Manager
   bytes32 public constant GUARDIAN_MANAGER = keccak256("GUARDIAN_MANAGER");
@@ -106,7 +108,26 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    *         rescue process will be completed. This means that `rescue` cannot be called anymore
    * @dev This function can only be called by accounts that have the permission to do so
    */
-  function confirmRescue() external { }
+  function confirmRescue() external {
+    if (rescueStatus != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+      revert InvalidRescueStatus();
+    }
+
+    StrategyId strategyId_ = strategyId();
+    IGuardianManagerCore manager = _getGuardianManager();
+    if (!manager.canConfirmRescue(strategyId_, msg.sender)) {
+      revert CallerCantPerformAction();
+    }
+
+    rescueStatus = RescueStatus.RESCUED;
+    (address feeRecipient, uint16 feeBps) = manager.confirmRescue(strategyId_);
+    address[] memory tokens = _guardian_underlying_tokens();
+    for (uint256 i = 0; i < tokens.length; i++) {
+      uint256 balance = tokens[i].balanceOf(address(this));
+      uint256 fee = balance.mulDiv(feeBps, 10_000, Math.Rounding.Floor);
+      tokens[i].transfer(feeRecipient, fee);
+    }
+  }
 
   // slither-disable-next-line naming-convention
   function _guardian_underlying_tokens() internal view virtual returns (address[] memory tokens);
