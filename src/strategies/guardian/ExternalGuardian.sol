@@ -95,16 +95,10 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     address[] memory tokens = _guardian_underlying_tokens();
     uint256 assetBalance = tokens[0].balanceOf(address(this));
     _guardian_underlying_deposited(tokens[0], assetBalance);
-    manager.cancelRescue(strategyId_);
 
-    for (uint256 i = 1; i < tokens.length; i++) {
-      uint256 balance = tokens[i].balanceOf(address(this));
-      if (balance > 0) {
-        rescueStatus = RescueStatus.OK_WITH_BALANCE_ON_STRATEGY;
-        return;
-      }
-    }
-    rescueStatus = RescueStatus.OK;
+    rescueStatus = _isThereRewardBalanceOnContract(tokens) ? RescueStatus.OK_WITH_BALANCE_ON_STRATEGY : RescueStatus.OK;
+
+    manager.cancelRescue(strategyId_);
   }
 
   /**
@@ -175,5 +169,15 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
     return IGuardianManagerCore(globalRegistry().getAddressOrFail(GUARDIAN_MANAGER));
+  }
+
+  function _isThereRewardBalanceOnContract(address[] memory tokens) private view returns (bool) {
+    for (uint256 i = 1; i < tokens.length; i++) {
+      uint256 balance = tokens[i].balanceOf(address(this));
+      if (balance > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }
