@@ -30,6 +30,8 @@ contract ExternalGuardianTest is Test {
     );
     vm.mockCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), "");
     vm.mockCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.startRescue.selector), "");
+    vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
+    vm.mockCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
   }
 
   function test_init() public {
@@ -206,6 +208,62 @@ contract ExternalGuardianTest is Test {
     );
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.CallerCantPerformAction.selector));
     guardian.cancelRescue();
+  }
+
+  function test_confirmRescue() public {
+    address feeRecipient = address(10);
+    uint256 feeBps = 1000;
+    uint256 assetBalance = 12_345_678;
+    uint256 rewardBalance = 987_655;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(assetBalance)
+    );
+    vm.mockCall(
+      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(rewardBalance)
+    );
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canConfirmRescue.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.confirmRescue.selector, strategyId),
+      abi.encode(feeRecipient, feeBps)
+    );
+
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.confirmRescue.selector, strategyId));
+    vm.expectCall(
+      address(asset), abi.encodeWithSelector(IERC20.transfer.selector, feeRecipient, assetBalance * feeBps / 10_000)
+    );
+    vm.expectCall(
+      address(reward), abi.encodeWithSelector(IERC20.transfer.selector, feeRecipient, rewardBalance * feeBps / 10_000)
+    );
+
+    guardian.confirmRescue();
+
+    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.RESCUED);
+  }
+
+  function test_confirmRescue_revertWhen_noNeedForConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.confirmRescue();
+  }
+
+  function test_confirmRescue_revertWhen_callerCantConfirmRescue() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canConfirmRescue.selector, strategyId, address(this)),
+      abi.encode(false)
+    );
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.CallerCantPerformAction.selector));
+    guardian.confirmRescue();
   }
 }
 
