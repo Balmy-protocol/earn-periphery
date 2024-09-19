@@ -279,6 +279,100 @@ contract ExternalGuardianTest is Test {
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.CallerCantPerformAction.selector));
     guardian.confirmRescue();
   }
+
+  function test_totalBalances_ok() public {
+    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 rewardUnderlyingBalance = 987_655;
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
+
+    (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(balances, CommonUtils.arrayOf(assetUndelyingBalance, rewardUnderlyingBalance));
+  }
+
+  function test_totalBalances_withBalances() public {
+    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 assetBalanceInContract = 345_789;
+    uint256 rewardUnderlyingBalance = 987_655;
+    uint256 rewardBalanceInContract = 123_890;
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
+    vm.mockCall(
+      address(asset),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(assetBalanceInContract)
+    );
+    vm.mockCall(
+      address(reward),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(rewardBalanceInContract)
+    );
+
+    (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(
+      balances,
+      CommonUtils.arrayOf(
+        assetUndelyingBalance + assetBalanceInContract, rewardUnderlyingBalance + rewardBalanceInContract
+      )
+    );
+  }
+
+  function test_totalBalances_needsConfirmation() public {
+    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 assetBalanceInContract = 345_789;
+    uint256 rewardUnderlyingBalance = 987_655;
+    uint256 rewardBalanceInContract = 123_890;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
+    vm.mockCall(
+      address(asset),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(assetBalanceInContract)
+    );
+    vm.mockCall(
+      address(reward),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(rewardBalanceInContract)
+    );
+
+    (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(
+      balances,
+      CommonUtils.arrayOf(
+        assetUndelyingBalance + assetBalanceInContract, rewardUnderlyingBalance + rewardBalanceInContract
+      )
+    );
+  }
+
+  function test_totalBalances_rescued() public {
+    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 assetBalanceInContract = 345_789;
+    uint256 rewardUnderlyingBalance = 987_655;
+    uint256 rewardBalanceInContract = 123_890;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
+    vm.mockCall(
+      address(asset),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(assetBalanceInContract)
+    );
+    vm.mockCall(
+      address(reward),
+      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
+      abi.encode(rewardBalanceInContract)
+    );
+
+    (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(balances, CommonUtils.arrayOf(assetBalanceInContract, rewardBalanceInContract));
+  }
 }
 
 contract ExternalGuardianInstance is ExternalGuardian {
@@ -299,6 +393,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   address[] private _tokens;
   Withdrawal private _withdrawal;
   Deposit private _deposit;
+  mapping(address token => uint256 balance) private _underlyingBalance;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -316,6 +411,10 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function init(bytes calldata data) external initializer {
     _guardian_init(data);
+  }
+
+  function totalBalances() external view returns (address[] memory tokens, uint256[] memory balances) {
+    return _guardian_totalBalances();
   }
 
   function deposit() external view returns (Deposit memory) {
@@ -340,6 +439,23 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function setWithdrawalType(IEarnStrategy.WithdrawalType withdrawalType) external {
     _withdrawalType = withdrawalType;
+  }
+
+  function setUnderlyingBalance(address token, uint256 balance) external {
+    _underlyingBalance[token] = balance;
+  }
+
+  function _guardian_underlying_totalBalances()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory balances)
+  {
+    tokens = _tokens;
+    balances = new uint256[](tokens.length);
+    for (uint256 i = 0; i < tokens.length; i++) {
+      balances[i] = _underlyingBalance[tokens[i]];
+    }
   }
 
   function _guardian_underlying_deposited(

@@ -163,7 +163,23 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     view
     override
     returns (address[] memory tokens, uint256[] memory balances)
-  { }
+  {
+    RescueStatus status = rescueConfig.status;
+    if (status == RescueStatus.OK) {
+      return _guardian_underlying_totalBalances();
+    } else if (status == RescueStatus.OK_WITH_BALANCE_ON_STRATEGY || status == RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+      (tokens, balances) = _guardian_underlying_totalBalances();
+      for (uint256 i = 0; i < tokens.length; i++) {
+        balances[i] += tokens[i].balanceOf(address(this));
+      }
+    } else {
+      tokens = _guardian_underlying_tokens();
+      balances = new uint256[](tokens.length);
+      for (uint256 i = 0; i < tokens.length; i++) {
+        balances[i] = tokens[i].balanceOf(address(this));
+      }
+    }
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_deposited(
