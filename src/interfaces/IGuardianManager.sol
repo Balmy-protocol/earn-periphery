@@ -22,18 +22,18 @@ interface IGuardianManagerCore {
   function strategySelfConfigure(bytes calldata data) external;
 
   /**
-   * @notice Starts a rescue
+   * @notice Alerts that a rescue has started
    * @dev Will revert if the rescue is already in progress or if it has been confirmed already
    */
-  function startRescue(StrategyId strategyId, address feeRecipient) external;
+  function rescueStarted(StrategyId strategyId) external;
   /**
-   * @notice Cancels a rescue
+   * @notice Alerts that a rescue has been cancelled
    * @dev Will revert if the rescue is not in progress
    */
-  function cancelRescue(StrategyId strategyId) external;
+  function rescueCancelled(StrategyId strategyId) external;
   /**
-   * @notice Confirms a rescue
+   * @notice Alerts that a rescue has been confirmed
    * @dev Will revert if the rescue is not in progress
    */
-  function confirmRescue(StrategyId strategyId) external returns (address feeRecipient, uint16 rescueFeeBps);
+  function rescueConfirmed(StrategyId strategyId) external;
 }

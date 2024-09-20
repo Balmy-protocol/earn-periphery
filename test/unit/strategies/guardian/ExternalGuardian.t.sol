@@ -29,7 +29,6 @@ contract ExternalGuardianTest is Test {
       abi.encode(manager)
     );
     vm.mockCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), "");
-    vm.mockCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.startRescue.selector), "");
     vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
     vm.mockCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
   }
@@ -38,7 +37,10 @@ contract ExternalGuardianTest is Test {
     bytes memory data = "1234567";
     vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, data));
     guardian.init(data);
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.OK);
+    (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 0);
+    assertEq(feeRecipient, address(0));
+    assertTrue(status == ExternalGuardian.RescueStatus.OK);
   }
 
   function test_rescue_ok() public {
@@ -50,9 +52,7 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.expectCall(
-      address(manager), abi.encodeWithSelector(IGuardianManagerCore.startRescue.selector, strategyId, feeRecipient)
-    );
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueStarted.selector, strategyId));
     (address[] memory tokens, uint256[] memory withdrawn) = guardian.rescue(feeRecipient);
 
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
@@ -62,7 +62,10 @@ contract ExternalGuardianTest is Test {
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    (uint16 feeBps, address configuredFeeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 12_345);
+    assertEq(configuredFeeRecipient, feeRecipient);
+    assertTrue(status == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
   }
 
   function test_rescue_okWithBalances() public {
@@ -74,9 +77,7 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.expectCall(
-      address(manager), abi.encodeWithSelector(IGuardianManagerCore.startRescue.selector, strategyId, feeRecipient)
-    );
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueStarted.selector, strategyId));
     (address[] memory tokens, uint256[] memory withdrawn) = guardian.rescue(feeRecipient);
 
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
@@ -86,7 +87,10 @@ contract ExternalGuardianTest is Test {
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    (uint16 feeBps, address configuredFeeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 12_345);
+    assertEq(configuredFeeRecipient, feeRecipient);
+    assertTrue(status == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
   }
 
   function test_rescue_rescueNeedsConfirmation() public {
@@ -98,7 +102,7 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.startRescue.selector), 0);
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueStarted.selector), 0);
     (address[] memory tokens, uint256[] memory withdrawn) = guardian.rescue(feeRecipient);
 
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
@@ -108,7 +112,10 @@ contract ExternalGuardianTest is Test {
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    (uint16 feeBps, address configuredFeeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 0);
+    assertEq(configuredFeeRecipient, address(0));
+    assertTrue(status == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
   }
 
   function test_rescue_revertWhen_alreadyRescued() public {
@@ -157,13 +164,16 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.cancelRescue.selector, strategyId));
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
     guardian.cancelRescue();
 
     ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, balance);
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.OK);
+    (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 0);
+    assertEq(feeRecipient, address(0));
+    assertTrue(status == ExternalGuardian.RescueStatus.OK);
   }
 
   function test_cancelRescue_withBalances() public {
@@ -182,13 +192,16 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.cancelRescue.selector, strategyId));
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
     guardian.cancelRescue();
 
     ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, assetBalance);
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+    (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 0);
+    assertEq(feeRecipient, address(0));
+    assertTrue(status == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
   }
 
   function test_cancelRescue_revertWhen_noNeedForConfirmation() public {
@@ -212,10 +225,12 @@ contract ExternalGuardianTest is Test {
 
   function test_confirmRescue() public {
     address feeRecipient = address(10);
-    uint256 feeBps = 1000;
+    uint256 feeBps = 12_345;
     uint256 assetBalance = 12_345_678;
     uint256 rewardBalance = 987_655;
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    guardian.setFeeRecipient(feeRecipient);
+    guardian.setFee(feeBps);
 
     vm.mockCall(
       address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(assetBalance)
@@ -228,13 +243,8 @@ contract ExternalGuardianTest is Test {
       abi.encodeWithSelector(IGuardianManagerCore.canConfirmRescue.selector, strategyId, address(this)),
       abi.encode(true)
     );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(IGuardianManagerCore.confirmRescue.selector, strategyId),
-      abi.encode(feeRecipient, feeBps)
-    );
 
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.confirmRescue.selector, strategyId));
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueConfirmed.selector, strategyId));
     vm.expectCall(
       address(asset), abi.encodeWithSelector(IERC20.transfer.selector, feeRecipient, assetBalance * feeBps / 10_000)
     );
@@ -244,7 +254,11 @@ contract ExternalGuardianTest is Test {
 
     guardian.confirmRescue();
 
-    assertTrue(guardian.rescueStatus() == ExternalGuardian.RescueStatus.RESCUED);
+    (uint16 configuredFeeBps, address configuredFeeRecipient, ExternalGuardian.RescueStatus status) =
+      guardian.rescueConfig();
+    assertEq(configuredFeeBps, feeBps);
+    assertEq(configuredFeeRecipient, feeRecipient);
+    assertTrue(status == ExternalGuardian.RescueStatus.RESCUED);
   }
 
   function test_confirmRescue_revertWhen_noNeedForConfirmation() public {
@@ -313,7 +327,15 @@ contract ExternalGuardianInstance is ExternalGuardian {
   }
 
   function setStatus(RescueStatus status) external {
-    rescueStatus = status;
+    rescueConfig.status = status;
+  }
+
+  function setFeeRecipient(address feeRecipient) external {
+    rescueConfig.feeRecipient = feeRecipient;
+  }
+
+  function setFee(uint256 feeBps) external {
+    rescueConfig.feeBps = uint16(feeBps);
   }
 
   function setWithdrawalType(IEarnStrategy.WithdrawalType withdrawalType) external {
@@ -384,5 +406,9 @@ contract ExternalGuardianInstance is ExternalGuardian {
   {
     tokens = _tokens;
     withdrawable = CommonUtils.arrayOf(10_000, 20_000);
+  }
+
+  function _guardian_rescueFee() internal pure override returns (uint16) {
+    return 12_345;
   }
 }

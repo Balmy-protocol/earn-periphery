@@ -23,6 +23,12 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     RESCUED
   }
 
+  struct RescueConfig {
+    uint16 feeBps;
+    address feeRecipient;
+    RescueStatus status;
+  }
+
   error InvalidRescueStatus();
   error CallerCantPerformAction();
   error OnlyImmediateWithdrawalsSupported();
@@ -33,8 +39,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   /// @notice The id for the Guardian Manager
   bytes32 public constant GUARDIAN_MANAGER = keccak256("GUARDIAN_MANAGER");
 
-  /// @notice Returns the strategy's current status
-  RescueStatus public rescueStatus;
+  /// @notice Returns the strategy's current config
+  RescueConfig public rescueConfig;
 
   /// @notice The address of the global registry
   function globalRegistry() public view virtual returns (IGlobalEarnRegistry);
@@ -54,7 +60,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    * @return rescued Amount that was rescued for each token
    */
   function rescue(address feeRecipient) external returns (address[] memory tokens, uint256[] memory rescued) {
-    RescueStatus status = rescueStatus;
+    RescueStatus status = rescueConfig.status;
     if (status == RescueStatus.RESCUED) {
       revert InvalidRescueStatus();
     }
@@ -66,9 +72,13 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     }
 
     if (status != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
-      // If we weren't waiting for confirmation before, then set correct status and alert manager
-      rescueStatus = RescueStatus.RESCUE_NEEDS_CONFIRMATION;
-      manager.startRescue(strategyId_, feeRecipient);
+      // If we weren't waiting for confirmation before, then set correct config and alert manager
+      rescueConfig = RescueConfig({
+        feeRecipient: feeRecipient,
+        feeBps: _guardian_rescueFee(),
+        status: RescueStatus.RESCUE_NEEDS_CONFIRMATION
+      });
+      manager.rescueStarted(strategyId_);
     }
 
     (tokens, rescued) = _guardian_underlying_maxWithdraw();
@@ -84,7 +94,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    * @dev This function can only be called by accounts that have the permission to do so
    */
   function cancelRescue() external {
-    if (rescueStatus != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+    if (rescueConfig.status != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
       revert InvalidRescueStatus();
     }
 
@@ -98,9 +108,13 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     uint256 assetBalance = tokens[0].balanceOf(address(this));
     _guardian_underlying_deposited(tokens[0], assetBalance);
 
-    rescueStatus = _isThereRewardBalanceOnContract(tokens) ? RescueStatus.OK_WITH_BALANCE_ON_STRATEGY : RescueStatus.OK;
+    rescueConfig = RescueConfig({
+      feeBps: 0,
+      feeRecipient: address(0),
+      status: _isThereRewardBalanceOnContract(tokens) ? RescueStatus.OK_WITH_BALANCE_ON_STRATEGY : RescueStatus.OK
+    });
 
-    manager.cancelRescue(strategyId_);
+    manager.rescueCancelled(strategyId_);
   }
 
   /**
@@ -109,7 +123,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    * @dev This function can only be called by accounts that have the permission to do so
    */
   function confirmRescue() external {
-    if (rescueStatus != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+    RescueConfig memory rescueConfig_ = rescueConfig;
+    if (rescueConfig_.status != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
       revert InvalidRescueStatus();
     }
 
@@ -119,22 +134,25 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
       revert CallerCantPerformAction();
     }
 
-    rescueStatus = RescueStatus.RESCUED;
-    (address feeRecipient, uint16 feeBps) = manager.confirmRescue(strategyId_);
+    rescueConfig.status = RescueStatus.RESCUED;
+    manager.rescueConfirmed(strategyId_);
     address[] memory tokens = _guardian_underlying_tokens();
     for (uint256 i = 0; i < tokens.length; i++) {
       uint256 balance = tokens[i].balanceOf(address(this));
-      uint256 fee = balance.mulDiv(feeBps, 10_000, Math.Rounding.Floor);
-      tokens[i].transfer(feeRecipient, fee);
+      uint256 fee = balance.mulDiv(rescueConfig_.feeBps, 10_000, Math.Rounding.Floor);
+      tokens[i].transfer(rescueConfig_.feeRecipient, fee);
     }
   }
 
   // slither-disable-next-line naming-convention
   function _guardian_underlying_tokens() internal view virtual returns (address[] memory tokens);
 
+  // slither-disable-next-line naming-convention
+  function _guardian_rescueFee() internal view virtual returns (uint16);
+
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_init(bytes calldata data) internal onlyInitializing {
-    rescueStatus = RescueStatus.OK;
+    rescueConfig = RescueConfig({ feeBps: 0, feeRecipient: address(0), status: RescueStatus.OK });
     IGuardianManagerCore manager = _getGuardianManager();
     manager.strategySelfConfigure(data);
   }
