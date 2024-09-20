@@ -16,6 +16,11 @@ abstract contract BaseGuardian {
     view
     virtual
     returns (address[] memory tokens, uint256[] memory withdrawable);
+  function _guardian_underlying_totalBalances()
+    internal
+    view
+    virtual
+    returns (address[] memory tokens, uint256[] memory balances);
   function _guardian_underlying_deposited(
     address depositToken,
     uint256 depositAmount
