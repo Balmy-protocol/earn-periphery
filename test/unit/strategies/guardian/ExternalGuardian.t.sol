@@ -58,7 +58,7 @@ contract ExternalGuardianTest is Test {
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawn, CommonUtils.arrayOf(10_000, 20_000));
 
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.withdrawal();
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
@@ -83,7 +83,7 @@ contract ExternalGuardianTest is Test {
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawn, CommonUtils.arrayOf(10_000, 20_000));
 
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.withdrawal();
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
@@ -108,7 +108,7 @@ contract ExternalGuardianTest is Test {
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawn, CommonUtils.arrayOf(10_000, 20_000));
 
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.withdrawal();
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
     assertEq(withdrawal.recipient, address(guardian));
@@ -167,7 +167,7 @@ contract ExternalGuardianTest is Test {
     vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
     guardian.cancelRescue();
 
-    ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
+    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, balance);
     (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
@@ -195,7 +195,7 @@ contract ExternalGuardianTest is Test {
     vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
     guardian.cancelRescue();
 
-    ExternalGuardianInstance.Deposit memory deposit = guardian.deposit();
+    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, assetBalance);
     (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
@@ -373,6 +373,38 @@ contract ExternalGuardianTest is Test {
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(balances, CommonUtils.arrayOf(assetBalanceInContract, rewardBalanceInContract));
   }
+
+  function test_deposit_ok() public {
+    uint256 amount = 12_345;
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+    uint256 deposited = guardian.deposit(asset, amount);
+    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
+    assertEq(deposit.token, asset);
+    assertEq(deposit.amount, amount);
+    assertEq(deposited, amount);
+  }
+
+  function test_deposit_withBalances() public {
+    uint256 amount = 12_345;
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+    uint256 deposited = guardian.deposit(asset, amount);
+    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
+    assertEq(deposit.token, asset);
+    assertEq(deposit.amount, amount);
+    assertEq(deposited, amount);
+  }
+
+  function test_deposit_needsConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.deposit(address(0), 0);
+  }
+
+  function test_deposit_rescued() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.deposit(address(0), 0);
+  }
 }
 
 contract ExternalGuardianInstance is ExternalGuardian {
@@ -417,11 +449,15 @@ contract ExternalGuardianInstance is ExternalGuardian {
     return _guardian_totalBalances();
   }
 
-  function deposit() external view returns (Deposit memory) {
+  function deposit(address token, uint256 amount) external returns (uint256 assetsDeposited) {
+    return _guardian_deposited(token, amount);
+  }
+
+  function lastDeposit() external view returns (Deposit memory) {
     return _deposit;
   }
 
-  function withdrawal() external view returns (Withdrawal memory) {
+  function lastWithdrawal() external view returns (Withdrawal memory) {
     return _withdrawal;
   }
 
