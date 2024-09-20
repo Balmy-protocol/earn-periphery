@@ -434,7 +434,30 @@ contract ExternalGuardianTest is Test {
   }
 
   function test_specialWithdraw_withBalances() public {
+    uint256 positionId = 2;
+    SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(10);
+    uint256[] memory toWithdraw = CommonUtils.arrayOf(1000, 1000);
+    bytes memory withdrawData = "12345";
+    address recipient = address(15);
     guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = guardian.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    assertEq(balanceChanges, toWithdraw);
+    assertEq(actualWithdrawnTokens.length, 0);
+    assertEq(actualWithdrawnAmounts.length, 0);
+    assertEq(result.length, 0);
+
+    ExternalGuardianInstance.SpecialWithdrawal memory specialWithdrawal = guardian.lastSpecialWithdrawal();
+    assertEq(specialWithdrawal.positionId, positionId);
+    assertTrue(specialWithdrawal.withdrawalCode == withdrawalCode);
+    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
+    assertEq(specialWithdrawal.withdrawData, withdrawData);
+    assertEq(specialWithdrawal.recipient, recipient);
   }
 
   function test_specialWithdraw_needsConfirmation() public {
