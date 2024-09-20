@@ -405,6 +405,49 @@ contract ExternalGuardianTest is Test {
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
     guardian.deposit(address(0), 0);
   }
+
+  function test_specialWithdraw_ok() public {
+    uint256 positionId = 2;
+    SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(10);
+    uint256[] memory toWithdraw = CommonUtils.arrayOf(1000, 1000);
+    bytes memory withdrawData = "12345";
+    address recipient = address(15);
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = guardian.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    assertEq(balanceChanges, toWithdraw);
+    assertEq(actualWithdrawnTokens.length, 0);
+    assertEq(actualWithdrawnAmounts.length, 0);
+    assertEq(result.length, 0);
+
+    ExternalGuardianInstance.SpecialWithdrawal memory specialWithdrawal = guardian.lastSpecialWithdrawal();
+    assertEq(specialWithdrawal.positionId, positionId);
+    assertTrue(specialWithdrawal.withdrawalCode == withdrawalCode);
+    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
+    assertEq(specialWithdrawal.withdrawData, withdrawData);
+    assertEq(specialWithdrawal.recipient, recipient);
+  }
+
+  function test_specialWithdraw_withBalances() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+  }
+
+  function test_specialWithdraw_needsConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.specialWithdraw(2, SpecialWithdrawalCode.wrap(10), CommonUtils.arrayOf(1000, 1000), "12345", address(15));
+  }
+
+  function test_specialWithdraw_rescued() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.specialWithdraw(2, SpecialWithdrawalCode.wrap(10), CommonUtils.arrayOf(1000, 1000), "12345", address(15));
+  }
 }
 
 contract ExternalGuardianInstance is ExternalGuardian {
@@ -419,11 +462,20 @@ contract ExternalGuardianInstance is ExternalGuardian {
     uint256 amount;
   }
 
+  struct SpecialWithdrawal {
+    uint256 positionId;
+    SpecialWithdrawalCode withdrawalCode;
+    uint256[] toWithdraw;
+    bytes withdrawData;
+    address recipient;
+  }
+
   IEarnStrategy.WithdrawalType private _withdrawalType = IEarnStrategy.WithdrawalType.IMMEDIATE;
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
   address[] private _tokens;
   Withdrawal private _withdrawal;
+  SpecialWithdrawal private _specialWithdrawal;
   Deposit private _deposit;
   mapping(address token => uint256 balance) private _underlyingBalance;
 
@@ -453,12 +505,34 @@ contract ExternalGuardianInstance is ExternalGuardian {
     return _guardian_deposited(token, amount);
   }
 
+  function specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    external
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    return _guardian_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
   function lastDeposit() external view returns (Deposit memory) {
     return _deposit;
   }
 
   function lastWithdrawal() external view returns (Withdrawal memory) {
     return _withdrawal;
+  }
+
+  function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
+    return _specialWithdrawal;
   }
 
   function setStatus(RescueStatus status) external {
@@ -524,14 +598,13 @@ contract ExternalGuardianInstance is ExternalGuardian {
   }
 
   function _guardian_underlying_specialWithdraw(
-    uint256,
-    SpecialWithdrawalCode,
+    uint256 positionId,
+    SpecialWithdrawalCode code,
     uint256[] calldata toWithdraw,
-    bytes calldata,
-    address
+    bytes calldata data,
+    address recipient
   )
     internal
-    pure
     override
     returns (
       uint256[] memory balanceChanges,
@@ -540,6 +613,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
       bytes memory result
     )
   {
+    _specialWithdrawal = SpecialWithdrawal(positionId, code, toWithdraw, data, recipient);
     balanceChanges = toWithdraw;
     actualWithdrawnTokens = new address[](0);
     actualWithdrawnAmounts = new uint256[](0);
