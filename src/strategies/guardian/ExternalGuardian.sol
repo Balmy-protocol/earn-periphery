@@ -225,7 +225,15 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
-  { }
+  {
+    // Note: even though the contract might have reward balance, special withdrawals are very particular and depend on
+    //       the underlying implementation. So we won't use this balance in this case
+    RescueStatus status = rescueConfig.status;
+    if (status != RescueStatus.OK && status != RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
+      revert InvalidRescueStatus();
+    }
+    return _guardian_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
 
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
