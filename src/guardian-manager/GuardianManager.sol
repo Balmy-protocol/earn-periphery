@@ -49,7 +49,7 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
 
   /// @inheritdoc IGuardianManager
   function isGuardian(StrategyId strategyId, address account) public view returns (bool) {
-    return _isGuardian[keccak256(abi.encodePacked(strategyId, account))];
+    return _isGuardian[_key(strategyId, account)];
   }
 
   /// @inheritdoc IGuardianManager
