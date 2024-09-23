@@ -79,16 +79,16 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManager
-  function assignGuardians(StrategyId strategyId, address[] memory guardians) public { }
+  function assignGuardians(StrategyId strategyId, address[] calldata guardians) public { }
 
   /// @inheritdoc IGuardianManager
-  function removeGuardians(StrategyId strategyId, address[] memory guardians) external { }
+  function removeGuardians(StrategyId strategyId, address[] calldata guardians) external { }
 
   /// @inheritdoc IGuardianManager
-  function assignJudges(StrategyId strategyId, address[] memory judges) public { }
+  function assignJudges(StrategyId strategyId, address[] calldata judges) public { }
 
   /// @inheritdoc IGuardianManager
-  function removeJudges(StrategyId strategyId, address[] memory judges) external { }
+  function removeJudges(StrategyId strategyId, address[] calldata judges) external { }
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {
     for (uint256 i; i < accounts.length; ++i) {

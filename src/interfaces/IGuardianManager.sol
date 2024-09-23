@@ -80,14 +80,14 @@ interface IGuardianManager is IGuardianManagerCore {
   function isJudge(StrategyId strategyId, address account) external view returns (bool);
 
   /// @notice Assigns the given accounts as guardians for the given strategy
-  function assignGuardians(StrategyId strategyId, address[] memory guardians) external;
+  function assignGuardians(StrategyId strategyId, address[] calldata guardians) external;
 
   /// @notice Removes the given accounts as guardians for the given strategy
-  function removeGuardians(StrategyId strategyId, address[] memory guardians) external;
+  function removeGuardians(StrategyId strategyId, address[] calldata guardians) external;
 
   /// @notice Assigns the given accounts as judges for the given strategy
-  function assignJudges(StrategyId strategyId, address[] memory judges) external;
+  function assignJudges(StrategyId strategyId, address[] calldata judges) external;
 
   /// @notice Removes the given accounts as judges for the given strategy
-  function removeJudges(StrategyId strategyId, address[] memory judges) external;
+  function removeJudges(StrategyId strategyId, address[] calldata judges) external;
 }
