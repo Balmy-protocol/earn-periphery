@@ -10,8 +10,12 @@ import {
   IEarnStrategyRegistry
 } from "../../../src/guardian-manager/GuardianManager.sol";
 import { CommonUtils } from "../../utils/CommonUtils.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
 contract GuardianManagerTest is PRBTest {
+  event GuardiansAssigned(StrategyId strategyId, address[] accounts);
+  event GuardiansRemoved(StrategyId strategyId, address[] accounts);
+
   address private superAdmin = address(1);
   address private globalGuardian = address(2);
   address private globalJudge = address(3);
@@ -65,5 +69,45 @@ contract GuardianManagerTest is PRBTest {
   function test_rescueConfirmed() public {
     // Make sure it can be called without reverting
     manager.rescueConfirmed(StrategyId.wrap(1));
+  }
+
+  function test_assignGuardians() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address newGuardian = address(15);
+    vm.expectEmit();
+    emit GuardiansAssigned(strategyId, CommonUtils.arrayOf(newGuardian));
+    vm.prank(manageGuardiansAdmin);
+    manager.assignGuardians(strategyId, CommonUtils.arrayOf(newGuardian));
+    assertTrue(manager.isGuardian(strategyId, newGuardian));
+  }
+
+  function test_assignGuardians_revertWhen_CalledWithoutRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_GUARDIANS_ROLE()
+      )
+    );
+    manager.assignGuardians(StrategyId.wrap(1), CommonUtils.arrayOf(address(1)));
+  }
+
+  function test_removeGuardians() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address newGuardian = address(15);
+    vm.prank(manageGuardiansAdmin);
+    manager.assignGuardians(strategyId, CommonUtils.arrayOf(newGuardian));
+    vm.expectEmit();
+    emit GuardiansRemoved(strategyId, CommonUtils.arrayOf(newGuardian));
+    vm.prank(manageGuardiansAdmin);
+    manager.removeGuardians(strategyId, CommonUtils.arrayOf(newGuardian));
+    assertFalse(manager.isGuardian(strategyId, newGuardian));
+  }
+
+  function test_removeGuardians_revertWhen_CalledWithoutRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_GUARDIANS_ROLE()
+      )
+    );
+    manager.removeGuardians(StrategyId.wrap(1), CommonUtils.arrayOf(address(1)));
   }
 }

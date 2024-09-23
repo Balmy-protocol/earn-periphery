@@ -45,8 +45,12 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
     _assignRoles(MANAGE_JUDGES_ROLE, initialManageJudgesAdmins);
   }
 
+  mapping(bytes32 strategyAndAccount => bool isGuardian) internal _isGuardian;
+
   /// @inheritdoc IGuardianManager
-  function isGuardian(StrategyId strategyId, address account) public view returns (bool) { }
+  function isGuardian(StrategyId strategyId, address account) public view returns (bool) {
+    return _isGuardian[keccak256(abi.encodePacked(strategyId, account))];
+  }
 
   /// @inheritdoc IGuardianManager
   function isJudge(StrategyId strategyId, address account) public view returns (bool) { }
@@ -79,10 +83,26 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManager
-  function assignGuardians(StrategyId strategyId, address[] calldata guardians) public { }
+  function assignGuardians(StrategyId strategyId, address[] calldata guardians) public onlyRole(MANAGE_GUARDIANS_ROLE) {
+    for (uint256 i; i < guardians.length; ++i) {
+      _isGuardian[_key(strategyId, guardians[i])] = true;
+    }
+    emit GuardiansAssigned(strategyId, guardians);
+  }
 
   /// @inheritdoc IGuardianManager
-  function removeGuardians(StrategyId strategyId, address[] calldata guardians) external { }
+  function removeGuardians(
+    StrategyId strategyId,
+    address[] calldata guardians
+  )
+    external
+    onlyRole(MANAGE_GUARDIANS_ROLE)
+  {
+    for (uint256 i; i < guardians.length; ++i) {
+      _isGuardian[_key(strategyId, guardians[i])] = false;
+    }
+    emit GuardiansRemoved(strategyId, guardians);
+  }
 
   /// @inheritdoc IGuardianManager
   function assignJudges(StrategyId strategyId, address[] calldata judges) public { }
@@ -94,5 +114,9 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
     for (uint256 i; i < accounts.length; ++i) {
       _grantRole(role, accounts[i]);
     }
+  }
+
+  function _key(StrategyId strategyId, address account) internal pure returns (bytes32) {
+    return keccak256(abi.encodePacked(strategyId, account));
   }
 }

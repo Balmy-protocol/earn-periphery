@@ -39,6 +39,9 @@ interface IGuardianManagerCore {
 }
 
 interface IGuardianManager is IGuardianManagerCore {
+  event GuardiansAssigned(StrategyId strategyId, address[] accounts);
+  event GuardiansRemoved(StrategyId strategyId, address[] accounts);
+
   /**
    * @notice Returns the address of the strategy registry
    * @return The address of the strategy registry
