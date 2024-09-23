@@ -189,7 +189,13 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     internal
     override
     returns (uint256 assetsDeposited)
-  { }
+  {
+    RescueStatus status = rescueConfig.status;
+    if (status != RescueStatus.OK && status != RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
+      revert InvalidRescueStatus();
+    }
+    return _guardian_underlying_deposited(depositToken, depositAmount);
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_withdraw(
