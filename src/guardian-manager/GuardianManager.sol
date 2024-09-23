@@ -46,6 +46,7 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   mapping(bytes32 strategyAndAccount => bool isGuardian) internal _isGuardian;
+  mapping(bytes32 strategyAndAccount => bool isJudge) internal _isJudge;
 
   /// @inheritdoc IGuardianManager
   function isGuardian(StrategyId strategyId, address account) public view returns (bool) {
@@ -53,7 +54,9 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManager
-  function isJudge(StrategyId strategyId, address account) public view returns (bool) { }
+  function isJudge(StrategyId strategyId, address account) public view returns (bool) {
+    return _isJudge[_key(strategyId, account)];
+  }
 
   /// @inheritdoc IGuardianManagerCore
   function canStartRescue(StrategyId strategyId, address account) external view returns (bool) { }
@@ -105,10 +108,20 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManager
-  function assignJudges(StrategyId strategyId, address[] calldata judges) public { }
+  function assignJudges(StrategyId strategyId, address[] calldata judges) public onlyRole(MANAGE_JUDGES_ROLE) {
+    for (uint256 i; i < judges.length; ++i) {
+      _isJudge[_key(strategyId, judges[i])] = true;
+    }
+    emit JudgesAssigned(strategyId, judges);
+  }
 
   /// @inheritdoc IGuardianManager
-  function removeJudges(StrategyId strategyId, address[] calldata judges) external { }
+  function removeJudges(StrategyId strategyId, address[] calldata judges) external onlyRole(MANAGE_JUDGES_ROLE) {
+    for (uint256 i; i < judges.length; ++i) {
+      _isJudge[_key(strategyId, judges[i])] = false;
+    }
+    emit JudgesRemoved(strategyId, judges);
+  }
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {
     for (uint256 i; i < accounts.length; ++i) {
