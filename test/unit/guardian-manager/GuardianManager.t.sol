@@ -15,6 +15,8 @@ import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAcces
 contract GuardianManagerTest is PRBTest {
   event GuardiansAssigned(StrategyId strategyId, address[] accounts);
   event GuardiansRemoved(StrategyId strategyId, address[] accounts);
+  event JudgesAssigned(StrategyId strategyId, address[] accounts);
+  event JudgesRemoved(StrategyId strategyId, address[] accounts);
 
   address private superAdmin = address(1);
   address private globalGuardian = address(2);
@@ -109,5 +111,45 @@ contract GuardianManagerTest is PRBTest {
       )
     );
     manager.removeGuardians(StrategyId.wrap(1), CommonUtils.arrayOf(address(1)));
+  }
+
+  function test_assignJudges() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address newJudge = address(15);
+    vm.expectEmit();
+    emit JudgesAssigned(strategyId, CommonUtils.arrayOf(newJudge));
+    vm.prank(manageJudgesAdmin);
+    manager.assignJudges(strategyId, CommonUtils.arrayOf(newJudge));
+    assertTrue(manager.isJudge(strategyId, newJudge));
+  }
+
+  function test_assignJudges_revertWhen_CalledWithoutRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_JUDGES_ROLE()
+      )
+    );
+    manager.assignJudges(StrategyId.wrap(1), CommonUtils.arrayOf(address(1)));
+  }
+
+  function test_removeJudges() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address newJudge = address(15);
+    vm.prank(manageJudgesAdmin);
+    manager.assignJudges(strategyId, CommonUtils.arrayOf(newJudge));
+    vm.expectEmit();
+    emit JudgesRemoved(strategyId, CommonUtils.arrayOf(newJudge));
+    vm.prank(manageJudgesAdmin);
+    manager.removeJudges(strategyId, CommonUtils.arrayOf(newJudge));
+    assertFalse(manager.isJudge(strategyId, newJudge));
+  }
+
+  function test_removeJudges_revertWhen_CalledWithoutRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_JUDGES_ROLE()
+      )
+    );
+    manager.removeJudges(StrategyId.wrap(1), CommonUtils.arrayOf(address(1)));
   }
 }
