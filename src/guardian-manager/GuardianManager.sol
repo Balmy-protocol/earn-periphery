@@ -90,22 +90,21 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
       _assignJudges(strategyId, judges);
     }
   }
+  // solhint-disable no-empty-blocks
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
 
   function rescueStarted(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
   function rescueCancelled(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
   function rescueConfirmed(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
+  // solhint-disable-end no-empty-blocks
 
   /// @inheritdoc IGuardianManager
   function assignGuardians(
