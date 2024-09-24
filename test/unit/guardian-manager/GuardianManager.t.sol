@@ -58,6 +58,60 @@ contract GuardianManagerTest is PRBTest {
     assertEq(manager.defaultAdmin(), superAdmin);
   }
 
+  function test_canStartRescue_strategyGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address guardian = address(30);
+    vm.prank(manageGuardiansAdmin);
+    manager.assignGuardians(strategyId, CommonUtils.arrayOf(guardian));
+    assertTrue(manager.canStartRescue(strategyId, guardian));
+  }
+
+  function test_canStartRescue_globalGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertTrue(manager.canStartRescue(strategyId, globalGuardian));
+  }
+
+  function test_canStartRescue_notGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertFalse(manager.canStartRescue(strategyId, address(30)));
+  }
+
+  function test_canCancelRescue_strategyGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address guardian = address(30);
+    vm.prank(manageGuardiansAdmin);
+    manager.assignGuardians(strategyId, CommonUtils.arrayOf(guardian));
+    assertTrue(manager.canCancelRescue(strategyId, guardian));
+  }
+
+  function test_canCancelRescue_globalGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertTrue(manager.canCancelRescue(strategyId, globalGuardian));
+  }
+
+  function test_canCancelRescue_notGuardian() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertFalse(manager.canCancelRescue(strategyId, address(30)));
+  }
+
+  function test_canConfirmRescue_strategyJudge() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address judge = address(30);
+    vm.prank(manageJudgesAdmin);
+    manager.assignJudges(strategyId, CommonUtils.arrayOf(judge));
+    assertTrue(manager.canConfirmRescue(strategyId, judge));
+  }
+
+  function test_canConfirmRescue_globalJudge() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertTrue(manager.canConfirmRescue(strategyId, globalJudge));
+  }
+
+  function test_canConfirmRescue_notJusge() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertFalse(manager.canConfirmRescue(strategyId, address(30)));
+  }
+
   function test_strategySelfConfigure_emptyBytes() public {
     // Nothing happens
     manager.strategySelfConfigure("");
