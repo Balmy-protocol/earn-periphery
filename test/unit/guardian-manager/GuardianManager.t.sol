@@ -58,6 +58,44 @@ contract GuardianManagerTest is PRBTest {
     assertEq(manager.defaultAdmin(), superAdmin);
   }
 
+  function test_strategySelfConfigure_emptyBytes() public {
+    // Nothing happens
+    manager.strategySelfConfigure("");
+  }
+
+  function test_strategySelfConfigure() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address strategy = address(14);
+    address newGuardian = address(15);
+    address newJudge = address(16);
+
+    vm.mockCall(
+      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector), abi.encode(strategyId)
+    );
+
+    vm.prank(strategy);
+    vm.expectEmit();
+    emit GuardiansAssigned(strategyId, CommonUtils.arrayOf(newGuardian));
+    emit JudgesAssigned(strategyId, CommonUtils.arrayOf(newJudge));
+    manager.strategySelfConfigure(abi.encode(CommonUtils.arrayOf(newGuardian), CommonUtils.arrayOf(newJudge)));
+    assertTrue(manager.isGuardian(strategyId, newGuardian));
+    assertTrue(manager.isJudge(strategyId, newJudge));
+  }
+
+  function test_strategySelfConfigure_revertWhen_callerHasNoId() public {
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector),
+      abi.encode(StrategyId.wrap(0))
+    );
+
+    vm.prank(strategy);
+    vm.expectRevert(abi.encodeWithSelector(GuardianManager.UnauthorizedCaller.selector));
+    manager.strategySelfConfigure(abi.encode(CommonUtils.arrayOf(address(1)), CommonUtils.arrayOf(address(2))));
+  }
+
   function test_rescueStarted() public {
     // Make sure it can be called without reverting
     manager.rescueStarted(StrategyId.wrap(1));

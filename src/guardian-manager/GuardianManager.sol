@@ -3,7 +3,8 @@ pragma solidity >=0.8.22;
 
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IGuardianManager, IGuardianManagerCore, IEarnStrategyRegistry } from "../interfaces/IGuardianManager.sol";
 
 /**
@@ -15,7 +16,9 @@ import { IGuardianManager, IGuardianManagerCore, IEarnStrategyRegistry } from ".
  *      judges. These can perform their roles with all strategies, regarding of their strategy-specific config
  */
 contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
+  error UnauthorizedCaller();
   /// @inheritdoc IGuardianManager
+
   bytes32 public constant GLOBAL_GUARDIAN_ROLE = keccak256("GLOBAL_GUARDIAN_ROLE");
   /// @inheritdoc IGuardianManager
   bytes32 public constant GLOBAL_JUDGE_ROLE = keccak256("GLOBAL_JUDGE_ROLE");
@@ -68,29 +71,50 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   function canConfirmRescue(StrategyId strategyId, address account) external view returns (bool) { }
 
   /// @inheritdoc IGuardianManagerCore
-  function strategySelfConfigure(bytes calldata data) external { }
+  function strategySelfConfigure(bytes calldata data) external {
+    if (data.length == 0) {
+      return;
+    }
+
+    // Find the caller's strategy id
+    StrategyId strategyId = STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender));
+    if (strategyId == StrategyIdConstants.NO_STRATEGY) {
+      revert UnauthorizedCaller();
+    }
+
+    (address[] memory guardians, address[] memory judges) = abi.decode(data, (address[], address[]));
+    if (guardians.length > 0) {
+      _assignGuardians(strategyId, guardians);
+    }
+    if (judges.length > 0) {
+      _assignJudges(strategyId, judges);
+    }
+  }
+  // solhint-disable no-empty-blocks
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
+
   function rescueStarted(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
   function rescueCancelled(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
   /// @inheritdoc IGuardianManagerCore
-  // solhint-disable-next-line no-empty-blocks
   function rescueConfirmed(StrategyId strategyId) external {
     // Does nothing, but we we want to have this function for future guardian manager implementations
   }
+  // solhint-disable-end no-empty-blocks
 
   /// @inheritdoc IGuardianManager
-  function assignGuardians(StrategyId strategyId, address[] calldata guardians) public onlyRole(MANAGE_GUARDIANS_ROLE) {
-    for (uint256 i; i < guardians.length; ++i) {
-      _isGuardian[_key(strategyId, guardians[i])] = true;
-    }
-    emit GuardiansAssigned(strategyId, guardians);
+  function assignGuardians(
+    StrategyId strategyId,
+    address[] calldata guardians
+  )
+    external
+    onlyRole(MANAGE_GUARDIANS_ROLE)
+  {
+    _assignGuardians(strategyId, guardians);
   }
 
   /// @inheritdoc IGuardianManager
@@ -108,11 +132,8 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManager
-  function assignJudges(StrategyId strategyId, address[] calldata judges) public onlyRole(MANAGE_JUDGES_ROLE) {
-    for (uint256 i; i < judges.length; ++i) {
-      _isJudge[_key(strategyId, judges[i])] = true;
-    }
-    emit JudgesAssigned(strategyId, judges);
+  function assignJudges(StrategyId strategyId, address[] calldata judges) external onlyRole(MANAGE_JUDGES_ROLE) {
+    _assignJudges(strategyId, judges);
   }
 
   /// @inheritdoc IGuardianManager
@@ -121,6 +142,20 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
       _isJudge[_key(strategyId, judges[i])] = false;
     }
     emit JudgesRemoved(strategyId, judges);
+  }
+
+  function _assignGuardians(StrategyId strategyId, address[] memory guardians) internal {
+    for (uint256 i; i < guardians.length; ++i) {
+      _isGuardian[_key(strategyId, guardians[i])] = true;
+    }
+    emit GuardiansAssigned(strategyId, guardians);
+  }
+
+  function _assignJudges(StrategyId strategyId, address[] memory judges) internal {
+    for (uint256 i; i < judges.length; ++i) {
+      _isJudge[_key(strategyId, judges[i])] = true;
+    }
+    emit JudgesAssigned(strategyId, judges);
   }
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {
