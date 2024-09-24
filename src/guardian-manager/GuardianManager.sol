@@ -62,13 +62,19 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc IGuardianManagerCore
-  function canStartRescue(StrategyId strategyId, address account) external view returns (bool) { }
+  function canStartRescue(StrategyId strategyId, address account) external view returns (bool) {
+    return isGuardian(strategyId, account) || hasRole(GLOBAL_GUARDIAN_ROLE, account);
+  }
   /// @inheritdoc IGuardianManagerCore
 
-  function canCancelRescue(StrategyId strategyId, address account) external view returns (bool) { }
+  function canCancelRescue(StrategyId strategyId, address account) external view returns (bool) {
+    return isGuardian(strategyId, account) || hasRole(GLOBAL_GUARDIAN_ROLE, account);
+  }
   /// @inheritdoc IGuardianManagerCore
 
-  function canConfirmRescue(StrategyId strategyId, address account) external view returns (bool) { }
+  function canConfirmRescue(StrategyId strategyId, address account) external view returns (bool) {
+    return isJudge(strategyId, account) || hasRole(GLOBAL_JUDGE_ROLE, account);
+  }
 
   /// @inheritdoc IGuardianManagerCore
   function strategySelfConfigure(bytes calldata data) external {
