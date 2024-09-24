@@ -12,6 +12,7 @@ import {
 } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IPermit2 } from "../interfaces/external/IPermit2.sol";
 import { BaseCompanion } from "./BaseCompanion.sol";
+import { IDelayedWithdrawalManager } from "src/interfaces/IDelayedWithdrawalManager.sol";
 
 contract EarnVaultCompanion is BaseCompanion, IERC1271 {
   error UnauthorizedCaller();
@@ -164,6 +165,21 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
       withdrawalData: withdrawalData,
       recipient: recipient
     });
+  }
+
+  function claimDelayedWithdraw(
+    IDelayedWithdrawalManager manager,
+    uint256 positionId,
+    address token,
+    address recipient
+  )
+    external
+    payable
+    verifyPermission(manager.VAULT(), positionId, WITHDRAW_PERMISSION)
+    returns (uint256, uint256)
+  {
+    // slither-disable-next-line unused-return (not sure why this is necessary)
+    return manager.withdraw({ positionId: positionId, token: token, recipient: recipient });
   }
 
   modifier verifyPermission(IEarnVault vault, uint256 positionId, INFTPermissions.Permission _permission) {

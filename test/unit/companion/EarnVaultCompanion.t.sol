@@ -14,6 +14,7 @@ import {
   StrategyId,
   IERC1271
 } from "src/companion/EarnVaultCompanion.sol";
+import { IDelayedWithdrawalManager } from "src/interfaces/IDelayedWithdrawalManager.sol";
 
 contract EarnVaultCompanionTest is Test {
   IEarnVault private vault;
@@ -337,6 +338,54 @@ contract EarnVaultCompanionTest is Test {
     assertEq(withdrawn, expectedWithdrawn);
     assertEq(types.length, expectedTypes.length);
     assertTrue(types[0] == expectedTypes[0]);
+  }
+
+  function test_claimDelayedWithdraw() public {
+    uint256 positionId = 2;
+    address recipient = address(1);
+    address tokenToWithdraw = address(34);
+    uint256 expectedWithdrawn = 12_345;
+    uint256 expectedPending = 10_000;
+
+    IDelayedWithdrawalManager manager;
+
+    // Simulate has permissions
+    vm.mockCall(
+      address(vault),
+      abi.encodeWithSelector(
+        INFTPermissions.hasPermission.selector, positionId, address(this), companion.WITHDRAW_PERMISSION()
+      ),
+      abi.encode(true)
+    );
+
+    // Simulate manager's vault
+    vm.mockCall(address(manager), abi.encodeWithSelector(IDelayedWithdrawalManager.VAULT.selector), abi.encode(vault));
+
+    // Simulate withdraw
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IDelayedWithdrawalManager.withdraw.selector, positionId, tokenToWithdraw, recipient),
+      abi.encode(expectedWithdrawn, expectedPending)
+    );
+
+    (uint256 withdrawn, uint256 pendingFunds) =
+      companion.claimDelayedWithdraw(manager, positionId, tokenToWithdraw, recipient);
+    assertEq(withdrawn, expectedWithdrawn);
+    assertEq(pendingFunds, expectedPending);
+  }
+
+  function test_claimDelayedWithdraw_revertWhen_NoPermission() public {
+    uint256 positionId = 2;
+    address recipient = address(1);
+    address tokenToWithdraw = address(34);
+
+    IDelayedWithdrawalManager manager;
+    vm.mockCall(address(manager), abi.encodeWithSelector(IDelayedWithdrawalManager.VAULT.selector), abi.encode(vault));
+
+    // Simulate has no permissions
+    vm.mockCall(address(vault), abi.encodeWithSelector(INFTPermissions.hasPermission.selector), abi.encode(false));
+    vm.expectRevert(abi.encodeWithSelector(EarnVaultCompanion.UnauthorizedCaller.selector));
+    companion.claimDelayedWithdraw(manager, positionId, tokenToWithdraw, recipient);
   }
 
   function test_specialWithdraw_revertWhen_NoPermission() public {
