@@ -197,7 +197,10 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     return _guardian_underlying_deposited(depositToken, depositAmount);
   }
 
-  // slither-disable-next-line naming-convention,dead-code
+  // Note: we disable the reentrancy check because the strategy should make sure this function
+  //       is called only by the vault, which already has a re-entrancy check
+  // slither-disable-start naming-convention,dead-code,reentrancy-no-eth
+  // solhint-disable-next-line code-complexity
   function _guardian_withdraw(
     uint256 positionId,
     address[] calldata tokens,
@@ -207,7 +210,55 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     internal
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
-  { }
+  {
+    RescueStatus status = rescueConfig.status;
+    if (status == RescueStatus.OK) {
+      // In this case, we just withdraw from the underlying layer
+      return _guardian_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+    } else if (status == RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
+      // In this case, we will try to use the balance on the strategy first, and withdraw the rest from the underlying
+      // layer
+      uint256[] memory toWithdrawUnderlying = new uint256[](tokens.length);
+      toWithdrawUnderlying[0] = toWithdraw[0];
+
+      bool shouldWithdrawUnderlying = toWithdraw[0] > 0;
+      bool continuesToHaveRewardBalance = false;
+
+      for (uint256 i = 1; i < tokens.length; ++i) {
+        uint256 toWithdrawToken = toWithdraw[i];
+        uint256 balance = tokens[i].balanceOf(address(this));
+        uint256 toTransfer = Math.min(balance, toWithdrawToken);
+        tokens[i].transfer(recipient, toTransfer);
+        toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
+
+        if (toWithdrawUnderlying[i] > 0) {
+          shouldWithdrawUnderlying = true;
+        }
+        if (balance > toTransfer) {
+          continuesToHaveRewardBalance = true;
+        }
+      }
+
+      if (!continuesToHaveRewardBalance) {
+        // solhint-disable-next-line reentrancy
+        rescueConfig.status = RescueStatus.OK;
+      }
+      if (shouldWithdrawUnderlying) {
+        return _guardian_underlying_withdraw(positionId, tokens, toWithdrawUnderlying, recipient);
+      }
+    } else if (status == RescueStatus.RESCUED) {
+      // If we are in "rescued" mode, then we simply transfer balance on the strategy
+      for (uint256 i = 0; i < tokens.length; ++i) {
+        tokens[i].transfer(recipient, toWithdraw[i]);
+      }
+    } else {
+      // If we get here, we are waiting for confirmation, so we can't withdraw
+      revert InvalidRescueStatus();
+    }
+    // Since this implementation doesn't support delayed withdrawals, we will always return immediate withdrawals
+    return new IEarnStrategy.WithdrawalType[](tokens.length);
+  }
+  // slither-disable-end naming-convention,dead-code,reentrancy-no-eth
 
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_specialWithdraw(
