@@ -22,9 +22,10 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   using Math for uint256;
 
   address private constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-  // slither-disable-next-line naming-convention
+  // slither-disable-start naming-convention
   // solhint-disable-next-line const-name-snakecase
   ILidoSTETH private constant _stETH = ILidoSTETH(0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84);
+  // slither-disable-end naming-convention
 
   function _delayedWithdrawalAdapter() internal view virtual returns (IDelayedWithdrawalAdapter);
 

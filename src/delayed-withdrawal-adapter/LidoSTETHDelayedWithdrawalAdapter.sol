@@ -46,9 +46,10 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
 
   IGlobalEarnRegistry public immutable registry;
 
-  // slither-disable-next-line naming-convention
+  // slither-disable-start naming-convention
   // solhint-disable-next-line const-name-snakecase
   address internal constant _stETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
+  // slither-disable-end naming-convention
   address internal constant _ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
   ILidoSTETHQueue internal immutable _queue;
   mapping(uint256 positionId => uint256[] requestIds) internal _pendingWithdrawals;

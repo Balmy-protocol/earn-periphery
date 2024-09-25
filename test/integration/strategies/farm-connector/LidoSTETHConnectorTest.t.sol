@@ -7,9 +7,6 @@ import { BaseConnectorDelayedWithdrawalTest } from "./base/BaseConnectorDelayedW
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 import { IDelayedWithdrawalAdapter } from "src/interfaces/IDelayedWithdrawalAdapter.sol";
 import { LidoSTETHConnector } from "src/strategies/connector/LidoSTETHConnector.sol";
-import { DelayedWithdrawalManagerMock } from
-  "../../../mocks/delayed-withdrawal-manager/DelayedWithdrawalManagerMock.sol";
-import { GlobalEarnRegistry, IGlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { DelayedWithdrawalAdapterMock } from
   "../../../mocks/delayed-withdrawal-adapter/DelayedWithdrawalAdapterMock.sol";
 
