@@ -198,7 +198,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   }
 
   // Note: we disable the reentrancy check because the strategy should make sure this function
-  //       is called only by the vault, which does have a re-entrancy check already
+  //       is called only by the vault, which already has a re-entrancy check
   // slither-disable-start naming-convention,dead-code,reentrancy-no-eth
   // solhint-disable-next-line code-complexity
   function _guardian_withdraw(
