@@ -647,6 +647,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
     return _tokens;
   }
 
+  // solhint-disable-next-line no-empty-blocks
   function _guardian_underlying_maxWithdraw()
     internal
     view

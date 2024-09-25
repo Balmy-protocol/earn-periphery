@@ -13,6 +13,16 @@ import { IDelayedWithdrawalManager } from "./IDelayedWithdrawalManager.sol";
  */
 interface IDelayedWithdrawalAdapter is IERC165 {
   /**
+   * @notice Thrown when the sender is not the delayed withdrawal manager
+   */
+  error UnauthorizedDelayedWithdrawalManager();
+
+  /**
+   * @notice Thrown when the sender is not the position's strategy
+   */
+  error UnauthorizedPositionStrategy();
+
+  /**
    * @notice Returns the address to Earn's vault
    * @return Earn's vault address
    */
@@ -43,8 +53,7 @@ interface IDelayedWithdrawalAdapter is IERC165 {
 
   /**
    * @notice Starts a delayed withdrawal, and associates it to the position
-   * @dev Can only be called by the position's strategy. If it's the zero position, then any registered strategy can
-   *      call it
+   * @dev Can only be called by the position's strategy.
    * @param positionId The position to associate to the withdrawal
    * @param token The token that is being withdrawn
    * @param amount The amount of input for the withdrawal to use. Each adapter might provide different meaning to this
