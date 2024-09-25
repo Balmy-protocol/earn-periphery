@@ -406,6 +406,124 @@ contract ExternalGuardianTest is Test {
     guardian.deposit(address(0), 0);
   }
 
+  function test_withdraw_ok() public {
+    uint256 positionId = 10;
+    uint256 amount = 12_345;
+    address recipient = address(30);
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK);
+
+    IEarnStrategy.WithdrawalType[] memory types =
+      guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
+    assertEq(types.length, 2);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying was called correctly
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
+    assertEq(withdrawal.positionId, positionId);
+    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(withdrawal.amounts, CommonUtils.arrayOf(amount, 0));
+    assertEq(withdrawal.recipient, recipient);
+  }
+
+  function test_withdraw_withBalances_notEnoughBalanceSoWillCallUnderlying() public {
+    uint256 positionId = 10;
+    uint256 toWithdrawAsset = 10_000;
+    uint256 toWithdrawReward = 10_000;
+    uint256 balanceReward = 5000;
+    address recipient = address(30);
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+
+    vm.mockCall(
+      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balanceReward)
+    );
+    // Expect assets's transfer to not be called
+    vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), 0);
+    // Expect reward's transfer to be called
+    vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector, recipient, balanceReward));
+    IEarnStrategy.WithdrawalType[] memory types = guardian.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward), recipient
+    );
+    assertEq(types.length, 2);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying was called correctly
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
+    assertEq(withdrawal.positionId, positionId);
+    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(withdrawal.amounts, CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward - balanceReward));
+    assertEq(withdrawal.recipient, recipient);
+
+    // Since all balance was transferred, then status was changed to ok
+    (,, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertTrue(status == ExternalGuardian.RescueStatus.OK);
+  }
+
+  function test_withdraw_withBalances_enoughBalanceSoWontCallUnderlying() public {
+    uint256 positionId = 10;
+    uint256 toWithdrawAsset = 0;
+    uint256 toWithdrawReward = 10_000;
+    uint256 balanceReward = 15_000;
+    address recipient = address(30);
+    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+
+    vm.mockCall(
+      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balanceReward)
+    );
+    // Expect assets's transfer to not be called
+    vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), 0);
+    // Expect reward's transfer to be called
+    vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector, recipient, toWithdrawReward));
+    IEarnStrategy.WithdrawalType[] memory types = guardian.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward), recipient
+    );
+    assertEq(types.length, 2);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying layer was not called
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
+    assertEq(withdrawal.positionId, 0);
+    assertEq(withdrawal.tokens.length, 0);
+    assertEq(withdrawal.amounts.length, 0);
+    assertEq(withdrawal.recipient, address(0));
+
+    // Since not all balance was transferred, then status was not changed
+    (,, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertTrue(status == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
+  }
+
+  function test_withdraw_needsConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.withdraw(1, CommonUtils.arrayOf(address(0)), CommonUtils.arrayOf(0), address(0));
+  }
+
+  function test_withdraw_rescued() public {
+    uint256 positionId = 10;
+    uint256 amount = 12_345;
+    address recipient = address(30);
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+
+    // Expect asset's transfer to be called
+    vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector, recipient, 12_345));
+    // Expect reward's transfer to not be called
+    vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector), 0);
+    IEarnStrategy.WithdrawalType[] memory types =
+      guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
+    assertEq(types.length, 2);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying layer was not called
+    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
+    assertEq(withdrawal.positionId, 0);
+    assertEq(withdrawal.tokens.length, 0);
+    assertEq(withdrawal.amounts.length, 0);
+    assertEq(withdrawal.recipient, address(0));
+  }
+
   function test_specialWithdraw_ok() public {
     uint256 positionId = 2;
     SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(10);
@@ -475,6 +593,7 @@ contract ExternalGuardianTest is Test {
 
 contract ExternalGuardianInstance is ExternalGuardian {
   struct Withdrawal {
+    uint256 positionId;
     address[] tokens;
     uint256[] amounts;
     address recipient;
@@ -526,6 +645,18 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function deposit(address token, uint256 amount) external returns (uint256 assetsDeposited) {
     return _guardian_deposited(token, amount);
+  }
+
+  function withdraw(
+    uint256 positionId,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
+    address recipient
+  )
+    external
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function specialWithdraw(
@@ -604,7 +735,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   }
 
   function _guardian_underlying_withdraw(
-    uint256,
+    uint256 positionId,
     address[] memory tokens,
     uint256[] memory toWithdraw,
     address recipient
@@ -613,7 +744,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
   {
-    _withdrawal = Withdrawal(tokens, toWithdraw, recipient);
+    _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
     types = new IEarnStrategy.WithdrawalType[](tokens.length);
     for (uint256 i; i < types.length; ++i) {
       types[i] = _withdrawalType;
