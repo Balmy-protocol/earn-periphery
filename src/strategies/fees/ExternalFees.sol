@@ -9,6 +9,11 @@ import { IFeeManagerCore, StrategyId, Fees } from "../../interfaces/IFeeManager.
 import { BaseFees } from "./base/BaseFees.sol";
 
 abstract contract ExternalFees is BaseFees, Initializable {
+  error CantWithdrawFees();
+  error NotEnoughFees();
+  error WithdrawMustBeImmediate();
+  error InvalidTokens();
+
   struct PerformanceData {
     uint128 lastBalance;
     uint120 performanceFees;
@@ -36,6 +41,24 @@ abstract contract ExternalFees is BaseFees, Initializable {
     collected = new uint256[](tokens.length);
     for (uint256 i = 0; i < tokens.length; i++) {
       collected[i] = _calculateFees(tokens[i], balances[i], fees.performanceFee);
+    }
+  }
+
+  function withdrawFees(address[] calldata tokens, uint256[] calldata toWithdraw, address recipient) external {
+    Fees memory fees = _getFeesOrFailIfSenderCantWithdraw();
+    (address[] memory allTokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+    _updateFeesForWithdraw({ tokens: tokens, withdrawAmounts: toWithdraw, currentBalances: currentBalances, fees: fees });
+    IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_withdraw(0, tokens, toWithdraw, recipient);
+    if (tokens.length != allTokens.length) {
+      revert InvalidTokens();
+    }
+    for (uint256 i; i < tokens.length; ++i) {
+      if (allTokens[i] != tokens[i]) {
+        revert InvalidTokens();
+      }
+      if (toWithdraw[i] > 0 && types[i] != IEarnStrategy.WithdrawalType.IMMEDIATE) {
+        revert WithdrawMustBeImmediate();
+      }
     }
   }
 
@@ -236,5 +259,44 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line dead-code
   function _getFeeManager() private view returns (IFeeManagerCore) {
     return IFeeManagerCore(globalRegistry().getAddressOrFail(FEE_MANAGER));
+  }
+
+  // slither-disable-next-line dead-code
+  function _getFeesOrFailIfSenderCantWithdraw() private view returns (Fees memory) {
+    StrategyId strategyId_ = strategyId();
+    IFeeManagerCore feeManager = _getFeeManager();
+    if (!feeManager.canWithdrawFees(strategyId_, msg.sender)) {
+      revert CantWithdrawFees();
+    }
+    return feeManager.getFees(strategyId_);
+  }
+
+  // slither-disable-next-line dead-code
+  function _updateFeesForWithdraw(
+    address[] memory tokens,
+    uint256[] memory withdrawAmounts,
+    uint256[] memory currentBalances,
+    Fees memory fees
+  )
+    private
+  {
+    for (uint256 i = 0; i < tokens.length; i++) {
+      uint256 amountToWithdraw = withdrawAmounts[i];
+      if (amountToWithdraw > 0) {
+        uint256 collected = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
+        if (amountToWithdraw > collected) {
+          revert NotEnoughFees();
+        }
+
+        _performanceData[tokens[i]] = fees.performanceFee > 0
+          ? PerformanceData({
+            // Note: there might be a small wei difference here, but we can ignore it since it should be negligible
+            lastBalance: (currentBalances[i] - amountToWithdraw).toUint128(),
+            performanceFees: (collected - amountToWithdraw).toUint120(),
+            isSet: true
+          })
+          : PerformanceData({ lastBalance: 0, performanceFees: (collected - amountToWithdraw).toUint120(), isSet: false });
+      }
+    }
   }
 }
