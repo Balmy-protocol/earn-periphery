@@ -62,6 +62,34 @@ abstract contract ExternalFees is BaseFees, Initializable {
     }
   }
 
+  function specialWithdrawFees(
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    external
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    Fees memory fees = _getFeesOrFailIfSenderCantWithdraw();
+    (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+
+    (balanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+      _fees_underlying_specialWithdraw(0, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    _updateFeesForWithdraw({
+      tokens: tokens,
+      withdrawAmounts: balanceChanges,
+      currentBalances: currentBalances,
+      fees: fees
+    });
+  }
+
   // slither-disable-next-line naming-convention
   function _fees_underlying_asset() internal view virtual returns (address asset);
 
