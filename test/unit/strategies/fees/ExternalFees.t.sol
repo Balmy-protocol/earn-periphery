@@ -56,6 +56,119 @@ contract ExternalFeesTest is Test {
     assertEq(bps[1], 300);
   }
 
+  function test_withdrawFees_revertWhen_callerCantWithdrawFees() public {
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(false)
+    );
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.CantWithdrawFees.selector));
+    fees.withdrawFees(CommonUtils.arrayOf(asset, token), CommonUtils.arrayOf(100, 100), address(0));
+  }
+
+  function test_withdrawFees_revertWhen_invalidTokensLength() public {
+    _setFee(500); // 5%
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.InvalidTokens.selector));
+    fees.withdrawFees(CommonUtils.arrayOf(asset), CommonUtils.arrayOf(100), address(0));
+  }
+
+  function test_withdrawFees_revertWhen_invalidTokens() public {
+    _setFee(500); // 5%
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.InvalidTokens.selector));
+    fees.withdrawFees(CommonUtils.arrayOf(asset, address(10)), CommonUtils.arrayOf(100, 0), address(0));
+  }
+
+  function test_withdrawFees_revertWhen_notEnoughFees() public {
+    _setFee(500); // 5%
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.NotEnoughFees.selector));
+    fees.withdrawFees(CommonUtils.arrayOf(asset, token), CommonUtils.arrayOf(3000, 0), address(0));
+  }
+
+  function test_withdrawFees_revertWhen_withdrawingDelayed() public {
+    _setFee(500); // 5%
+    fees.setType(asset, IEarnStrategy.WithdrawalType.DELAYED);
+    address recipient = address(100);
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.WithdrawMustBeImmediate.selector));
+    fees.withdrawFees(CommonUtils.arrayOf(asset, token), CommonUtils.arrayOf(2500, 0), recipient);
+  }
+
+  function test_withdrawFees() public {
+    _setFee(500); // 5%
+    fees.setType(token, IEarnStrategy.WithdrawalType.DELAYED); // We set it for delayed, but we won't withdraw anything
+    address recipient = address(100);
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+
+    fees.withdrawFees(CommonUtils.arrayOf(asset, token), CommonUtils.arrayOf(2500, 0), recipient);
+
+    // Make sure fees were updated
+    (address[] memory tokens, uint256[] memory collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 0);
+    assertEq(collected[1], 0);
+
+    // Make sure underlying withdraw was executed correctly
+    ExternalFeesInstance.Withdrawal memory withdrawal = fees.lastWithdrawal();
+    assertEq(withdrawal.positionId, 0);
+    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, token));
+    assertEq(withdrawal.amounts, CommonUtils.arrayOf(2500, 0));
+    assertEq(withdrawal.recipient, recipient);
+  }
+
   function test_totalBalances() public {
     _setFee(500); // 5%
     fees.init(""); // Initialize so that performance data is set
@@ -235,10 +348,19 @@ contract ExternalFeesTest is Test {
 }
 
 contract ExternalFeesInstance is ExternalFees {
+  struct Withdrawal {
+    uint256 positionId;
+    address[] tokens;
+    uint256[] amounts;
+    address recipient;
+  }
+
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
   address[] private _tokens;
   mapping(address token => uint256 balance) private _balances;
+  mapping(address token => IEarnStrategy.WithdrawalType withdrawalType) private _types;
+  Withdrawal private _withdrawal;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -256,6 +378,10 @@ contract ExternalFeesInstance is ExternalFees {
 
   function deposited(address token, uint256 amount) external returns (uint256) {
     return _fees_deposited(token, amount);
+  }
+
+  function lastWithdrawal() external view returns (Withdrawal memory) {
+    return _withdrawal;
   }
 
   function withdraw(
@@ -304,6 +430,10 @@ contract ExternalFeesInstance is ExternalFees {
     _balances[token] = balance;
   }
 
+  function setType(address token, IEarnStrategy.WithdrawalType withdrawalType) external {
+    _types[token] = withdrawalType;
+  }
+
   function _fees_underlying_totalBalances()
     internal
     view
@@ -330,17 +460,23 @@ contract ExternalFeesInstance is ExternalFees {
   }
 
   function _fees_underlying_withdraw(
-    uint256,
+    uint256 positionId,
     address[] calldata tokens,
-    uint256[] calldata,
-    address
+    uint256[] calldata toWithdraw,
+    address recipient
   )
     internal
-    pure
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
+    returns (IEarnStrategy.WithdrawalType[] memory withdrawalTypes)
   {
-    return new IEarnStrategy.WithdrawalType[](tokens.length);
+    _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
+    for (uint256 i = 0; i < tokens.length; i++) {
+      _balances[tokens[i]] -= toWithdraw[i];
+    }
+    withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
+    for (uint256 i = 0; i < tokens.length; i++) {
+      withdrawalTypes[i] = _types[tokens[i]];
+    }
   }
 
   function _fees_underlying_specialWithdraw(
