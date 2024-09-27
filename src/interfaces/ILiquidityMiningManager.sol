@@ -22,7 +22,6 @@ interface ILiquidityMiningManagerCore {
    * @notice Returns the amount of rewards for a given strategy and token
    * @param strategyId The id of the strategy
    * @param token The token to get the rewards for
-   * @return
    */
   function rewardAmount(StrategyId strategyId, address token) external view returns (uint256);
 
@@ -45,9 +44,9 @@ interface ILiquidityMiningManagerCore {
   /**
    * @notice Alerts that a withdrawal has been made from the strategy
    * @param strategyId The id of the strategy
-   * @param assetsWithdrew The amount of assets withdrew
+   * @param assetsWithdrawn The amount of assets withdrew
    */
-  function withdrew(StrategyId strategyId, uint256 assetsWithdrew) external;
+  function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external;
 }
 
 /**
