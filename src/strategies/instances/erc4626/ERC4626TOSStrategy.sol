@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: TBD
 pragma solidity >=0.8.22;
 
+import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {
   IEarnStrategy,
   SpecialWithdrawalCode,
@@ -9,34 +10,51 @@ import {
   IEarnStrategyRegistry,
   IERC165
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
+import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 
-import { LidoSTETHConnector } from "src/strategies/layers/connector/LidoSTETHConnector.sol";
+import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
+import { TOSCreationValidation, AccessControl } from "../../layers/creation-validation/TOSCreationValidation.sol";
 
-contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
+contract ERC4626TOSStrategy is IEarnBalmyStrategy, ERC4626Connector, TOSCreationValidation {
+  error OnlyVault();
+  error OnlyStrategyRegistry();
+
   /// @inheritdoc IEarnStrategy
   IEarnVault public immutable vault;
   /// @inheritdoc IEarnStrategy
   string public description;
 
   // slither-disable-next-line naming-convention
-  IDelayedWithdrawalAdapter internal immutable __delayedWithdrawalAdapter;
+  IERC4626 internal immutable _ERC4626Vault;
+  IERC20 internal immutable _vaultAsset;
 
   constructor(
     // General
     IEarnVault vault_,
     string memory description_,
-    IDelayedWithdrawalAdapter delayedWithdrawalAdapter_
-  )
-    initializer
-  {
+    // ERC4626 connector
+    IERC4626 farmVault,
+    // TOS validation
+    bytes memory tos,
+    address[] memory tosAdmins
+  ) {
     vault = vault_;
     description = description_;
-    __delayedWithdrawalAdapter = delayedWithdrawalAdapter_;
+    _ERC4626Vault = farmVault;
+    _vaultAsset = IERC20(farmVault.asset());
+    _connector_init();
+    _creationValidation_init(tos, tosAdmins);
   }
 
-  receive() external payable { }
+  // slither-disable-next-line naming-convention
+  function ERC4626Vault() public view override returns (IERC4626) {
+    return _ERC4626Vault;
+  }
+
+  function _asset() internal view override returns (IERC20) {
+    return _vaultAsset;
+  }
 
   /// @inheritdoc IEarnStrategy
   function registry() public view returns (IEarnStrategyRegistry) {
@@ -44,18 +62,18 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IERC165
-  function supportsInterface(bytes4 interfaceId) public pure override(IERC165) returns (bool) {
+  function supportsInterface(bytes4 interfaceId) public view override(IERC165, AccessControl) returns (bool) {
     return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
-      || interfaceId == type(IERC165).interfaceId;
+      || AccessControl.supportsInterface(interfaceId);
   }
 
   /// @inheritdoc IEarnStrategy
-  function asset() external pure returns (address) {
+  function asset() external view returns (address) {
     return _connector_asset();
   }
 
   /// @inheritdoc IEarnStrategy
-  function allTokens() external pure returns (address[] memory) {
+  function allTokens() external view returns (address[] memory) {
     return _connector_allTokens();
   }
 
@@ -65,7 +83,7 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IEarnStrategy
-  function supportedDepositTokens() external pure returns (address[] memory) {
+  function supportedDepositTokens() external view returns (address[] memory) {
     return _connector_supportedDepositTokens();
   }
 
@@ -80,12 +98,12 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IEarnStrategy
-  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external pure returns (bool) {
+  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external view returns (bool) {
     return _connector_isSpecialWithdrawalSupported(withdrawalCode);
   }
 
   /// @inheritdoc IEarnStrategy
-  function supportedSpecialWithdrawals() external pure returns (SpecialWithdrawalCode[] memory) {
+  function supportedSpecialWithdrawals() external view returns (SpecialWithdrawalCode[] memory) {
     return _connector_supportedSpecialWithdrawals();
   }
 
@@ -110,13 +128,22 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IEarnStrategy
-  function deposited(address depositToken, uint256 depositAmount) external payable returns (uint256 assetsDeposited) {
-    return _connector_deposit(depositToken, depositAmount);
+  function validatePositionCreation(address sender, bytes calldata creationData) external view {
+    _creationValidation_validate(sender, creationData);
   }
 
   /// @inheritdoc IEarnStrategy
-  // solhint-disable-next-line no-empty-blocks
-  function validatePositionCreation(address sender, bytes calldata creationData) external view { }
+  function deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    external
+    payable
+    onlyVault
+    returns (uint256 assetsDeposited)
+  {
+    return _connector_deposit(depositToken, depositAmount);
+  }
 
   /// @inheritdoc IEarnStrategy
   function withdraw(
@@ -126,6 +153,7 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
     address recipient
   )
     external
+    onlyVault
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
@@ -156,6 +184,7 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
     bytes calldata migrationData
   )
     external
+    onlyStrategyRegistry
     returns (bytes memory)
   {
     return _connector_migrateToNewStrategy(newStrategy, migrationData);
@@ -168,11 +197,18 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
     bytes calldata migrationResultData
   )
     external
+    onlyStrategyRegistry
   {
     _connector_strategyRegistered(strategyId, oldStrategy, migrationResultData);
   }
 
-  function _delayedWithdrawalAdapter() internal view virtual override returns (IDelayedWithdrawalAdapter) {
-    return __delayedWithdrawalAdapter;
+  modifier onlyStrategyRegistry() {
+    if (msg.sender != address(registry())) revert OnlyStrategyRegistry();
+    _;
+  }
+
+  modifier onlyVault() {
+    if (msg.sender != address(vault)) revert OnlyVault();
+    _;
   }
 }

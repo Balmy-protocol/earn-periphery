@@ -22,7 +22,6 @@ import { EarnBalmyStrategyStateBalanceMock } from "../../mocks/strategies/EarnBa
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { BalmyStrategyUtils } from "../../utils/BalmyStrategyUtils.sol";
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
-import { ERC4626TOSStrategy } from "src/strategies/ERC4626TOSStrategy.sol";
 
 contract BaseDelayedWithdrawalGasTest is PRBTest {
   using BalmyStrategyUtils for IEarnStrategyRegistry;
