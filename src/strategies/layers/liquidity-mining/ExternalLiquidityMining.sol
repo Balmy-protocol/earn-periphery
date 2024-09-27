@@ -17,7 +17,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
-  mapping(address => uint256) internal _underlyingTokens;
+  mapping(address token => uint256 balance) internal _underlyingTokens;
 
   function _liquidity_mining_init() internal onlyInitializing {
     address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
@@ -54,6 +54,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       }
     }
     if (tokensIndex < tokens.length) {
+      // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(tokens, tokensIndex)
       }
@@ -102,6 +103,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       }
     }
     if (tokensIndex < tokens.length) {
+      // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(tokens, tokensIndex)
         mstore(balances, tokensIndex)
@@ -119,6 +121,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     virtual
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
+  // solhint-disable-next-line no-empty-blocks
   { }
 
   function _liquidity_mining_specialWithdraw(
@@ -137,6 +140,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
+  // solhint-disable-next-line no-empty-blocks
   { }
 
   function _liquidity_mining_supportedWithdrawals()

@@ -127,6 +127,7 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     virtual
     override
     returns (address[] memory tokens, uint256[] memory withdrawable)
+  // solhint-disable-next-line no-empty-blocks
   { }
 
   function _liquidity_mining_underlying_totalBalances()
