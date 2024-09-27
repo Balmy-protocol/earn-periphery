@@ -86,16 +86,16 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       if (_underlyingTokens[rewardToken] == 0) {
         for (uint256 j = 1; j < underlyingTokens.length; ++j) {
           if (underlyingTokens[j] == rewardToken) {
-            indexRepeated = j;
+            indexRepeated = j + 1;
             break;
           }
         }
       } else {
-        indexRepeated = _underlyingTokens[rewardToken] - 1;
+        indexRepeated = _underlyingTokens[rewardToken];
       }
 
       if (indexRepeated != 0) {
-        balances[indexRepeated] += rewardAmount;
+        balances[indexRepeated - 1] += rewardAmount;
       } else {
         tokens[tokensIndex] = rewardToken;
         balances[tokensIndex] = rewardAmount;
