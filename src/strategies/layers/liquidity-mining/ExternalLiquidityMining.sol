@@ -17,7 +17,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
-  mapping(address token => uint256 balance) internal _underlyingTokens;
+  mapping(address token => uint256 index) internal _underlyingTokens;
 
   function _liquidity_mining_init() internal onlyInitializing {
     address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
