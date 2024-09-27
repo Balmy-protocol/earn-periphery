@@ -55,6 +55,7 @@ interface ILiquidityMiningManagerCore {
  * @dev This interface is meant to be used by the strategies
  *      and for those address who has the permission to manage the liquidity mining rewards campaigns
  */
+// solhint-disable-next-line no-empty-blocks
 interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
 // TODO: add campaign management functions
 }
