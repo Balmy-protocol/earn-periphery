@@ -169,6 +169,78 @@ contract ExternalFeesTest is Test {
     assertEq(withdrawal.recipient, recipient);
   }
 
+  // Revert if caller cant withdraw
+  // Revert if not enough fees
+  // Ok
+  //  - Fees are updated
+  //  - special withdraw is called correctly
+
+  function test_specialWithdrawFees_revertWhen_callerCantWithdrawFees() public {
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(false)
+    );
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.CantWithdrawFees.selector));
+    fees.specialWithdrawFees(SpecialWithdrawalCode.wrap(1), CommonUtils.arrayOf(100, 100), "", address(0));
+  }
+
+  function test_specialWithdrawFees_revertWhen_notEnoughFees() public {
+    _setFee(500); // 5%
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+
+    vm.expectRevert(abi.encodeWithSelector(ExternalFees.NotEnoughFees.selector));
+    fees.specialWithdrawFees(SpecialWithdrawalCode.wrap(1), CommonUtils.arrayOf(3000, 0), "", address(0));
+  }
+
+  function test_specialWithdrawFees() public {
+    _setFee(500); // 5%
+    SpecialWithdrawalCode code = SpecialWithdrawalCode.wrap(1);
+    uint256[] memory toWithdraw = CommonUtils.arrayOf(2500, 0);
+    bytes memory withdrawData = "12345";
+    address recipient = address(15);
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IFeeManagerCore.canWithdrawFees.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    // Deposit 100k
+    fees.deposited(asset, 100_000);
+
+    // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
+    fees.setBalance(asset, 150_000);
+
+    fees.specialWithdrawFees(code, toWithdraw, withdrawData, recipient);
+
+    // Make sure fees were updated
+    (address[] memory tokens, uint256[] memory collected) = fees.collectedFees();
+    assertEq(tokens.length, 2);
+    assertEq(collected.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(collected[0], 0);
+    assertEq(collected[1], 0);
+
+    // Make sure underlying special withdraw was executed correctly
+    ExternalFeesInstance.SpecialWithdrawal memory specialWithdrawal = fees.lastSpecialWithdrawal();
+    assertEq(specialWithdrawal.positionId, 0);
+    assertTrue(specialWithdrawal.withdrawalCode == code);
+    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
+    assertEq(specialWithdrawal.withdrawData, withdrawData);
+    assertEq(specialWithdrawal.recipient, recipient);
+  }
+
   function test_totalBalances() public {
     _setFee(500); // 5%
     fees.init(""); // Initialize so that performance data is set
@@ -355,12 +427,21 @@ contract ExternalFeesInstance is ExternalFees {
     address recipient;
   }
 
+  struct SpecialWithdrawal {
+    uint256 positionId;
+    SpecialWithdrawalCode withdrawalCode;
+    uint256[] toWithdraw;
+    bytes withdrawData;
+    address recipient;
+  }
+
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
   address[] private _tokens;
   mapping(address token => uint256 balance) private _balances;
   mapping(address token => IEarnStrategy.WithdrawalType withdrawalType) private _types;
   Withdrawal private _withdrawal;
+  SpecialWithdrawal private _specialWithdrawal;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -382,6 +463,10 @@ contract ExternalFeesInstance is ExternalFees {
 
   function lastWithdrawal() external view returns (Withdrawal memory) {
     return _withdrawal;
+  }
+
+  function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
+    return _specialWithdrawal;
   }
 
   function withdraw(
@@ -480,14 +565,13 @@ contract ExternalFeesInstance is ExternalFees {
   }
 
   function _fees_underlying_specialWithdraw(
-    uint256,
-    SpecialWithdrawalCode,
+    uint256 positionId,
+    SpecialWithdrawalCode code,
     uint256[] calldata toWithdraw,
-    bytes calldata,
-    address
+    bytes calldata data,
+    address recipient
   )
     internal
-    pure
     override
     returns (
       uint256[] memory balanceChanges,
@@ -496,6 +580,11 @@ contract ExternalFeesInstance is ExternalFees {
       bytes memory result
     )
   {
+    _specialWithdrawal = SpecialWithdrawal(positionId, code, toWithdraw, data, recipient);
+    address[] memory tokens = _tokens;
+    for (uint256 i = 0; i < toWithdraw.length; i++) {
+      _balances[tokens[i]] -= toWithdraw[i];
+    }
     balanceChanges = toWithdraw;
     actualWithdrawnTokens = new address[](0);
     actualWithdrawnAmounts = new uint256[](0);
