@@ -25,6 +25,14 @@ abstract contract BaseLiquidityMining {
     virtual
     returns (IEarnStrategy.WithdrawalType[] memory);
 
+  function _liquidity_mining_underlying_deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    internal
+    virtual
+    returns (uint256 assetsDeposited);
+
   // liquidity_mining
   function _liquidity_mining_allTokens() internal view virtual returns (address[] memory tokens);
   function _liquidity_mining_totalBalances()
@@ -32,6 +40,13 @@ abstract contract BaseLiquidityMining {
     view
     virtual
     returns (address[] memory tokens, uint256[] memory balances);
+  function _liquidity_mining_deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    internal
+    virtual
+    returns (uint256 assetsDeposited);
   function _liquidity_mining_withdraw(
     uint256 positionId,
     address[] calldata tokens,
