@@ -13,6 +13,10 @@ import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/Saf
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 
+interface IAToken is IERC20 {
+  function scaledTotalSupply() external view returns (uint256);
+}
+
 interface IAaveV3Pool {
   function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
   function withdraw(address asset, uint256 amount, address to) external returns (uint256);
@@ -32,7 +36,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   /// @notice Returns the pool's address
   function pool() public view virtual returns (IAaveV3Pool);
   /// @notice Returns the vault's address
-  function vault() public view virtual returns (IERC20);
+  function vault() public view virtual returns (IAToken);
   /// @notice Returns the rewards contractt's address
   function rewards() public view virtual returns (IAaveV3Rewards);
   function _asset() internal view virtual returns (IERC20);
@@ -171,6 +175,17 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_delayedWithdrawalAdapter(address) internal pure override returns (IDelayedWithdrawalAdapter) {
     return IDelayedWithdrawalAdapter(address(0));
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
+    IAToken vault_ = vault();
+    uint256 shares = vault_.scaledTotalSupply();
+    if (shares == 0) {
+      return 1e18;
+    }
+    uint256 assets = vault_.totalSupply();
+    return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code

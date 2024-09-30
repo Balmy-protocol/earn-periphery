@@ -108,8 +108,14 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _fees_fees();
   }
 
+  /// @inheritdoc IEarnStrategy
   function totalBalances() external view returns (address[] memory tokens, uint256[] memory balances) {
     return _fees_totalBalances();
+  }
+
+  /// @inheritdoc IEarnBalmyStrategy
+  function assetYieldCoefficient() external view returns (uint256) {
+    return _connector_assetYieldCoefficient();
   }
 
   /// @inheritdoc IEarnStrategy

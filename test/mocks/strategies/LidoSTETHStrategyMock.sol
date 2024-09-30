@@ -175,4 +175,8 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   function _delayedWithdrawalAdapter() internal view virtual override returns (IDelayedWithdrawalAdapter) {
     return __delayedWithdrawalAdapter;
   }
+
+  function assetYieldCoefficient() external pure override returns (uint256) {
+    return 1e18;
+  }
 }
