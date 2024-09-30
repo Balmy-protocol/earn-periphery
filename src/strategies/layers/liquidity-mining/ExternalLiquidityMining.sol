@@ -59,34 +59,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   {
     (address[] memory underlyingTokens, uint256[] memory underlyingBalances) =
       _liquidity_mining_underlying_totalBalances();
-    StrategyId strategyId_ = strategyId();
-    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
-    address[] memory rewardsTokens = manager.rewards(strategyId_);
-    tokens = new address[](underlyingTokens.length + rewardsTokens.length);
-    balances = new uint256[](underlyingTokens.length + rewardsTokens.length);
-    for (uint256 i; i < underlyingTokens.length; ++i) {
-      tokens[i] = underlyingTokens[i];
-      balances[i] = underlyingBalances[i];
-    }
-    uint256 tokensIndex = underlyingTokens.length;
-    for (uint256 i; i < rewardsTokens.length; ++i) {
-      address rewardToken = rewardsTokens[i];
-      uint256 rewardAmount = manager.rewardAmount(strategyId_, rewardToken);
-      (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
-      if (isRepeated) {
-        balances[indexRepeated] += rewardAmount;
-      } else {
-        tokens[tokensIndex] = rewardToken;
-        balances[tokensIndex++] = rewardAmount;
-      }
-    }
-    if (tokensIndex < tokens.length) {
-      // solhint-disable-next-line no-inline-assembly
-      assembly {
-        mstore(tokens, tokensIndex)
-        mstore(balances, tokensIndex)
-      }
-    }
+    (tokens, balances) = _combineArraysWithRewards(underlyingTokens, underlyingBalances);
   }
   // slither-disable-end assembly
 
@@ -152,6 +125,18 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
+  function _liquidity_mining_maxWithdraw()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory withdrawable)
+  {
+    (address[] memory underlyingTokens, uint256[] memory underlyingWithdrawable) =
+      _liquidity_mining_underlying_maxWithdraw();
+    (tokens, withdrawable) = _combineArraysWithRewards(underlyingTokens, underlyingWithdrawable);
+  }
+
   // slither-disable-next-line dead-code
   function _getLiquidityMiningManager() private view returns (ILiquidityMiningManagerCore) {
     return ILiquidityMiningManagerCore(globalRegistry().getAddressOrFail(LIQUIDITY_MINING_MANAGER));
@@ -167,4 +152,45 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     }
     return (false, 0);
   }
+
+  // slither-disable-start assembly
+  // slither-disable-next-line dead-code
+  function _combineArraysWithRewards(
+    address[] memory underlyingTokens,
+    uint256[] memory underlyingAmounts
+  )
+    private
+    view
+    returns (address[] memory tokens, uint256[] memory amounts)
+  {
+    StrategyId strategyId_ = strategyId();
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    address[] memory rewardsTokens = manager.rewards(strategyId_);
+    tokens = new address[](underlyingTokens.length + rewardsTokens.length);
+    amounts = new uint256[](underlyingTokens.length + rewardsTokens.length);
+    for (uint256 i; i < underlyingTokens.length; ++i) {
+      tokens[i] = underlyingTokens[i];
+      amounts[i] = underlyingAmounts[i];
+    }
+    uint256 tokensIndex = underlyingTokens.length;
+    for (uint256 i; i < rewardsTokens.length; ++i) {
+      address rewardToken = rewardsTokens[i];
+      uint256 rewardAmount = manager.rewardAmount(strategyId_, rewardToken);
+      (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
+      if (isRepeated) {
+        amounts[indexRepeated] += rewardAmount;
+      } else {
+        tokens[tokensIndex] = rewardToken;
+        amounts[tokensIndex++] = rewardAmount;
+      }
+    }
+    if (tokensIndex < tokens.length) {
+      // solhint-disable-next-line no-inline-assembly
+      assembly {
+        mstore(tokens, tokensIndex)
+        mstore(amounts, tokensIndex)
+      }
+    }
+  }
+  // slither-disable-end assembly
 }
