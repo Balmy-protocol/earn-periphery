@@ -90,6 +90,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   }
   // slither-disable-end assembly
 
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_deposited(
     address depositToken,
     uint256 depositAmount
