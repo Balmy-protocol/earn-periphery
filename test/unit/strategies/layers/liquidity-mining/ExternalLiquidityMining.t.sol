@@ -35,7 +35,8 @@ contract ExternalLiquidityMiningTest is Test {
   }
 
   function test_init() public {
-    liquidityMining.init();
+    bytes memory data = "1234567";
+    liquidityMining.init(data);
   }
 
   function test_allTokens() public {
@@ -101,8 +102,8 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     _tokens = tokens;
   }
 
-  function init() external initializer {
-    _liquidity_mining_init();
+  function init(bytes calldata data) external initializer {
+    _liquidity_mining_init(data);
   }
 
   function allTokens() external view virtual returns (address[] memory tokens) {
