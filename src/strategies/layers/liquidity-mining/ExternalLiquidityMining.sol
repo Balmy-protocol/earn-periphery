@@ -167,6 +167,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     return (false, 0);
   }
 
+  // slither-disable-start assembly
   // slither-disable-next-line dead-code
   function _combineArraysWithRewards(
     address[] memory underlyingTokens,
@@ -205,4 +206,5 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       }
     }
   }
+  // slither-disable-end assembly
 }
