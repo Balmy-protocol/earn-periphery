@@ -17,13 +17,8 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
-  mapping(address token => uint256 index) internal _underlyingTokens;
-
-  function _liquidity_mining_init() internal onlyInitializing {
-    address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
-    for (uint256 i; i < underlyingTokens.length; ++i) {
-      _underlyingTokens[underlyingTokens[i]] = i + 1; // 0 is reserved for false
-    }
+  function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
+     // manager.strategySelfConfigure(data);
   }
 
   function _liquidity_mining_allTokens() internal view override returns (address[] memory tokens) {
@@ -37,18 +32,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     uint256 tokensIndex = underlyingTokens.length;
     for (uint256 i; i < rewardsTokens.length; ++i) {
       address rewardToken = rewardsTokens[i];
-      bool isRepeated;
-      if (_underlyingTokens[rewardToken] == 0) {
-        for (uint256 j = 1; j < underlyingTokens.length; ++j) {
-          if (underlyingTokens[j] == rewardToken) {
-            isRepeated = true;
-            break;
-          }
-        }
-      } else {
-        isRepeated = true;
-      }
-
+      (bool isRepeated,) = _isRepeated(rewardToken, underlyingTokens);
       if (!isRepeated) {
         tokens[tokensIndex++] = rewardToken;
       }
@@ -64,7 +48,6 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   function _liquidity_mining_totalBalances()
     internal
     view
-    virtual
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
@@ -82,20 +65,9 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     for (uint256 i; i < rewardsTokens.length; ++i) {
       address rewardToken = rewardsTokens[i];
       uint256 rewardAmount = manager.rewardAmount(strategyId(), rewardToken);
-      uint256 indexRepeated;
-      if (_underlyingTokens[rewardToken] == 0) {
-        for (uint256 j = 1; j < underlyingTokens.length; ++j) {
-          if (underlyingTokens[j] == rewardToken) {
-            indexRepeated = j + 1;
-            break;
-          }
-        }
-      } else {
-        indexRepeated = _underlyingTokens[rewardToken];
-      }
-
-      if (indexRepeated != 0) {
-        balances[indexRepeated - 1] += rewardAmount;
+      (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
+      if (isRepeated) {
+        balances[indexRepeated] += rewardAmount;
       } else {
         tokens[tokensIndex] = rewardToken;
         balances[tokensIndex] = rewardAmount;
@@ -118,7 +90,6 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     address recipient
   )
     internal
-    virtual
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
   // solhint-disable-next-line no-empty-blocks
@@ -132,7 +103,6 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     address recipient
   )
     internal
-    virtual
     override
     returns (
       uint256[] memory balanceChanges,
@@ -160,5 +130,14 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
 
   function _getLiquidityMiningManager() private view returns (ILiquidityMiningManagerCore) {
     return ILiquidityMiningManagerCore(globalRegistry().getAddressOrFail(LIQUIDITY_MINING_MANAGER));
+  }
+
+  function _isRepeated(address token, address[] memory tokens) private pure returns (bool isRepeated, uint256 index) {
+    for (uint256 i; i < tokens.length; ++i) {
+      if (tokens[i] == token) {
+        return (true, i);
+      }
+    }
+    return (false, 0);
   }
 }
