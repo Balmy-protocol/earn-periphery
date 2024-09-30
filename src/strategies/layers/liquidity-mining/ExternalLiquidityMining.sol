@@ -17,10 +17,13 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
+  // solhint-disable-next-line no-empty-blocks
   function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
-     // manager.strategySelfConfigure(data);
+    // manager.strategySelfConfigure(data);
   }
 
+  // slither-disable-start assembly
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_allTokens() internal view override returns (address[] memory tokens) {
     address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
@@ -45,6 +48,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_totalBalances()
     internal
     view
@@ -82,7 +86,9 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       }
     }
   }
+  // slither-disable-end assembly
 
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_withdraw(
     uint256 positionId,
     address[] calldata tokens,
@@ -95,6 +101,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   // solhint-disable-next-line no-empty-blocks
   { }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
