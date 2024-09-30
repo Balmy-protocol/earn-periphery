@@ -17,6 +17,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
+  // slither-disable-next-line naming-convention,dead-code
   // solhint-disable-next-line no-empty-blocks
   function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
     // manager.strategySelfConfigure(data);
@@ -120,6 +121,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   // solhint-disable-next-line no-empty-blocks
   { }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_supportedWithdrawals()
     internal
     view
@@ -135,10 +137,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     }
   }
 
+  // slither-disable-next-line dead-code
   function _getLiquidityMiningManager() private view returns (ILiquidityMiningManagerCore) {
     return ILiquidityMiningManagerCore(globalRegistry().getAddressOrFail(LIQUIDITY_MINING_MANAGER));
   }
 
+  // slither-disable-next-line dead-code
   function _isRepeated(address token, address[] memory tokens) private pure returns (bool isRepeated, uint256 index) {
     for (uint256 i; i < tokens.length; ++i) {
       if (tokens[i] == token) {
