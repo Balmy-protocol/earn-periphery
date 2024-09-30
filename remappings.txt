@@ -1,6 +1,7 @@
 @prb/test/=node_modules/@prb/test/src
 ds-test/=node_modules/ds-test/src
 forge-std/=node_modules/forge-std/src
+@clones/=node_modules/clones/src
 src/=src/
 @openzeppelin/=node_modules/@openzeppelin/
 @balmy/nft-permissions/=node_modules/@balmy/nft-permissions/src/
