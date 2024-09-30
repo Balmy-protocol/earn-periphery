@@ -5,7 +5,7 @@ import { Test } from "forge-std/Test.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/ExternalLiquidityMining.sol";
-import { IEarnStrategy, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { CommonUtils } from "../../../../utils/CommonUtils.sol";
 
 contract ExternalLiquidityMiningTest is Test {
@@ -127,13 +127,49 @@ contract ExternalLiquidityMiningTest is Test {
     assertEq(withdrawable[1], 456 + lmAmount); // reward + lmRewardRepeated
     assertEq(withdrawable[2], lmAmount); //lmReward
   }
+
+  function test_specialWithdraw() public {
+    uint256 positionId = 1;
+    SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(1);
+    uint256[] memory toWithdraw = CommonUtils.arrayOf(123);
+    bytes memory withdrawData = "1234567";
+    address recipient = address(1);
+
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = liquidityMining.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    assertEq(balanceChanges, toWithdraw);
+    assertEq(actualWithdrawnTokens.length, 0);
+    assertEq(actualWithdrawnAmounts.length, 0);
+    assertEq(result.length, 0);
+
+    ExternalLiquidityMiningInstance.SpecialWithdrawal memory specialWithdrawal = liquidityMining.lastSpecialWithdrawal();
+    assertEq(specialWithdrawal.positionId, positionId);
+    assertTrue(specialWithdrawal.withdrawalCode == withdrawalCode);
+    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
+    assertEq(specialWithdrawal.withdrawData, withdrawData);
+    assertEq(specialWithdrawal.recipient, recipient);
+  }
 }
 
 contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
+  struct SpecialWithdrawal {
+    uint256 positionId;
+    SpecialWithdrawalCode withdrawalCode;
+    uint256[] toWithdraw;
+    bytes withdrawData;
+    address recipient;
+  }
+
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
   address[] private _tokens;
   mapping(address token => uint256 balance) private _underlyingBalance;
+  SpecialWithdrawal private _specialWithdrawal;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -163,6 +199,28 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
 
   function maxWithdraw() external view returns (address[] memory tokens, uint256[] memory withdrawable) {
     return _liquidity_mining_maxWithdraw();
+  }
+
+  function specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    external
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    return _liquidity_mining_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
+    return _specialWithdrawal;
   }
 
   function _liquidity_mining_underlying_allTokens() internal view virtual override returns (address[] memory tokens) {
@@ -227,5 +285,30 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     returns (uint256 assetsDeposited)
   {
     return depositAmount;
+  }
+
+  function _liquidity_mining_underlying_specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    internal
+    virtual
+    override
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    _specialWithdrawal = SpecialWithdrawal(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    balanceChanges = toWithdraw;
+    actualWithdrawnTokens = new address[](0);
+    actualWithdrawnAmounts = new uint256[](0);
+    result = "";
   }
 }

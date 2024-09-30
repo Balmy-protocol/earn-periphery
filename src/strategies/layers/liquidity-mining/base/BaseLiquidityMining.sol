@@ -29,6 +29,21 @@ abstract contract BaseLiquidityMining {
     internal
     virtual
     returns (uint256 assetsDeposited);
+  function _liquidity_mining_underlying_specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    internal
+    virtual
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    );
 
   // liquidity_mining
   function _liquidity_mining_allTokens() internal view virtual returns (address[] memory tokens);

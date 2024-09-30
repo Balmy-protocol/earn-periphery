@@ -106,8 +106,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     )
-  // solhint-disable-next-line no-empty-blocks
-  { }
+  {
+    (balanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+      _liquidity_mining_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    manager.withdrew(strategyId(), balanceChanges[0]);
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_supportedWithdrawals()
