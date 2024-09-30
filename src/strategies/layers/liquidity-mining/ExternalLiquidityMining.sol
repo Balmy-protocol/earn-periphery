@@ -90,6 +90,19 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   }
   // slither-disable-end assembly
 
+  function _liquidity_mining_deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    internal
+    override
+    returns (uint256 assetsDeposited)
+  {
+    assetsDeposited = _liquidity_mining_underlying_deposited(depositToken, depositAmount);
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    manager.deposited(strategyId(), assetsDeposited);
+  }
+
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_withdraw(
     uint256 positionId,
