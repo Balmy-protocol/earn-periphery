@@ -24,8 +24,8 @@ import { BaseGuardian } from "../../layers/guardian/base/BaseGuardian.sol";
  *         3. Creation validation
  *         4. Connector
  *
- *         They are executed in the same order and presented above. Strategies that inherit from this contract must
- *         define implementations for each of these layers, and they might need to implment some aditional logic
+ *         They are executed in the same order as presented above. Strategies that inherit from this contract must
+ *         define implementations for each of these layers, and they might need to impelment some additional logic
  *         in the strategy itself.
  */
 abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, BaseCreationValidation, BaseConnector {
