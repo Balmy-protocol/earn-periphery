@@ -156,9 +156,183 @@ contract ExternalLiquidityMiningTest is Test {
     assertEq(specialWithdrawal.withdrawData, withdrawData);
     assertEq(specialWithdrawal.recipient, recipient);
   }
+
+  function test_withdraw_ok() public {
+    uint256 positionId = 10;
+    uint256 amount = 12_345;
+    address recipient = address(30);
+
+    vm.expectCall(
+      address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector, strategyId, amount)
+    );
+
+    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(amount, 0, 0), recipient
+    );
+    assertEq(types.length, 3);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying was called correctly
+    ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
+    assertEq(withdrawal.positionId, positionId);
+    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(withdrawal.amounts, CommonUtils.arrayOf(amount, 0));
+    assertEq(withdrawal.recipient, recipient);
+  }
+
+  function test_withdraw_onlyLiquidityMining() public {
+    uint256 positionId = 10;
+    uint256 amount = 999;
+    address recipient = address(30);
+
+    uint256 lmAmount = 1000;
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmReward),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmRewardRepeated),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.claim.selector, strategyId, lmReward, lmAmount, recipient),
+      abi.encode()
+    );
+
+    vm.expectCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.claim.selector, strategyId, lmReward, amount, recipient)
+    );
+
+    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, 0, amount), recipient
+    );
+    assertEq(types.length, 3);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying layer was not called
+    ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
+    assertEq(withdrawal.positionId, 0);
+    assertEq(withdrawal.tokens.length, 0);
+    assertEq(withdrawal.amounts.length, 0);
+    assertEq(withdrawal.recipient, address(0));
+  }
+
+  function test_withdraw_notEnoughBalanceSoWillCallUnderlying() public {
+    uint256 positionId = 10;
+    uint256 amount = 1010;
+    address recipient = address(30);
+
+    liquidityMining.setUnderlyingBalance(asset, 123);
+    liquidityMining.setUnderlyingBalance(reward, 456);
+
+    uint256 lmAmount = 1000;
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmReward),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmRewardRepeated),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(
+        ILiquidityMiningManagerCore.claim.selector, strategyId, lmRewardRepeated, lmAmount, recipient
+      ),
+      abi.encode()
+    );
+
+    vm.expectCall(
+      address(manager),
+      abi.encodeWithSelector(
+        ILiquidityMiningManagerCore.claim.selector, strategyId, lmRewardRepeated, lmAmount, recipient
+      )
+    );
+
+    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, amount, 0), recipient
+    );
+    assertEq(types.length, 3);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying was called correctly
+    ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
+    assertEq(withdrawal.positionId, positionId);
+    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
+    assertEq(withdrawal.amounts, CommonUtils.arrayOf(0, amount - lmAmount));
+    assertEq(withdrawal.recipient, recipient);
+  }
+
+  function test_withdraw_enoughBalanceSoWontCallUnderlying() public {
+    uint256 positionId = 10;
+    uint256 amount = 999;
+    address recipient = address(30);
+
+    liquidityMining.setUnderlyingBalance(asset, 123);
+    liquidityMining.setUnderlyingBalance(reward, 456);
+
+    uint256 lmAmount = 1000;
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmReward),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmRewardRepeated),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(
+        ILiquidityMiningManagerCore.claim.selector, strategyId, lmRewardRepeated, lmAmount, recipient
+      ),
+      abi.encode()
+    );
+
+    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+      positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, amount, 0), recipient
+    );
+    assertEq(types.length, 3);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+
+    // Make sure underlying layer was not called
+    ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
+    assertEq(withdrawal.positionId, 0);
+    assertEq(withdrawal.tokens.length, 0);
+    assertEq(withdrawal.amounts.length, 0);
+    assertEq(withdrawal.recipient, address(0));
+  }
 }
 
 contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
+  struct Withdrawal {
+    uint256 positionId;
+    address[] tokens;
+    uint256[] amounts;
+    address recipient;
+  }
+
   struct SpecialWithdrawal {
     uint256 positionId;
     SpecialWithdrawalCode withdrawalCode;
@@ -171,6 +345,7 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
   StrategyId private _strategyId;
   address[] private _tokens;
   mapping(address token => uint256 balance) private _underlyingBalance;
+  Withdrawal private _withdrawal;
   SpecialWithdrawal private _specialWithdrawal;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
@@ -203,6 +378,18 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     return _liquidity_mining_maxWithdraw();
   }
 
+  function withdraw(
+    uint256 positionId,
+    address[] calldata tokens,
+    uint256[] calldata toWithdraw,
+    address recipient
+  )
+    external
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _liquidity_mining_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
   function specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -219,6 +406,10 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     )
   {
     return _liquidity_mining_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  function lastWithdrawal() external view returns (Withdrawal memory) {
+    return _withdrawal;
   }
 
   function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
@@ -312,5 +503,20 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     actualWithdrawnTokens = new address[](0);
     actualWithdrawnAmounts = new uint256[](0);
     result = "";
+  }
+
+  function _liquidity_mining_underlying_withdraw(
+    uint256 positionId,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
+    address recipient
+  )
+    internal
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
+    return _liquidity_mining_supportedWithdrawals();
   }
 }

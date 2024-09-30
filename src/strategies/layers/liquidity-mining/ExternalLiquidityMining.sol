@@ -6,8 +6,11 @@ import { BaseLiquidityMining } from "./base/BaseLiquidityMining.sol";
 import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable {
+  using Math for uint256;
+
   /// @notice The id for the Liquidity Mining Manager
   bytes32 public constant LIQUIDITY_MINING_MANAGER = keccak256("LIQUIDITY_MINING_MANAGER");
 
@@ -87,8 +90,39 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     internal
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
-  // solhint-disable-next-line no-empty-blocks
-  { }
+  {
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
+    // In this case, we will try to use the balance of the liquidity mining manager first,
+    // and withdraw the rest from the underlying layer
+    uint256[] memory toWithdrawUnderlying = new uint256[](underlyingTokens.length);
+    toWithdrawUnderlying[0] = toWithdraw[0];
+
+    bool shouldWithdrawUnderlying = toWithdraw[0] > 0;
+    for (uint256 i = 1; i < tokens.length; ++i) {
+      uint256 toWithdrawToken = toWithdraw[i];
+      uint256 balance = manager.rewardAmount(strategyId(), tokens[i]);
+      uint256 toTransfer = Math.min(balance, toWithdrawToken);
+      if (toTransfer > 0) {
+        manager.claim(strategyId(), tokens[i], toTransfer, recipient);
+      }
+      if (i < underlyingTokens.length) {
+        toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
+        if (toWithdrawUnderlying[i] > 0) {
+          shouldWithdrawUnderlying = true;
+        }
+      }
+    }
+
+    if (shouldWithdrawUnderlying) {
+      if (toWithdrawUnderlying[0] > 0) {
+        // Only call withdrew if we are withdrawing the asset
+        manager.withdrew(strategyId(), toWithdrawUnderlying[0]);
+      }
+      _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
+    }
+    return _liquidity_mining_supportedWithdrawals();
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_specialWithdraw(

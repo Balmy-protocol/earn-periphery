@@ -29,6 +29,15 @@ abstract contract BaseLiquidityMining {
     internal
     virtual
     returns (uint256 assetsDeposited);
+  function _liquidity_mining_underlying_withdraw(
+    uint256 positionId,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
+    address recipient
+  )
+    internal
+    virtual
+    returns (IEarnStrategy.WithdrawalType[] memory types);
   function _liquidity_mining_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
