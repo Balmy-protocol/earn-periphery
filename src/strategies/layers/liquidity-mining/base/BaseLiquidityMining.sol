@@ -7,7 +7,6 @@ abstract contract BaseLiquidityMining {
   // slither-disable-start naming-convention
   /// Underlying
   function _liquidity_mining_underlying_allTokens() internal view virtual returns (address[] memory tokens);
-
   function _liquidity_mining_underlying_maxWithdraw()
     internal
     view
@@ -18,13 +17,11 @@ abstract contract BaseLiquidityMining {
     view
     virtual
     returns (address[] memory tokens, uint256[] memory balances);
-
   function _liquidity_mining_underlying_supportedWithdrawals()
     internal
     view
     virtual
     returns (IEarnStrategy.WithdrawalType[] memory);
-
   function _liquidity_mining_underlying_deposited(
     address depositToken,
     uint256 depositAmount
@@ -71,11 +68,15 @@ abstract contract BaseLiquidityMining {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
-
   function _liquidity_mining_supportedWithdrawals()
     internal
     view
     virtual
     returns (IEarnStrategy.WithdrawalType[] memory);
+  function _liquidity_mining_maxWithdraw()
+    internal
+    view
+    virtual
+    returns (address[] memory tokens, uint256[] memory withdrawable);
   // slither-disable-end naming-convention
 }

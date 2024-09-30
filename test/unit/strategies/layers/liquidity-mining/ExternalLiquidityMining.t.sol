@@ -100,6 +100,33 @@ contract ExternalLiquidityMiningTest is Test {
     uint256 deposited = liquidityMining.deposited(asset, amount);
     assertEq(deposited, amount);
   }
+
+  function test_maxWithdraw() public {
+    uint256 lmAmount = 1000;
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmReward),
+      abi.encode(lmAmount)
+    );
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewardAmount.selector, strategyId, lmRewardRepeated),
+      abi.encode(lmAmount)
+    );
+
+    liquidityMining.setUnderlyingBalance(asset, 123);
+    liquidityMining.setUnderlyingBalance(reward, 456);
+
+    (address[] memory tokens, uint256[] memory withdrawable) = liquidityMining.maxWithdraw();
+    assertEq(tokens.length, 3);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], reward);
+    assertEq(tokens[2], lmReward);
+    assertEq(withdrawable[0], 123);
+    assertEq(withdrawable[1], 456 + lmAmount); // reward + lmRewardRepeated
+    assertEq(withdrawable[2], lmAmount); //lmReward
+  }
 }
 
 contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
@@ -134,6 +161,10 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     return _liquidity_mining_deposited(depositToken, depositAmount);
   }
 
+  function maxWithdraw() external view returns (address[] memory tokens, uint256[] memory withdrawable) {
+    return _liquidity_mining_maxWithdraw();
+  }
+
   function _liquidity_mining_underlying_allTokens() internal view virtual override returns (address[] memory tokens) {
     return _tokens;
   }
@@ -145,7 +176,9 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     override
     returns (address[] memory tokens, uint256[] memory withdrawable)
   // solhint-disable-next-line no-empty-blocks
-  { }
+  {
+    return _liquidity_mining_underlying_totalBalances();
+  }
 
   function _liquidity_mining_underlying_totalBalances()
     internal
