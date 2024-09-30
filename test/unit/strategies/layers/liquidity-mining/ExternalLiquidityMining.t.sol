@@ -134,7 +134,9 @@ contract ExternalLiquidityMiningTest is Test {
     uint256[] memory toWithdraw = CommonUtils.arrayOf(123);
     bytes memory withdrawData = "1234567";
     address recipient = address(1);
-
+    vm.expectCall(
+      address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector, strategyId, toWithdraw[0])
+    );
     (
       uint256[] memory balanceChanges,
       address[] memory actualWithdrawnTokens,
