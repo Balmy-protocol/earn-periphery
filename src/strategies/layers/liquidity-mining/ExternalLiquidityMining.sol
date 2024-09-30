@@ -20,6 +20,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   // slither-disable-next-line naming-convention,dead-code
   // solhint-disable-next-line no-empty-blocks
   function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
+    // TODO: implement
     // manager.strategySelfConfigure(data);
   }
 
@@ -58,8 +59,9 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   {
     (address[] memory underlyingTokens, uint256[] memory underlyingBalances) =
       _liquidity_mining_underlying_totalBalances();
+    StrategyId strategyId_ = strategyId();
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
-    address[] memory rewardsTokens = manager.rewards(strategyId());
+    address[] memory rewardsTokens = manager.rewards(strategyId_);
     tokens = new address[](underlyingTokens.length + rewardsTokens.length);
     balances = new uint256[](underlyingTokens.length + rewardsTokens.length);
     for (uint256 i; i < underlyingTokens.length; ++i) {
@@ -69,14 +71,13 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     uint256 tokensIndex = underlyingTokens.length;
     for (uint256 i; i < rewardsTokens.length; ++i) {
       address rewardToken = rewardsTokens[i];
-      uint256 rewardAmount = manager.rewardAmount(strategyId(), rewardToken);
+      uint256 rewardAmount = manager.rewardAmount(strategyId_, rewardToken);
       (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
       if (isRepeated) {
         balances[indexRepeated] += rewardAmount;
       } else {
         tokens[tokensIndex] = rewardToken;
-        balances[tokensIndex] = rewardAmount;
-        tokensIndex++;
+        balances[tokensIndex++] = rewardAmount;
       }
     }
     if (tokensIndex < tokens.length) {
@@ -144,7 +145,8 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
 
   // slither-disable-next-line dead-code
   function _isRepeated(address token, address[] memory tokens) private pure returns (bool isRepeated, uint256 index) {
-    for (uint256 i; i < tokens.length; ++i) {
+    // The asset and can't be repeated, so we start from next index
+    for (uint256 i = 1; i < tokens.length; ++i) {
       if (tokens[i] == token) {
         return (true, i);
       }

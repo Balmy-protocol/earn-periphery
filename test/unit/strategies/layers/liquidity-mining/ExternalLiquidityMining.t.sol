@@ -37,6 +37,9 @@ contract ExternalLiquidityMiningTest is Test {
   function test_init() public {
     bytes memory data = "1234567";
     liquidityMining.init(data);
+    // TODO: test self configure
+    //vm.expectCall(address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector,
+    // data));
   }
 
   function test_allTokens() public {
