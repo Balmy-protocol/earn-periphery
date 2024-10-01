@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.8;
 
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 /**
  * @title Liquidity Mining Manager Core Interface
  * @notice This contract will manage the liquidity mining rewards for the strategies
@@ -59,5 +59,28 @@ interface ILiquidityMiningManagerCore {
  */
 // solhint-disable-next-line no-empty-blocks
 interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
-// TODO: add campaign management functions
+  event CampaignSet(StrategyId indexed strategyId, address indexed reward, uint256 emissionPerSecond, uint256 deadline);
+
+  /**
+   * @notice Returns the address of the strategy registry
+   * @return The address of the strategy registry
+   */
+  // slither-disable-next-line naming-convention
+  function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
+  /**
+   * @notice Returns the role in charge of managing campaigns. Accounts with this role set campaigns
+   * to individual strategies
+   * @return The role in charge of managing campaigns
+   */
+  // slither-disable-next-line naming-convention
+  function MANAGE_CAMPAIGNS_ROLE() external view returns (bytes32);
+
+  function setCampaign(
+    StrategyId strategyId,
+    address reward,
+    uint256 emissionPerSecond,
+    uint256 deadline
+  )
+    external
+    payable;
 }
