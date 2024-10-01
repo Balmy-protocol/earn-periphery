@@ -78,12 +78,12 @@ contract ERC4626Strategy is
     return IERC20(_getArgAddress(60));
   }
 
-  // slither-disable-next-line naming-convention
+  // slither-disable-next-line naming-convention,dead-code
   function _fees_underlying_asset() internal view override returns (address asset) {
     return _connector_asset();
   }
 
-  // slither-disable-next-line naming-convention
+  // slither-disable-next-line naming-convention,dead-code
   function _guardian_rescueFee() internal view override returns (uint16) {
     return _getFees().rescueFee;
   }
