@@ -37,7 +37,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
 
   mapping(bytes32 strategyAndReward => Campaign campaigns) internal _campaigns;
 
-  mapping(StrategyId strategyId => address[] rewards) public _rewards;
+  mapping(StrategyId strategyId => address[] rewards) internal _rewards;
 
   constructor(
     IEarnStrategyRegistry registry,
