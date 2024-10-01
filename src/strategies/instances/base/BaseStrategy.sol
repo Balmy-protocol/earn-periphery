@@ -27,7 +27,7 @@ import { BaseLiquidityMining } from "../../layers/liquidity-mining/base/BaseLiqu
  *         5. Connector
  *
  *         They are executed in the same order as presented above. Strategies that inherit from this contract must
- *         define implementations for each of these layers, and they might need to impelment some additional logic
+ *         define implementations for each of these layers, and they might need to implement some additional logic
  *         in the strategy itself.
  */
 abstract contract BaseStrategy is
