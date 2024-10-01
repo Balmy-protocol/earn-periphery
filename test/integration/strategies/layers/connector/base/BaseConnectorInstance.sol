@@ -54,6 +54,10 @@ abstract contract BaseConnectorInstance is BaseConnector {
     return _connector_delayedWithdrawalAdapter(token);
   }
 
+  function assetYieldCoefficient() external view returns (uint256) {
+    return _connector_assetYieldCoefficient();
+  }
+
   function deposit(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
     return _connector_deposit(depositToken, depositAmount);
   }

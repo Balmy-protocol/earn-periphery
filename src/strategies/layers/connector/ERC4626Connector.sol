@@ -3,6 +3,7 @@ pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { StrategyId, IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
@@ -13,6 +14,7 @@ import { BaseConnector } from "./base/BaseConnector.sol";
 abstract contract ERC4626Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using SafeERC20 for IERC4626;
+  using Math for uint256;
 
   /// @notice Returns the address of the ERC4626 vault
   // slither-disable-next-line naming-convention
@@ -138,6 +140,17 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     returns (IDelayedWithdrawalAdapter)
   // solhint-disable-next-line no-empty-blocks
   { }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
+    IERC4626 vault = ERC4626Vault();
+    uint256 shares = vault.totalSupply();
+    if (shares == 0) {
+      return 1e18;
+    }
+    uint256 assets = vault.totalAssets();
+    return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(

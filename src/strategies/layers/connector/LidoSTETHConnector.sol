@@ -15,6 +15,8 @@ import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol
 
 interface ILidoSTETH {
   function submit(address _referral) external payable returns (uint256);
+  function getTotalPooledEther() external view returns (uint256);
+  function getTotalShares() external view returns (uint256);
 }
 
 abstract contract LidoSTETHConnector is BaseConnector, Initializable {
@@ -149,6 +151,16 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
       return _delayedWithdrawalAdapter();
     }
     return IDelayedWithdrawalAdapter(address(0));
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
+    uint256 shares = _stETH.getTotalShares();
+    if (shares == 0) {
+      return 1e18;
+    }
+    uint256 assets = _stETH.getTotalPooledEther();
+    return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code
