@@ -47,6 +47,9 @@ interface ILiquidityMiningManagerCore {
    * @param assetsWithdrawn The amount of assets withdrew
    */
   function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external;
+
+  /// @notice Allows the strategy to call the manager, for self-configuration
+  function strategySelfConfigure(bytes calldata data) external;
 }
 
 /**
