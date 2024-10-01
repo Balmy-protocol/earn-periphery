@@ -6,8 +6,11 @@ import { BaseLiquidityMining } from "./base/BaseLiquidityMining.sol";
 import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable {
+  using Math for uint256;
+
   /// @notice The id for the Liquidity Mining Manager
   bytes32 public constant LIQUIDITY_MINING_MANAGER = keccak256("LIQUIDITY_MINING_MANAGER");
 
@@ -17,11 +20,10 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
-  // solhint-disable no-empty-blocks
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
-    // TODO: implement
-    // manager.strategySelfConfigure(data);
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    manager.strategySelfConfigure(data);
   }
 
   // slither-disable-start assembly
@@ -87,8 +89,39 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     internal
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
-  // solhint-disable-next-line no-empty-blocks
-  { }
+  {
+    // In this case, we will try to use the balance of the liquidity mining manager first,
+    // and withdraw the rest from the underlying layer
+    StrategyId strategyId_ = strategyId();
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
+    uint256[] memory toWithdrawUnderlying = new uint256[](underlyingTokens.length);
+    uint256 toWithdrawAsset = toWithdraw[0];
+    bool shouldWithdrawUnderlying = toWithdrawAsset > 0;
+    for (uint256 i = 1; i < tokens.length; ++i) {
+      uint256 toWithdrawToken = toWithdraw[i];
+      uint256 balance = manager.rewardAmount(strategyId_, tokens[i]);
+      uint256 toTransfer = Math.min(balance, toWithdrawToken);
+      if (toTransfer > 0) {
+        manager.claim(strategyId_, tokens[i], toTransfer, recipient);
+      }
+      if (i < underlyingTokens.length) {
+        toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
+        if (toWithdrawUnderlying[i] > 0) {
+          shouldWithdrawUnderlying = true;
+        }
+      }
+    }
+    if (shouldWithdrawUnderlying) {
+      if (toWithdrawAsset > 0) {
+        // Only call withdrew if we are withdrawing the asset
+        manager.withdrew(strategyId_, toWithdrawAsset);
+      }
+      toWithdrawUnderlying[0] = toWithdrawAsset;
+      _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
+    }
+    return _liquidity_mining_supportedWithdrawals();
+  }
 
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_specialWithdraw(

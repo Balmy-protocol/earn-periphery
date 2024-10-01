@@ -28,11 +28,11 @@ interface ILiquidityMiningManagerCore {
   /**
    * @notice Claims the rewards for a given strategy and token, and sends them to the recipient
    * @param strategyId The id of the strategy
-   * @param tokens The tokens to claim
-   * @param amounts The amounts to claim
+   * @param token The token to claim
+   * @param amount The amount to claim
    * @param recipient The recipient of the rewards
    */
-  function claim(StrategyId strategyId, address[] memory tokens, uint256[] memory amounts, address recipient) external;
+  function claim(StrategyId strategyId, address token, uint256 amount, address recipient) external;
 
   /**
    * @notice Alerts that a deposit has been made to the strategy
@@ -47,6 +47,9 @@ interface ILiquidityMiningManagerCore {
    * @param assetsWithdrawn The amount of assets withdrew
    */
   function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external;
+
+  /// @notice Allows the strategy to call the manager, for self-configuration
+  function strategySelfConfigure(bytes calldata data) external;
 }
 
 /**
