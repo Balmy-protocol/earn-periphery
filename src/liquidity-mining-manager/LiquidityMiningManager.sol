@@ -7,12 +7,14 @@ import { IEarnStrategy, StrategyId, IEarnStrategyRegistry } from "@balmy/earn-co
 import { ILiquidityMiningManager, ILiquidityMiningManagerCore } from "../interfaces/ILiquidityMiningManager.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @notice A guardian manager that allows the configuration of liquidity mining campaigns
  */
 contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefaultAdminRules {
   using SafeERC20 for IERC20;
+  using Math for uint256;
 
   error UnauthorizedCaller();
   error InvalidReward();
@@ -33,7 +35,9 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   // slither-disable-next-line naming-convention
   IEarnStrategyRegistry public immutable STRATEGY_REGISTRY;
 
-  mapping(bytes32 strategyAndReward => Campaign campaigns) internal _rewards;
+  mapping(bytes32 strategyAndReward => Campaign campaigns) internal _campaigns;
+
+  mapping(StrategyId strategyId => address[] rewards) public _rewards;
 
   constructor(
     IEarnStrategyRegistry registry,
@@ -47,12 +51,16 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
-  // solhint-disable-next-line no-empty-blocks
-  function rewards(StrategyId strategyId) external view override returns (address[] memory) { }
+  function rewardAmount(StrategyId strategyId, address token) external view override returns (uint256) {
+    Campaign memory campaign = _campaigns[_key(strategyId, token)];
+    return campaign.pendingFromLastUpdate
+      + campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
+  }
 
   /// @inheritdoc ILiquidityMiningManagerCore
-  // solhint-disable-next-line no-empty-blocks
-  function rewardAmount(StrategyId strategyId, address token) external view override returns (uint256) { }
+  function rewards(StrategyId strategyId) external view override returns (address[] memory) {
+    return _rewards[strategyId];
+  }
 
   /// @inheritdoc ILiquidityMiningManagerCore
   // solhint-disable-next-line no-empty-blocks
@@ -87,16 +95,17 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     onlyRole(MANAGE_CAMPAIGNS_ROLE)
   {
     bytes32 key = _key(strategyId, reward);
-    Campaign storage campaign = _rewards[key];
+    Campaign storage campaign = _campaigns[key];
     if (campaign.lastUpdated == 0) {
       IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
       if (strategy.asset() == reward) {
         revert InvalidReward();
       }
+      _rewards[strategyId].push(reward);
     } else {
       // Update the pending rewards
-      campaign.pendingFromLastUpdate =
-        campaign.emissionPerSecond * (block.timestamp - campaign.lastUpdated) - campaign.claimed;
+      campaign.pendingFromLastUpdate = campaign.emissionPerSecond
+        * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated) - campaign.claimed;
     }
 
     uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);

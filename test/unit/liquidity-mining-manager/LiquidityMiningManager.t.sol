@@ -16,8 +16,9 @@ import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
+import { StdCheats } from "forge-std/StdCheats.sol";
 
-contract LiquidityMiningManagerTest is PRBTest {
+contract LiquidityMiningManagerTest is PRBTest, StdCheats {
   event CampaignSet(StrategyId indexed strategyId, address indexed reward, uint256 emissionPerSecond, uint256 deadline);
 
   address private superAdmin = address(1);
@@ -28,10 +29,12 @@ contract LiquidityMiningManagerTest is PRBTest {
   LiquidityMiningManager private manager;
   IERC20 private asset = IERC20(address(7));
   ERC20MintableBurnableMock private reward = new ERC20MintableBurnableMock();
+  ERC20MintableBurnableMock private anotherReward = new ERC20MintableBurnableMock();
 
   function setUp() public virtual {
     manager = new LiquidityMiningManager(registry, superAdmin, CommonUtils.arrayOf(adminManageCampaigns));
     reward.mint(address(adminManageCampaigns), type(uint256).max);
+    anotherReward.mint(address(adminManageCampaigns), type(uint256).max);
     vm.deal(address(adminManageCampaigns), type(uint256).max);
 
     vm.mockCall(
@@ -79,6 +82,30 @@ contract LiquidityMiningManagerTest is PRBTest {
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
     assertEq(reward.balanceOf(address(manager)), balanceForCampaign);
+    assertEq(manager.rewards(strategyId)[0], address(reward));
+  }
+
+  function test_setCampaign_twoCampaigns() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    anotherReward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(anotherReward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+    vm.stopPrank();
+    assertEq(manager.rewards(strategyId)[0], address(reward));
+    assertEq(manager.rewards(strategyId)[1], address(anotherReward));
   }
 
   function test_setCampaign_modifyCampaign_addBalance() public {
@@ -212,5 +239,65 @@ contract LiquidityMiningManagerTest is PRBTest {
       emissionPerSecond: 3,
       deadline: block.timestamp + 1 days
     });
+  }
+
+  function test_rewardAmounts_twoCampaigns() public {
+    vm.warp(block.timestamp);
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    anotherReward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 0); // No rewards yet
+    skip(5); // 5 seconds passed
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
+
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(anotherReward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 0); // No rewards yet
+    skip(1000); // 1000 seconds passed, deadline reached for both campaigns
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 10);
+    assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 3 * 10);
+    vm.stopPrank();
+  }
+
+  function test_rewardAmount_modifyCampaign_addBalance() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    balanceForCampaign = 10 * 100 - balanceForCampaign;
+    reward.approve(address(manager), balanceForCampaign);
+    skip(5); // 5 seconds passed
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
+
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 10,
+      deadline: block.timestamp + 100
+    });
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
+    skip(10);
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5 + 10 * 10);
+    vm.stopPrank();
   }
 }
