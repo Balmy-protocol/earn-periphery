@@ -93,17 +93,18 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   {
     // In this case, we will try to use the balance of the liquidity mining manager first,
     // and withdraw the rest from the underlying layer
+    StrategyId strategyId_ = strategyId();
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
     address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
     uint256[] memory toWithdrawUnderlying = new uint256[](underlyingTokens.length);
-    toWithdrawUnderlying[0] = toWithdraw[0];
-    bool shouldWithdrawUnderlying = toWithdraw[0] > 0;
+    uint256 toWithdrawAsset = toWithdraw[0];
+    bool shouldWithdrawUnderlying = toWithdrawAsset > 0;
     for (uint256 i = 1; i < tokens.length; ++i) {
       uint256 toWithdrawToken = toWithdraw[i];
-      uint256 balance = manager.rewardAmount(strategyId(), tokens[i]);
+      uint256 balance = manager.rewardAmount(strategyId_, tokens[i]);
       uint256 toTransfer = Math.min(balance, toWithdrawToken);
       if (toTransfer > 0) {
-        manager.claim(strategyId(), tokens[i], toTransfer, recipient);
+        manager.claim(strategyId_, tokens[i], toTransfer, recipient);
       }
       if (i < underlyingTokens.length) {
         toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
@@ -112,12 +113,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
         }
       }
     }
-
     if (shouldWithdrawUnderlying) {
-      if (toWithdrawUnderlying[0] > 0) {
+      if (toWithdrawAsset > 0) {
         // Only call withdrew if we are withdrawing the asset
-        manager.withdrew(strategyId(), toWithdrawUnderlying[0]);
+        manager.withdrew(strategyId_, toWithdrawAsset);
       }
+      toWithdrawUnderlying[0] = toWithdrawAsset;
       _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
     }
     return _liquidity_mining_supportedWithdrawals();

@@ -157,7 +157,7 @@ contract ExternalLiquidityMiningTest is Test {
     assertEq(specialWithdrawal.recipient, recipient);
   }
 
-  function test_withdraw_ok() public {
+  function test_withdraw_onlyAsset() public {
     uint256 positionId = 10;
     uint256 amount = 12_345;
     address recipient = address(30);
