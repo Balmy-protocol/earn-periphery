@@ -91,13 +91,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     override
     returns (IEarnStrategy.WithdrawalType[] memory types)
   {
-    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
-    address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
     // In this case, we will try to use the balance of the liquidity mining manager first,
     // and withdraw the rest from the underlying layer
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    address[] memory underlyingTokens = _liquidity_mining_underlying_allTokens();
     uint256[] memory toWithdrawUnderlying = new uint256[](underlyingTokens.length);
     toWithdrawUnderlying[0] = toWithdraw[0];
-
     bool shouldWithdrawUnderlying = toWithdraw[0] > 0;
     for (uint256 i = 1; i < tokens.length; ++i) {
       uint256 toWithdrawToken = toWithdraw[i];
