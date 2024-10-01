@@ -546,8 +546,8 @@ contract ExternalFeesInstance is ExternalFees {
 
   function _fees_underlying_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal

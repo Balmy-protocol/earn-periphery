@@ -14,25 +14,37 @@ import { BaseConnector, IDelayedWithdrawalAdapter } from "../../layers/connector
 import { BaseCreationValidation } from "../../layers/creation-validation/base/BaseCreationValidation.sol";
 import { BaseFees } from "../../layers/fees/base/BaseFees.sol";
 import { BaseGuardian } from "../../layers/guardian/base/BaseGuardian.sol";
+import { BaseLiquidityMining } from "../../layers/liquidity-mining/base/BaseLiquidityMining.sol";
 
 /**
  * @title Earn base strategy
  * @notice This is a base strategy that implements the core functionality of an Earn Strategy. It has the following
  *         layers:
- *         1. Fees
- *         2. Guardian
- *         3. Creation validation
- *         4. Connector
+ *         1. Liquidity mining
+ *         2. Fees
+ *         3. Guardian
+ *         4. Creation validation
+ *         5. Connector
  *
  *         They are executed in the same order as presented above. Strategies that inherit from this contract must
  *         define implementations for each of these layers, and they might need to impelment some additional logic
  *         in the strategy itself.
  */
-abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, BaseCreationValidation, BaseConnector {
+abstract contract BaseStrategy is
+  IEarnBalmyStrategy,
+  BaseLiquidityMining,
+  BaseFees,
+  BaseGuardian,
+  BaseCreationValidation,
+  BaseConnector
+{
   error OnlyVault();
   error OnlyStrategyRegistry();
 
   StrategyId internal _strategyId;
+
+  /// @dev Some strategies have the native token as the asset
+  receive() external payable { }
 
   function strategyId() public view virtual returns (StrategyId) {
     return _strategyId;
@@ -200,6 +212,84 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
   }
 
   ////////////////////////////////////////////////////////
+  ///////////////////    LIQ MINING    ///////////////////
+  ////////////////////////////////////////////////////////
+
+  function _liquidity_mining_underlying_allTokens() internal view override returns (address[] memory tokens) {
+    return _connector_allTokens();
+  }
+
+  function _liquidity_mining_underlying_maxWithdraw()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory withdrawable)
+  {
+    return _connector_maxWithdraw();
+  }
+
+  function _liquidity_mining_underlying_totalBalances()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory balances)
+  {
+    return _fees_totalBalances();
+  }
+
+  function _liquidity_mining_underlying_supportedWithdrawals()
+    internal
+    view
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _connector_supportedWithdrawals();
+  }
+
+  function _liquidity_mining_underlying_deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    internal
+    override
+    returns (uint256 assetsDeposited)
+  {
+    return _fees_deposited(depositToken, depositAmount);
+  }
+
+  function _liquidity_mining_underlying_withdraw(
+    uint256 positionId,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
+    address recipient
+  )
+    internal
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  function _liquidity_mining_underlying_specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    internal
+    override
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    return _fees_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  ////////////////////////////////////////////////////////
   ///////////////////       FEES       ///////////////////
   ////////////////////////////////////////////////////////
   // slither-disable-next-line naming-convention
@@ -232,8 +322,8 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
   // slither-disable-next-line naming-convention
   function _fees_underlying_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal

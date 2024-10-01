@@ -181,8 +181,8 @@ abstract contract ExternalFees is BaseFees, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _fees_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal
