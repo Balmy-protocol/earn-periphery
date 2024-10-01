@@ -20,11 +20,10 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   /// @notice The id assigned to this strategy
   function strategyId() public view virtual returns (StrategyId);
 
-  // solhint-disable no-empty-blocks
   // slither-disable-next-line naming-convention,dead-code
   function _liquidity_mining_init(bytes calldata data) internal onlyInitializing {
-    // TODO: implement
-    // manager.strategySelfConfigure(data);
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+    manager.strategySelfConfigure(data);
   }
 
   // slither-disable-start assembly

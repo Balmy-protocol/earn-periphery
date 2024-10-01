@@ -32,14 +32,18 @@ contract ExternalLiquidityMiningTest is Test {
       abi.encodeWithSelector(ILiquidityMiningManagerCore.rewards.selector, strategyId),
       abi.encode(CommonUtils.arrayOf(lmReward, lmRewardRepeated))
     );
+
+    vm.mockCall(
+      address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector), ""
+    );
   }
 
   function test_init() public {
     bytes memory data = "1234567";
+    vm.expectCall(
+      address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, data)
+    );
     liquidityMining.init(data);
-    // TODO: test self configure
-    //vm.expectCall(address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector,
-    // data));
   }
 
   function test_allTokens() public {
