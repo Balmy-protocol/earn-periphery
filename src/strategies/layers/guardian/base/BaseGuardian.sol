@@ -65,8 +65,8 @@ abstract contract BaseGuardian {
     returns (uint256 assetsDeposited);
   function _guardian_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal

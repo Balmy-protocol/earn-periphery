@@ -14,25 +14,37 @@ import { BaseConnector, IDelayedWithdrawalAdapter } from "../../layers/connector
 import { BaseCreationValidation } from "../../layers/creation-validation/base/BaseCreationValidation.sol";
 import { BaseFees } from "../../layers/fees/base/BaseFees.sol";
 import { BaseGuardian } from "../../layers/guardian/base/BaseGuardian.sol";
+import { BaseLiquidityMining } from "../../layers/liquidity-mining/base/BaseLiquidityMining.sol";
 
 /**
  * @title Earn base strategy
  * @notice This is a base strategy that implements the core functionality of an Earn Strategy. It has the following
  *         layers:
- *         1. Fees
- *         2. Guardian
- *         3. Creation validation
- *         4. Connector
+ *         1. Liquidity mining
+ *         2. Fees
+ *         3. Guardian
+ *         4. Creation validation
+ *         5. Connector
  *
  *         They are executed in the same order as presented above. Strategies that inherit from this contract must
- *         define implementations for each of these layers, and they might need to impelment some additional logic
+ *         define implementations for each of these layers, and they might need to implement some additional logic
  *         in the strategy itself.
  */
-abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, BaseCreationValidation, BaseConnector {
+abstract contract BaseStrategy is
+  IEarnBalmyStrategy,
+  BaseLiquidityMining,
+  BaseFees,
+  BaseGuardian,
+  BaseCreationValidation,
+  BaseConnector
+{
   error OnlyVault();
   error OnlyStrategyRegistry();
 
   StrategyId internal _strategyId;
+
+  /// @dev Some strategies have the native token as the asset
+  receive() external payable { }
 
   function strategyId() public view virtual returns (StrategyId) {
     return _strategyId;
@@ -60,7 +72,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
 
   /// @inheritdoc IEarnStrategy
   function allTokens() external view returns (address[] memory) {
-    return _connector_allTokens();
+    return _liquidity_mining_allTokens();
   }
 
   /// @inheritdoc IEarnStrategy
@@ -80,7 +92,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
 
   /// @inheritdoc IEarnStrategy
   function supportedWithdrawals() external view returns (WithdrawalType[] memory) {
-    return _connector_supportedWithdrawals();
+    return _liquidity_mining_supportedWithdrawals();
   }
 
   /// @inheritdoc IEarnStrategy
@@ -95,7 +107,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
 
   /// @inheritdoc IEarnStrategy
   function maxWithdraw() external view returns (address[] memory, uint256[] memory) {
-    return _connector_maxWithdraw();
+    return _liquidity_mining_maxWithdraw();
   }
 
   /// @inheritdoc IEarnBalmyStrategy
@@ -110,7 +122,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
 
   /// @inheritdoc IEarnStrategy
   function totalBalances() external view returns (address[] memory tokens, uint256[] memory balances) {
-    return _fees_totalBalances();
+    return _liquidity_mining_totalBalances();
   }
 
   /// @inheritdoc IEarnBalmyStrategy
@@ -133,7 +145,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     onlyVault
     returns (uint256 assetsDeposited)
   {
-    return _fees_deposited(depositToken, depositAmount);
+    return _liquidity_mining_deposited(depositToken, depositAmount);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -147,7 +159,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     onlyVault
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+    return _liquidity_mining_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -166,7 +178,7 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
       bytes memory result
     )
   {
-    return _fees_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawalData, recipient);
+    return _liquidity_mining_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawalData, recipient);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -206,14 +218,91 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
   }
 
   ////////////////////////////////////////////////////////
+  ///////////////////    LIQ MINING    ///////////////////
+  ////////////////////////////////////////////////////////
+
+  // slither-disable-start naming-convention,dead-code
+  function _liquidity_mining_underlying_allTokens() internal view override returns (address[] memory tokens) {
+    return _connector_allTokens();
+  }
+
+  function _liquidity_mining_underlying_maxWithdraw()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory withdrawable)
+  {
+    return _connector_maxWithdraw();
+  }
+
+  function _liquidity_mining_underlying_totalBalances()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory balances)
+  {
+    return _fees_totalBalances();
+  }
+
+  function _liquidity_mining_underlying_supportedWithdrawals()
+    internal
+    view
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _connector_supportedWithdrawals();
+  }
+
+  function _liquidity_mining_underlying_deposited(
+    address depositToken,
+    uint256 depositAmount
+  )
+    internal
+    override
+    returns (uint256 assetsDeposited)
+  {
+    return _fees_deposited(depositToken, depositAmount);
+  }
+
+  function _liquidity_mining_underlying_withdraw(
+    uint256 positionId,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
+    address recipient
+  )
+    internal
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  function _liquidity_mining_underlying_specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    internal
+    override
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    return _fees_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  ////////////////////////////////////////////////////////
   ///////////////////       FEES       ///////////////////
   ////////////////////////////////////////////////////////
-  // slither-disable-next-line naming-convention
   function _fees_underlying_tokens() internal view override returns (address[] memory tokens) {
     return _connector_allTokens();
   }
 
-  // slither-disable-next-line naming-convention
   function _fees_underlying_totalBalances()
     internal
     view
@@ -223,7 +312,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _guardian_totalBalances();
   }
 
-  // slither-disable-next-line naming-convention
   function _fees_underlying_deposited(
     address depositToken,
     uint256 depositAmount
@@ -235,11 +323,10 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _guardian_underlying_deposited(depositToken, depositAmount);
   }
 
-  // slither-disable-next-line naming-convention
   function _fees_underlying_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal
@@ -249,7 +336,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
-  // slither-disable-next-line naming-convention
   function _fees_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -272,12 +358,10 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
   ////////////////////////////////////////////////////////
   ///////////////////     GUARDIAN     ///////////////////
   ////////////////////////////////////////////////////////
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_tokens() internal view override returns (address[] memory tokens) {
     return _connector_allTokens();
   }
 
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_maxWithdraw()
     internal
     view
@@ -287,7 +371,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _connector_maxWithdraw();
   }
 
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_totalBalances()
     internal
     view
@@ -297,7 +380,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _connector_totalBalances();
   }
 
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_deposited(
     address depositToken,
     uint256 depositAmount
@@ -309,7 +391,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _connector_deposit(depositToken, depositAmount);
   }
 
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_withdraw(
     uint256 positionId,
     address[] memory tokens,
@@ -323,7 +404,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
-  // slither-disable-next-line naming-convention
   function _guardian_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -347,4 +427,6 @@ abstract contract BaseStrategy is IEarnBalmyStrategy, BaseFees, BaseGuardian, Ba
   ///////////////////     VIRTUAL      ///////////////////
   ////////////////////////////////////////////////////////
   function _earnVault() internal view virtual returns (IEarnVault);
+
+  // slither-disable-end naming-convention,dead-code
 }

@@ -9,12 +9,14 @@ import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
 import { ExternalFees } from "../../layers/fees/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/ExternalGuardian.sol";
 import { ExternalTOSCreationValidation } from "../../layers/creation-validation/ExternalTOSCreationValidation.sol";
+import { ExternalLiquidityMining } from "../../layers/liquidity-mining/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
 contract ERC4626Strategy is
   BaseStrategy,
   Clone,
   ERC4626Connector,
+  ExternalLiquidityMining,
   ExternalFees,
   ExternalGuardian,
   ExternalTOSCreationValidation
@@ -42,7 +44,7 @@ contract ERC4626Strategy is
   function strategyId()
     public
     view
-    override(ExternalFees, ExternalGuardian, ExternalTOSCreationValidation, BaseStrategy)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation, BaseStrategy)
     returns (StrategyId)
   {
     return BaseStrategy.strategyId();
@@ -61,7 +63,7 @@ contract ERC4626Strategy is
   function globalRegistry()
     public
     pure
-    override(ExternalFees, ExternalGuardian, ExternalTOSCreationValidation)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));
@@ -76,12 +78,12 @@ contract ERC4626Strategy is
     return IERC20(_getArgAddress(60));
   }
 
-  // slither-disable-next-line naming-convention
+  // slither-disable-next-line naming-convention,dead-code
   function _fees_underlying_asset() internal view override returns (address asset) {
     return _connector_asset();
   }
 
-  // slither-disable-next-line naming-convention
+  // slither-disable-next-line naming-convention,dead-code
   function _guardian_rescueFee() internal view override returns (uint16) {
     return _getFees().rescueFee;
   }

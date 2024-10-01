@@ -27,7 +27,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     address asset = erc4626Vault.asset();
     bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
     (IEarnBalmyStrategy clone_, StrategyId stratId) = _cloneAndRegister(strategyRegistry, owner, immutableData);
-    clone = ERC4626Strategy(address(clone_));
+    clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = stratId;
     clone.init(tosData, guardianData, feesData, description);
   }
@@ -49,7 +49,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     address asset = erc4626Vault.asset();
     bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
     (IEarnBalmyStrategy clone_, StrategyId stratId) = _clone2AndRegister(strategyRegistry, owner, immutableData);
-    clone = ERC4626Strategy(address(clone_));
+    clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = stratId;
     clone.init(tosData, guardianData, feesData, description);
   }
@@ -72,7 +72,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     address asset = erc4626Vault.asset();
     bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
     (IEarnBalmyStrategy clone_, StrategyId stratId) = _clone3AndRegister(strategyRegistry, owner, immutableData, salt);
-    clone = ERC4626Strategy(address(clone_));
+    clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = stratId;
     clone.init(tosData, guardianData, feesData, description);
   }

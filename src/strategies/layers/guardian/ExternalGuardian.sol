@@ -199,8 +199,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   // solhint-disable-next-line code-complexity
   function _guardian_withdraw(
     uint256 positionId,
-    address[] calldata tokens,
-    uint256[] calldata toWithdraw,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
     address recipient
   )
     internal
