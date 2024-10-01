@@ -4,7 +4,6 @@ pragma solidity >=0.8.22;
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import { IEarnStrategy, StrategyId, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { ILiquidityMiningManager, ILiquidityMiningManagerCore } from "../interfaces/ILiquidityMiningManager.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
@@ -48,25 +47,31 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function rewards(StrategyId strategyId) external view override returns (address[] memory) { }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function rewardAmount(StrategyId strategyId, address token) external view override returns (uint256) { }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function claim(StrategyId strategyId, address token, uint256 amount, address recipient) external override { }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function deposited(StrategyId strategyId, uint256 assetsDeposited) external override {
     // Does nothing, but we we want to have this function for future liquidity mining manager implementations
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external override {
     // Does nothing, but we we want to have this function for future liquidity mining manager implementations
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  // solhint-disable-next-line no-empty-blocks
   function strategySelfConfigure(bytes calldata data) external override { }
 
   /// @inheritdoc ILiquidityMiningManager
@@ -88,9 +93,10 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       if (strategy.asset() == reward) {
         revert InvalidReward();
       }
-    }else{
-        // Update the pending rewards
-        campaign.pendingFromLastUpdate = campaign.emissionPerSecond * (block.timestamp - campaign.lastUpdated) - campaign.claimed;
+    } else {
+      // Update the pending rewards
+      campaign.pendingFromLastUpdate =
+        campaign.emissionPerSecond * (block.timestamp - campaign.lastUpdated) - campaign.claimed;
     }
 
     uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);

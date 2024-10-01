@@ -23,11 +23,11 @@ contract LiquidityMiningManagerTest is PRBTest {
   address private superAdmin = address(1);
   address private adminManageCampaigns = address(2);
   StrategyId private strategyId = StrategyId.wrap(1);
-  IEarnStrategy strategy = IEarnStrategy(address(3));
+  IEarnStrategy private strategy = IEarnStrategy(address(3));
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(6));
   LiquidityMiningManager private manager;
   IERC20 private asset = IERC20(address(7));
-  ERC20MintableBurnableMock reward = new ERC20MintableBurnableMock();
+  ERC20MintableBurnableMock private reward = new ERC20MintableBurnableMock();
 
   function setUp() public virtual {
     manager = new LiquidityMiningManager(registry, superAdmin, CommonUtils.arrayOf(adminManageCampaigns));
