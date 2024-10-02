@@ -23,7 +23,6 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   struct Campaign {
     uint256 emissionPerSecond;
     uint256 deadline;
-    uint256 claimed;
     uint256 pendingFromLastUpdate;
     uint256 lastUpdated;
   }
@@ -83,6 +82,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   function strategySelfConfigure(bytes calldata data) external override { }
 
   /// @inheritdoc ILiquidityMiningManager
+  //slither-disable-start timestamp
   function setCampaign(
     StrategyId strategyId,
     address reward,
@@ -104,12 +104,13 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       _rewards[strategyId].push(reward);
     } else {
       // Update the pending rewards
-      campaign.pendingFromLastUpdate = campaign.emissionPerSecond
-        * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated) - campaign.claimed;
+      campaign.pendingFromLastUpdate =
+        campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
     }
 
     uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);
-    uint256 currentBalance = campaign.emissionPerSecond * (campaign.deadline - campaign.lastUpdated) - campaign.claimed;
+    uint256 currentBalance =
+      (campaign.deadline > block.timestamp) ? campaign.emissionPerSecond * (campaign.deadline - block.timestamp) : 0;
     if (currentBalance < balanceNeeded) {
       // Transfer the missing tokens
       if (reward == Token.NATIVE_TOKEN) {
@@ -124,6 +125,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     if (currentBalance > balanceNeeded) {
       // Return the excess tokens
       if (reward == Token.NATIVE_TOKEN) {
+        // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
         payable(address(msg.sender)).transfer(currentBalance - balanceNeeded);
       } else {
         IERC20(reward).safeTransfer(msg.sender, currentBalance - balanceNeeded);
@@ -132,10 +134,10 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     campaign.emissionPerSecond = emissionPerSecond;
     campaign.deadline = deadline;
     campaign.lastUpdated = block.timestamp;
-    campaign.claimed = 0;
 
     emit CampaignSet(strategyId, reward, emissionPerSecond, deadline);
   }
+  //slither-disable-end timestamp
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {
     for (uint256 i; i < accounts.length; ++i) {
