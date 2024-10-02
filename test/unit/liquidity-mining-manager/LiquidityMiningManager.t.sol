@@ -395,8 +395,6 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
   }
 
   function test_claim_RevertWhen_InsufficientBalance() public {
-    address recipient = address(89);
-
     uint256 timestamp = 10; // Start at 10 seconds
     vm.warp(timestamp);
 
