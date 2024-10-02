@@ -97,8 +97,9 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   {
     bytes32 key = _key(strategyId, reward);
     Campaign storage campaign = _campaigns[key];
+    Campaign memory campaignMem = campaign;
 
-    if (campaign.lastUpdated == 0) {
+    if (campaignMem.lastUpdated == 0) {
       IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
       if (strategy.asset() == reward) {
         revert InvalidReward();
@@ -107,12 +108,13 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     } else {
       // Update the pending rewards
       campaign.pendingFromLastUpdate =
-        campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
+        campaignMem.emissionPerSecond * (Math.min(block.timestamp, campaignMem.deadline) - campaignMem.lastUpdated);
     }
 
     uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);
-    uint256 currentBalance =
-      (campaign.deadline > block.timestamp) ? campaign.emissionPerSecond * (campaign.deadline - block.timestamp) : 0;
+    uint256 currentBalance = (campaignMem.deadline > block.timestamp)
+      ? campaignMem.emissionPerSecond * (campaignMem.deadline - block.timestamp)
+      : 0;
     if (currentBalance < balanceNeeded) {
       // Transfer the missing tokens
       if (reward == Token.NATIVE_TOKEN) {
