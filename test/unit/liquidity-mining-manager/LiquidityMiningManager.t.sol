@@ -312,6 +312,20 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.warp(timestamp); // 10 seconds passed
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5 + 10 * 10);
+
+    balanceForCampaign = 5 * 100;
+    reward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 5,
+      deadline: block.timestamp + 100
+    });
+
+    timestamp += 15;
+    vm.warp(timestamp); // 15 seconds passed
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5 + 10 * 10 + 5 * 15);
+
     vm.stopPrank();
   }
 }

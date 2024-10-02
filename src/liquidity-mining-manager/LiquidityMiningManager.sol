@@ -8,13 +8,15 @@ import { ILiquidityMiningManager, ILiquidityMiningManagerCore } from "../interfa
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /**
- * @notice A guardian manager that allows the configuration of liquidity mining campaigns
+ * @notice A liquidity mining manager that allows the configuration of liquidity mining campaigns
  */
 contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefaultAdminRules {
   using SafeERC20 for IERC20;
   using Math for uint256;
+  using SafeCast for uint256;
   using Token for address;
 
   error UnauthorizedCaller();
@@ -22,10 +24,10 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   error InsufficientBalance();
 
   struct Campaign {
-    uint256 emissionPerSecond;
-    uint256 deadline;
-    uint256 pendingFromLastUpdate;
-    uint256 lastUpdated;
+    uint88 emissionPerSecond;
+    uint32 deadline;
+    uint104 pendingFromLastUpdate;
+    uint32 lastUpdated;
   }
 
   /// @inheritdoc ILiquidityMiningManager
@@ -53,8 +55,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   /// @inheritdoc ILiquidityMiningManagerCore
   function rewardAmount(StrategyId strategyId, address token) external view override returns (uint256) {
     Campaign memory campaign = _campaigns[_key(strategyId, token)];
-    return campaign.pendingFromLastUpdate
-      + campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
+    return _calculateRewardAmount(campaign);
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
@@ -84,6 +85,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
 
   /// @inheritdoc ILiquidityMiningManager
   //slither-disable-start timestamp
+  //slither-disable-next-line reentrancy-no-eth
   function setCampaign(
     StrategyId strategyId,
     address reward,
@@ -107,8 +109,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       _rewards[strategyId].push(reward);
     } else {
       // Update the pending rewards
-      campaign.pendingFromLastUpdate =
-        campaignMem.emissionPerSecond * (Math.min(block.timestamp, campaignMem.deadline) - campaignMem.lastUpdated);
+      campaign.pendingFromLastUpdate = (_calculateRewardAmount(campaign)).toUint104();
     }
 
     uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);
@@ -118,22 +119,21 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     if (currentBalance < balanceNeeded) {
       // Transfer the missing tokens
       if (reward == Token.NATIVE_TOKEN) {
-        if (msg.value < balanceNeeded - currentBalance) {
+        if (msg.value != balanceNeeded - currentBalance) {
           revert InsufficientBalance();
         }
       } else {
         IERC20(reward).safeTransferFrom(msg.sender, address(this), balanceNeeded - currentBalance);
       }
-    }
-    if (currentBalance > balanceNeeded) {
+    } else if (currentBalance > balanceNeeded) {
       // Return the excess tokens
       // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
       reward.transfer({ recipient: msg.sender, amount: currentBalance - balanceNeeded });
     }
 
-    campaign.emissionPerSecond = emissionPerSecond;
-    campaign.deadline = deadline;
-    campaign.lastUpdated = block.timestamp;
+    campaign.emissionPerSecond = emissionPerSecond.toUint88();
+    campaign.deadline = deadline.toUint32();
+    campaign.lastUpdated = block.timestamp.toUint32();
     emit CampaignSet(strategyId, reward, emissionPerSecond, deadline);
   }
   //slither-disable-end timestamp
@@ -146,5 +146,10 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
 
   function _key(StrategyId strategyId, address token) internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(strategyId, token));
+  }
+
+  function _calculateRewardAmount(Campaign memory campaign) internal view returns (uint256) {
+    return campaign.pendingFromLastUpdate
+      + campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
   }
 }
