@@ -85,12 +85,11 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       campaign.pendingFromLastUpdate = (balance - amount).toUint104();
       campaign.lastUpdated = block.timestamp.toUint32();
     } else if (block.timestamp >= campaignMem.deadline) {
-        // Balance is 0 and the campaign is over, so we can delete it
-        delete _campaigns[key];
+      // Balance is 0 and the campaign is over, so we can delete it
+      delete _campaigns[key];
     }
 
     token.transfer({ recipient: recipient, amount: amount });
-
   }
   //slither-disable-end timestamp
 
