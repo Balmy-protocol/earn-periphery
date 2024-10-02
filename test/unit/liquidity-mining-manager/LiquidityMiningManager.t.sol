@@ -242,7 +242,9 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
   }
 
   function test_rewardAmounts_twoCampaigns() public {
-    vm.warp(block.timestamp);
+    uint256 timestamp = 10;
+    vm.warp(timestamp);
+
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
@@ -255,9 +257,11 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 0); // No rewards yet
-    skip(5); // 5 seconds passed
-    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
 
+    timestamp += 5; // 5 seconds passed
+    vm.warp(timestamp);
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
     manager.setCampaign({
       strategyId: strategyId,
       reward: address(anotherReward),
@@ -266,13 +270,19 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     });
 
     assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 0); // No rewards yet
-    skip(1000); // 1000 seconds passed, deadline reached for both campaigns
+
+    timestamp += 1000; // 1000 seconds passed, deadline reached for both campaigns
+    vm.warp(timestamp);
+
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 10);
     assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 3 * 10);
     vm.stopPrank();
   }
 
   function test_rewardAmount_modifyCampaign_addBalance() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    vm.warp(timestamp);
+
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
@@ -283,7 +293,9 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       deadline: block.timestamp + 10
     });
 
-    skip(5); // 5 seconds passed
+    timestamp += 5; // 5 seconds passed
+    vm.warp(timestamp); // 5 seconds passed
+
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
     balanceForCampaign = 10 * 100 - 3 * 5;
     reward.approve(address(manager), balanceForCampaign);
@@ -295,7 +307,10 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
-    skip(10);
+
+    timestamp += 10;
+    vm.warp(timestamp); // 10 seconds passed
+
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5 + 10 * 10);
     vm.stopPrank();
   }

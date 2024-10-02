@@ -15,6 +15,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefaultAdminRules {
   using SafeERC20 for IERC20;
   using Math for uint256;
+  using Token for address;
 
   error UnauthorizedCaller();
   error InvalidReward();
@@ -34,7 +35,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   // slither-disable-next-line naming-convention
   IEarnStrategyRegistry public immutable STRATEGY_REGISTRY;
 
-  mapping(bytes32 strategyAndReward => Campaign campaigns) internal _campaigns;
+  mapping(bytes32 strategyAndReward => Campaign campaign) internal _campaigns;
 
   mapping(StrategyId strategyId => address[] rewards) internal _rewards;
 
@@ -96,6 +97,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   {
     bytes32 key = _key(strategyId, reward);
     Campaign storage campaign = _campaigns[key];
+
     if (campaign.lastUpdated == 0) {
       IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
       if (strategy.asset() == reward) {
@@ -118,23 +120,18 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
           revert InsufficientBalance();
         }
       } else {
-        IERC20(reward).forceApprove(address(this), balanceNeeded - currentBalance);
         IERC20(reward).safeTransferFrom(msg.sender, address(this), balanceNeeded - currentBalance);
       }
     }
     if (currentBalance > balanceNeeded) {
       // Return the excess tokens
-      if (reward == Token.NATIVE_TOKEN) {
-        // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
-        payable(address(msg.sender)).transfer(currentBalance - balanceNeeded);
-      } else {
-        IERC20(reward).safeTransfer(msg.sender, currentBalance - balanceNeeded);
-      }
+      // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
+      reward.transfer({ recipient: msg.sender, amount: currentBalance - balanceNeeded });
     }
+
     campaign.emissionPerSecond = emissionPerSecond;
     campaign.deadline = deadline;
     campaign.lastUpdated = block.timestamp;
-
     emit CampaignSet(strategyId, reward, emissionPerSecond, deadline);
   }
   //slither-disable-end timestamp
