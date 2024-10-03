@@ -328,4 +328,128 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
 
     vm.stopPrank();
   }
+
+  function test_claim() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    vm.warp(timestamp);
+
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    timestamp += 1000; // 1000 seconds passed, deadline reached
+    vm.warp(timestamp);
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 10);
+    vm.stopPrank();
+
+    uint256 previousBalance = reward.balanceOf(address(this));
+    vm.startPrank(address(strategy));
+    uint256 balance = manager.rewardAmount(strategyId, address(reward));
+    manager.claim(strategyId, address(reward), balance / 2, address(this));
+    assertEq(manager.rewardAmount(strategyId, address(reward)), balance / 2);
+    assertEq(reward.balanceOf(address(this)), previousBalance + balance / 2);
+
+    manager.claim(strategyId, address(reward), balance / 2, address(this));
+    assertEq(reward.balanceOf(address(this)), previousBalance + balance);
+    vm.stopPrank();
+  }
+
+  function test_claim_exact() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    vm.warp(timestamp);
+
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({
+      strategyId: strategyId,
+      reward: address(reward),
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    timestamp += 5; // 5 seconds passed
+    vm.warp(timestamp);
+
+    uint256 rewardBalance = manager.rewardAmount(strategyId, address(reward));
+    assertEq(manager.rewardAmount(strategyId, address(reward)), rewardBalance);
+    vm.stopPrank();
+
+    uint256 previousBalance = reward.balanceOf(address(this));
+    vm.prank(address(strategy));
+    manager.claim(strategyId, address(reward), rewardBalance, address(this));
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 0);
+    assertEq(reward.balanceOf(address(this)), previousBalance + rewardBalance);
+  }
+
+  function test_claim_Native() public {
+    address recipient = address(89);
+
+    uint256 timestamp = 10; // Start at 10 seconds
+    vm.warp(timestamp);
+
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    manager.setCampaign{ value: balanceForCampaign }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    timestamp += 1000; // 1000 seconds passed, deadline reached
+    vm.warp(timestamp);
+
+    assertEq(manager.rewardAmount(strategyId, Token.NATIVE_TOKEN), 3 * 10);
+    vm.stopPrank();
+
+    uint256 previousBalance = recipient.balance;
+    vm.startPrank(address(strategy));
+    uint256 balance = manager.rewardAmount(strategyId, Token.NATIVE_TOKEN);
+    manager.claim(strategyId, Token.NATIVE_TOKEN, balance / 2, recipient);
+    assertEq(manager.rewardAmount(strategyId, Token.NATIVE_TOKEN), balance / 2);
+    assertEq(recipient.balance, previousBalance + balance / 2);
+
+    manager.claim(strategyId, Token.NATIVE_TOKEN, balance / 2, recipient);
+    assertEq(recipient.balance, previousBalance + balance);
+    vm.stopPrank();
+  }
+
+  function test_claim_RevertWhen_InsufficientBalance() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    vm.warp(timestamp);
+
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    manager.setCampaign{ value: balanceForCampaign }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      emissionPerSecond: 3,
+      deadline: block.timestamp + 10
+    });
+
+    timestamp += 5; // 5 seconds passed
+    vm.warp(timestamp);
+
+    vm.stopPrank();
+
+    vm.startPrank(address(strategy));
+    uint256 balance = manager.rewardAmount(strategyId, address(reward));
+    vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InsufficientBalance.selector));
+    manager.claim(strategyId, address(reward), balance + 1, address(this));
+    vm.stopPrank();
+  }
+
+  function test_claim_RevertWhen_UnauthorizedCaller() public {
+    uint256 balance = manager.rewardAmount(strategyId, address(reward));
+    vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.UnauthorizedCaller.selector));
+    manager.claim(strategyId, address(reward), balance + 1, address(this));
+  }
 }

@@ -64,24 +64,48 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
-  // solhint-disable-next-line no-empty-blocks
-  function claim(StrategyId strategyId, address token, uint256 amount, address recipient) external override { }
+  //slither-disable-start timestamp
+  function claim(
+    StrategyId strategyId,
+    address token,
+    uint256 amount,
+    address recipient
+  )
+    external
+    override
+    onlyStrategy(strategyId)
+  {
+    bytes32 key = _key(strategyId, token);
+    Campaign storage campaign = _campaigns[key];
+    Campaign memory campaignMem = campaign;
+    uint256 balance = _calculateRewardAmount(campaignMem);
+    if (amount > balance) {
+      revert InsufficientBalance();
+    }
+    campaign.pendingFromLastUpdate = (balance - amount).toUint104();
+    campaign.lastUpdated = block.timestamp.toUint32();
+
+    token.transfer({ recipient: recipient, amount: amount });
+  }
+  //slither-disable-end timestamp
 
   /// @inheritdoc ILiquidityMiningManagerCore
   // solhint-disable-next-line no-empty-blocks
   function deposited(StrategyId strategyId, uint256 assetsDeposited) external override {
-    // Does nothing, but we we want to have this function for future liquidity mining manager implementations
+    // Does nothing, but we want to have this function for future liquidity mining manager implementations
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
   // solhint-disable-next-line no-empty-blocks
   function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external override {
-    // Does nothing, but we we want to have this function for future liquidity mining manager implementations
+    // Does nothing, but we want to have this function for future liquidity mining manager implementations
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
   // solhint-disable-next-line no-empty-blocks
-  function strategySelfConfigure(bytes calldata data) external override { }
+  function strategySelfConfigure(bytes calldata data) external override {
+    // Does nothing, we want to have this function for future liquidity mining manager implementations
+  }
 
   /// @inheritdoc ILiquidityMiningManager
   //slither-disable-start timestamp
@@ -150,6 +174,18 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
 
   function _calculateRewardAmount(Campaign memory campaign) internal view returns (uint256) {
     return campaign.pendingFromLastUpdate
-      + campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated);
+      + (
+        campaign.lastUpdated < campaign.deadline
+          ? campaign.emissionPerSecond * (Math.min(block.timestamp, campaign.deadline) - campaign.lastUpdated)
+          : 0
+      );
+  }
+
+  modifier onlyStrategy(StrategyId strategyId) {
+    IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
+    if (msg.sender != address(strategy)) {
+      revert UnauthorizedCaller();
+    }
+    _;
   }
 }

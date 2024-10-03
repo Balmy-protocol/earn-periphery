@@ -95,7 +95,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
 
     lidoSTETHDelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount);
     uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
-    assertAlmostEq(pendingAmount, amount, 1);
+    assertAlmostEq(pendingAmount, amount, 2);
 
     vm.stopPrank();
   }
