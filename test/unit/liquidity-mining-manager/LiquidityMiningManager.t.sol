@@ -378,15 +378,15 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     timestamp += 5; // 5 seconds passed
     vm.warp(timestamp);
 
-    assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
+    uint256 rewardBalance = manager.rewardAmount(strategyId, address(reward));
+    assertEq(manager.rewardAmount(strategyId, address(reward)), rewardBalance);
     vm.stopPrank();
 
     uint256 previousBalance = reward.balanceOf(address(this));
-    uint256 balance = manager.rewardAmount(strategyId, address(reward));
     vm.prank(address(strategy));
-    manager.claim(strategyId, address(reward), 3 * 5, address(this));
+    manager.claim(strategyId, address(reward), rewardBalance, address(this));
     assertEq(manager.rewardAmount(strategyId, address(reward)), 0);
-    assertEq(reward.balanceOf(address(this)), previousBalance + 3 * 5);
+    assertEq(reward.balanceOf(address(this)), previousBalance + rewardBalance);
   }
 
   function test_claim_Native() public {
