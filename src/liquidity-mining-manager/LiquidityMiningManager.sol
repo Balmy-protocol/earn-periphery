@@ -81,10 +81,9 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     uint256 balance = _calculateRewardAmount(campaignMem);
     if (amount > balance) {
       revert InsufficientBalance();
-    } else if (amount <= balance) {
-      campaign.pendingFromLastUpdate = (balance - amount).toUint104();
-      campaign.lastUpdated = block.timestamp.toUint32();
     }
+    campaign.pendingFromLastUpdate = (balance - amount).toUint104();
+    campaign.lastUpdated = block.timestamp.toUint32();
 
     token.transfer({ recipient: recipient, amount: amount });
   }
