@@ -90,4 +90,4 @@ $ forge test
 
 ## License
 
-TBD
+This project is licensed under MIT.
