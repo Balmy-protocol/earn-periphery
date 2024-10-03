@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: TBD
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
 import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
