@@ -191,14 +191,15 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
+  function _connector_assetYieldCoefficient() internal view override returns (uint256 coefficient, uint256 multiplier) {
+    multiplier = 1e18;
     IAToken vault_ = aToken();
     uint256 shares = vault_.scaledTotalSupply();
     if (shares == 0) {
-      return 1e18;
+      return (multiplier, multiplier);
     }
     uint256 assets = vault_.totalSupply();
-    return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+    coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -226,6 +227,11 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
         }
       }
     }
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_totalAssetsInFarm() internal view override returns (uint256) {
+    return aToken().totalSupply();
   }
 
   // slither-disable-next-line naming-convention,dead-code

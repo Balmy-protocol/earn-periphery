@@ -126,13 +126,18 @@ abstract contract BaseStrategy is
   }
 
   /// @inheritdoc IEarnBalmyStrategy
-  function assetYieldCoefficient() external view returns (uint256) {
+  function assetYieldCoefficient() external view returns (uint256, uint256) {
     return _connector_assetYieldCoefficient();
   }
 
   /// @inheritdoc IEarnBalmyStrategy
   function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
     return _connector_rewardEmissionsPerSecondPerAsset();
+  }
+
+  /// @notice Return the total amount of assets on the underlying farm
+  function totalAssetsInFarm() external view returns (uint256) {
+    return _connector_totalAssetsInFarm();
   }
 
   /// @inheritdoc IEarnStrategy

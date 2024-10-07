@@ -101,7 +101,9 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   }
 
   function testFork_assetYieldCoefficient() public {
-    assertGte(connector.assetYieldCoefficient(), 1e18);
+    (uint256 coefficient, uint256 multiplier) = connector.assetYieldCoefficient();
+    assertGte(coefficient, multiplier);
+    assertEq(multiplier, 1e18);
   }
 
   function testFork_deposit() public {
