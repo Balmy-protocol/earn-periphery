@@ -15,6 +15,7 @@ import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol
 
 interface IAToken is IERC20 {
   function scaledTotalSupply() external view returns (uint256);
+  // slither-disable-next-line naming-convention
   function UNDERLYING_ASSET_ADDRESS() external returns (address);
 }
 
@@ -36,7 +37,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
 
   /// @notice Returns the pool's address
   function pool() public view virtual returns (IAaveV3Pool);
-  /// @notice Returns the vault's address
+  /// @notice Returns the aToken's address
   function aToken() public view virtual returns (IAToken);
   /// @notice Returns the rewards contractt's address
   function rewards() public view virtual returns (IAaveV3Rewards);

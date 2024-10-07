@@ -54,7 +54,7 @@ contract AaveV3Strategy is
   // Immutable params:
   // 1. Earn Vault (20B)        - _getArgAddress(0)
   // 2. Global Registry (20B)   - _getArgAddress(20)
-  // 3. AaveV3 vault (20B)      - _getArgAddress(40)
+  // 3. AaveV3 aToken (20B)      - _getArgAddress(40)
   // 4. Asset (20B)             - _getArgAddress(60)
   // 5. AaveV3 pool (20B)       - _getArgAddress(80)
   // 6. AaveV3 rewards (20B)    - _getArgAddress(100)
