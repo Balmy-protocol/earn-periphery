@@ -123,7 +123,7 @@ abstract contract BaseDelayedStrategy is
   }
 
   /// @inheritdoc IEarnBalmyStrategy
-  function assetYieldCoefficient() external view returns (uint256) {
+  function assetYieldCoefficient() external view returns (uint256, uint256) {
     return _connector_assetYieldCoefficient();
   }
 
