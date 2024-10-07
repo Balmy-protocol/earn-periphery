@@ -43,6 +43,20 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     return address(aAaveV3Vault);
   }
 
+  function testFork_rewardEmissionsPerSecondPerAsset() public {
+    IAaveV3Rewards aAaveV3RewardsControllerMock = new AaveV3RewardsMock();
+
+    AaveV3ConnectorInstance aaveV3Connector =
+      new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
+
+    (uint256[] memory emissions, uint256[] memory multipliers) = aaveV3Connector.rewardEmissionsPerSecondPerAsset();
+
+    assertEq(emissions.length, 1);
+    assertEq(emissions[0], 1e10 * 1e30 / aAaveV3Vault.totalSupply());
+    assertEq(multipliers.length, 1);
+    assertEq(multipliers[0], 1e30);
+  }
+
   function testFork_claimRewardTokens() public {
     // Mock the rewards controller to include the asset as a reward
     IAaveV3Rewards aAaveV3RewardsControllerMock =
@@ -121,6 +135,10 @@ contract AaveV3ConnectorInstance is BaseConnectorInstance, AaveV3Connector {
   function rewards() public view override returns (IAaveV3Rewards) {
     return _rewards;
   }
+
+  function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
+    return _connector_rewardEmissionsPerSecondPerAsset();
+  }
 }
 
 contract AaveV3RewardsWithAssetRewardsMock is IAaveV3Rewards {
@@ -165,5 +183,27 @@ contract AaveV3RewardsWithAssetRewardsMock is IAaveV3Rewards {
       return IERC20(reward).balanceOf(address(this));
     }
     return rewards.getUserRewards(assets, user, reward);
+  }
+
+  function getRewardsData(address, address) external pure returns (uint256, uint256, uint256, uint256) {
+    return (0, 0, 0, 0);
+  }
+}
+
+contract AaveV3RewardsMock is IAaveV3Rewards {
+  // solhint-disable-next-line no-empty-blocks
+  function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external override { }
+
+  function getRewardsByAsset(address) external pure override returns (address[] memory returnRewardsList) {
+    returnRewardsList = new address[](1);
+    returnRewardsList[0] = address(15);
+  }
+
+  function getUserRewards(address[] calldata, address, address) external pure override returns (uint256) {
+    return 0;
+  }
+
+  function getRewardsData(address, address) external view returns (uint256, uint256, uint256, uint256) {
+    return (0, 1e10, 0, block.timestamp + 10);
   }
 }

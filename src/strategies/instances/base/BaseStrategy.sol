@@ -130,6 +130,11 @@ abstract contract BaseStrategy is
     return _connector_assetYieldCoefficient();
   }
 
+  /// @inheritdoc IEarnBalmyStrategy
+  function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
+    return _connector_rewardEmissionsPerSecondPerAsset();
+  }
+
   /// @inheritdoc IEarnStrategy
   function validatePositionCreation(address sender, bytes calldata creationData) external view {
     _creationValidation_validate(sender, creationData);
