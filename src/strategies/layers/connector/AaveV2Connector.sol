@@ -15,6 +15,7 @@ import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol
 
 interface IAToken is IERC20 {
   function scaledTotalSupply() external view returns (uint256);
+  function UNDERLYING_ASSET_ADDRESS() external returns (address);
 }
 
 interface IAaveV2Pool {
@@ -29,7 +30,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   /// @notice Returns the pool's address
   function pool() public view virtual returns (IAaveV2Pool);
   /// @notice Returns the vault's address
-  function vault() public view virtual returns (IAToken);
+  function aToken() public view virtual returns (IAToken);
   function _asset() internal view virtual returns (IERC20);
 
   /// @notice Performs a max approve to the pool, so that we can deposit without any worries
@@ -55,14 +56,14 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(vault());
+    return depositToken == _connector_asset() || depositToken == address(aToken());
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
-    supported[1] = address(vault());
+    supported[1] = address(aToken());
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -121,7 +122,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = vault().balanceOf(address(this));
+    balances[0] = aToken().balanceOf(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -131,7 +132,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
-    IAToken vault_ = vault();
+    IAToken vault_ = aToken();
     uint256 shares = vault_.scaledTotalSupply();
     if (shares == 0) {
       return 1e18;
@@ -152,7 +153,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     if (depositToken == _connector_asset()) {
       pool().deposit(depositToken, depositAmount, address(this), 0);
       return depositAmount;
-    } else if (depositToken == address(vault())) {
+    } else if (depositToken == address(aToken())) {
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
@@ -197,7 +198,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
       withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
-      IERC20 aaveVault = vault();
+      IERC20 aaveVault = aToken();
       balanceChanges = new uint256[](1);
       actualWithdrawnTokens = new address[](1);
       actualWithdrawnAmounts = new uint256[](1);
@@ -221,7 +222,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     override
     returns (bytes memory)
   {
-    IERC20 vault_ = vault();
+    IERC20 vault_ = aToken();
     uint256 balance = vault_.balanceOf(address(this));
     vault_.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
