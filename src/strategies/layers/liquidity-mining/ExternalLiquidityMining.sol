@@ -129,7 +129,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     uint256[] memory toWithdrawUnderlying,
     address recipient
   )
-    internal
+    private
   {
     if (toWithdrawAsset > 0) {
       // Only call withdrew if we are withdrawing the asset

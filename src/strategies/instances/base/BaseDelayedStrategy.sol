@@ -16,10 +16,9 @@ import { BaseFees } from "../../layers/fees/base/BaseFees.sol";
 import { BaseLiquidityMining } from "../../layers/liquidity-mining/base/BaseLiquidityMining.sol";
 
 /**
- * @title Earn base strategy
- * @notice This is a base strategy that implements the core functionality of an Earn Strategy with delayed withdrawal. It
- * has the following
- *         layers:
+ * @title Earn Base Strategy with Delayed Withdrawals support
+ * @notice This is a base strategy that implements the core functionality of an Earn Strategy and prepared to support
+ *         delayed withdrawals. It has the following layers:
  *         1. Liquidity mining
  *         2. Fees
  *         3. Creation validation

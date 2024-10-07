@@ -20,11 +20,10 @@ contract LidoSTETHStrategy is
   /// @inheritdoc IEarnStrategy
   string public description;
 
-  // slither-disable-start naming-convention
+  // slither-disable-next-line naming-convention
   IDelayedWithdrawalAdapter internal immutable __delayedWithdrawalAdapter;
   IGlobalEarnRegistry internal immutable _globalRegistry;
   IEarnVault internal immutable _vault;
-  // slither-disable-end naming-convention
 
   constructor(
     // General
