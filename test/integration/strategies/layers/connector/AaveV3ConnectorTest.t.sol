@@ -49,9 +49,6 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     AaveV3ConnectorInstance aaveV3Connector =
       new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
 
-    address[] memory asset = new address[](1);
-    asset[0] = address(aAaveV3Vault);
-
     (uint256[] memory emissions, uint256[] memory multipliers) = aaveV3Connector.rewardEmissionsPerSecondPerAsset();
 
     assertEq(emissions.length, 1);
