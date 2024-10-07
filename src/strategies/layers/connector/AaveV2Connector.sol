@@ -140,7 +140,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
       return (multiplier, multiplier);
     }
     uint256 assets = vault_.totalSupply();
-    coefficient = assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+    coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code
