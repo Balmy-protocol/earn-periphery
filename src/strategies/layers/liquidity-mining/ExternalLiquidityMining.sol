@@ -113,14 +113,30 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       }
     }
     if (shouldWithdrawUnderlying) {
-      if (toWithdrawAsset > 0) {
-        // Only call withdrew if we are withdrawing the asset
-        manager.withdrew(strategyId_, toWithdrawAsset);
-      }
-      toWithdrawUnderlying[0] = toWithdrawAsset;
-      _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
+      _withdrawUnderlying(
+        positionId, strategyId_, manager, underlyingTokens, toWithdrawAsset, toWithdrawUnderlying, recipient
+      );
     }
     return _liquidity_mining_supportedWithdrawals();
+  }
+
+  function _withdrawUnderlying(
+    uint256 positionId,
+    StrategyId strategyId_,
+    ILiquidityMiningManagerCore manager,
+    address[] memory underlyingTokens,
+    uint256 toWithdrawAsset,
+    uint256[] memory toWithdrawUnderlying,
+    address recipient
+  )
+    internal
+  {
+    if (toWithdrawAsset > 0) {
+      // Only call withdrew if we are withdrawing the asset
+      manager.withdrew(strategyId_, toWithdrawAsset);
+    }
+    toWithdrawUnderlying[0] = toWithdrawAsset;
+    _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
   }
 
   // slither-disable-next-line naming-convention,dead-code
