@@ -43,6 +43,7 @@ contract LidoSTETHStrategy is
     return __delayedWithdrawalAdapter;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _fees_underlying_asset() internal pure override returns (address asset) {
     return _connector_asset();
   }
