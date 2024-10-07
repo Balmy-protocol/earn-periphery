@@ -135,6 +135,11 @@ abstract contract BaseStrategy is
     return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
+  /// @notice Return the total amount of assets on the underlying farm
+  function totalAssetsInFarm() external view returns (uint256) {
+    return _connector_totalAssetsInFarm();
+  }
+
   /// @inheritdoc IEarnStrategy
   function validatePositionCreation(address sender, bytes calldata creationData) external view {
     _creationValidation_validate(sender, creationData);

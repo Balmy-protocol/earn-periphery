@@ -230,6 +230,11 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function _connector_totalAssetsInFarm() internal view override returns (uint256) {
+    return aToken().totalSupply();
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount
