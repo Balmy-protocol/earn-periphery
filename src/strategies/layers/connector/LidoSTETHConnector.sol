@@ -154,13 +154,23 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_assetYieldCoefficient() internal view virtual override returns (uint256) {
+  function _connector_assetYieldCoefficient() internal view override returns (uint256) {
     uint256 shares = _stETH.getTotalShares();
     if (shares == 0) {
       return 1e18;
     }
     uint256 assets = _stETH.getTotalPooledEther();
     return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_rewardEmissionsPerSecondPerAsset()
+    internal
+    pure
+    override
+    returns (uint256[] memory, uint256[] memory)
+  {
+    return (new uint256[](0), new uint256[](0));
   }
 
   // slither-disable-next-line naming-convention,dead-code

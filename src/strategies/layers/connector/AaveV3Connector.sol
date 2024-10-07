@@ -26,6 +26,17 @@ interface IAaveV3Rewards {
   function claimRewards(address[] calldata assets, uint256 amount, address to, address reward) external;
   function getRewardsByAsset(address asset) external view returns (address[] memory);
   function getUserRewards(address[] calldata assets, address user, address reward) external view returns (uint256);
+  /**
+   * @dev Returns the configuration of the distribution reward for a certain asset
+   * @param asset The incentivized asset
+   * @param reward The reward token of the incentivized asset
+   * @return The index of the asset distribution
+   * @return The emission per second of the reward distribution
+   * @return The timestamp of the last update of the index
+   * @return The timestamp of the distribution end
+   *
+   */
+  function getRewardsData(address asset, address reward) external view returns (uint256, uint256, uint256, uint256);
 }
 
 // The AaveV3Connector is an implementation based on AaveV3ERC4626 to interact directly with Aave's Vaults (aTokens)
@@ -186,6 +197,31 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     }
     uint256 assets = vault_.totalSupply();
     return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_rewardEmissionsPerSecondPerAsset()
+    internal
+    view
+    override
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  {
+    IAaveV3Rewards rewardsController = rewards();
+    IAToken aToken = vault();
+    uint256 totalAssets = aToken.totalSupply();
+    address[] memory rewardsList = rewardsController.getRewardsByAsset(address(aToken));
+    emissions = new uint256[](rewardsList.length);
+    multipliers = new uint256[](rewardsList.length);
+    if (totalAssets > 0) {
+      for (uint256 i; i < rewardsList.length; ++i) {
+        (, uint256 emissionPerSecond,, uint256 distributionEnd) =
+          rewardsController.getRewardsData(address(aToken), rewardsList[i]);
+        if (block.timestamp <= distributionEnd) {
+          multipliers[i] = 1e30;
+          emissions[i] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
+        }
+      }
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code

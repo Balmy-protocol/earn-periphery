@@ -38,4 +38,8 @@ contract EarnBalmyStrategyStateBalanceMock is EarnStrategyStateBalanceMock, IEar
   function assetYieldCoefficient() external pure override returns (uint256) {
     return 1e18;
   }
+
+  function rewardEmissionsPerSecondPerAsset() external pure override returns (uint256[] memory, uint256[] memory) {
+    return (new uint256[](0), new uint256[](0));
+  }
 }
