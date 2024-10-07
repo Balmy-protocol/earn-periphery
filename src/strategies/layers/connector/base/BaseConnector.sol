@@ -44,6 +44,7 @@ abstract contract BaseConnector {
     view
     virtual
     returns (uint256[] memory emissions, uint256[] memory multipliers);
+  function _connector_totalAssetsInFarm() internal view virtual returns (uint256);
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount

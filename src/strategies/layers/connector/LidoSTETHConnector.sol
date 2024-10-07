@@ -174,6 +174,11 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function _connector_totalAssetsInFarm() internal view override returns (uint256) {
+    return _stETH.getTotalPooledEther();
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256 positionId,
     address[] memory,

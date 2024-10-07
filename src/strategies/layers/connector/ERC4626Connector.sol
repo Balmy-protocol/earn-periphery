@@ -163,6 +163,11 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function _connector_totalAssetsInFarm() internal view override returns (uint256) {
+    return ERC4626Vault().totalAssets();
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount
