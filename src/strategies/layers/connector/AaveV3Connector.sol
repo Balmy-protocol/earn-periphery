@@ -209,16 +209,16 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     returns (uint256[] memory emissions, uint256[] memory multipliers)
   {
     IAaveV3Rewards rewardsController = rewards();
-    IAToken aToken = vault();
-    uint256 totalAssets = aToken.totalSupply();
-    address[] memory rewardsList = rewardsController.getRewardsByAsset(address(aToken));
+    IAToken aToken_ = aToken();
+    uint256 totalAssets = aToken_.totalSupply();
+    address[] memory rewardsList = rewardsController.getRewardsByAsset(address(aToken_));
     emissions = new uint256[](rewardsList.length);
     multipliers = new uint256[](rewardsList.length);
     if (totalAssets > 0) {
       for (uint256 i; i < rewardsList.length; ++i) {
         // slither-disable-next-line unused-return
         (, uint256 emissionPerSecond,, uint256 distributionEnd) =
-          rewardsController.getRewardsData(address(aToken), rewardsList[i]);
+          rewardsController.getRewardsData(address(aToken_), rewardsList[i]);
         // slither-disable-next-line timestamp
         if (block.timestamp <= distributionEnd) {
           multipliers[i] = 1e30;
