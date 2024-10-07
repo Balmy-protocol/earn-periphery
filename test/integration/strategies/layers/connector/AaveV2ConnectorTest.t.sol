@@ -64,7 +64,7 @@ contract AaveV2ConnectorInstance is BaseConnectorInstance, AaveV2Connector {
     return _pool;
   }
 
-  function vault() public view override returns (IAToken) {
+  function aToken() public view override returns (IAToken) {
     return _vault;
   }
 
