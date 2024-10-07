@@ -176,8 +176,8 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
     return __delayedWithdrawalAdapter;
   }
 
-  function assetYieldCoefficient() external pure override returns (uint256) {
-    return 1e18;
+  function assetYieldCoefficient() external pure override returns (uint256, uint256) {
+    return (1e18, 1e18);
   }
 
   function rewardEmissionsPerSecondPerAsset() external pure override returns (uint256[] memory, uint256[] memory) {

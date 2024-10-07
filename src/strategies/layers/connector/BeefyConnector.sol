@@ -131,14 +131,15 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_assetYieldCoefficient() internal view override returns (uint256) {
+  function _connector_assetYieldCoefficient() internal view override returns (uint256 coefficient, uint256 multiplier) {
+    multiplier = 1e18;
     IBeefyVault vault = beefyVault();
     uint256 shares = vault.totalSupply();
     if (shares == 0) {
-      return 1e18;
+      return (multiplier, multiplier);
     }
     uint256 assets = vault.balance();
-    return assets.mulDiv(1e18, shares, Math.Rounding.Floor);
+    coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code
