@@ -16,6 +16,10 @@ import "src/tos-manager/TOSManager.sol";
 import "src/strategies/instances/erc4626/ERC4626Strategy.sol";
 import "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
 
+import "src/strategies/instances/aave-v3/AaveV3Strategy.sol";
+import "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
+
+
 contract DeployPolygon is Script {
   function run() external {
     uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
@@ -83,6 +87,23 @@ contract DeployPolygon is Script {
     );
     */
 
+    AaveV3Strategy aaveV3 = new AaveV3Strategy();
+    AaveV3StrategyFactory aaveV3Factory = new AaveV3StrategyFactory(aaveV3);
+    aaveV3Factory.cloneAndRegister(
+      AaveV3StrategyImmutableData(
+        strategyRegistry,
+        admin,
+        vault,
+        globalRegistry,
+        IAToken(0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE), // aDai
+        IAaveV3Pool(0x794a61358D6845594F94dc1DB02A252b5b4814aD), // Aave v3 Pool
+        IAaveV3Rewards(0x929EC64c34a17401F460460D4B9390518E5B473e), // Aave v3 Rewards
+        "",
+        "",
+        "",
+        ""
+      )
+    );
     vm.stopBroadcast();
   }
 }
