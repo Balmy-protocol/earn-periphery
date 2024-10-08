@@ -25,8 +25,9 @@ contract DeployMainnet is Script {
 
     EarnStrategyRegistry strategyRegistry = new EarnStrategyRegistry();
     EarnNFTDescriptor nftDescriptor = new EarnNFTDescriptor();
-    address[] memory initialAdmins = new address[](1);
+    address[] memory initialAdmins = new address[](2);
     initialAdmins[0] = admin;
+    initialAdmins[1] = deployer;
     EarnVault vault = new EarnVault(strategyRegistry, admin, initialAdmins, nftDescriptor);
 
     FeeManager feeManager = new FeeManager(admin, initialAdmins, initialAdmins, Fees(0, 0, 500, 1000));

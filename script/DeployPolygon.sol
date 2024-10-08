@@ -25,8 +25,9 @@ contract DeployPolygon is Script {
 
     EarnStrategyRegistry strategyRegistry = new EarnStrategyRegistry();
     EarnNFTDescriptor nftDescriptor = EarnNFTDescriptor(0xAe84114Aa7a651F765B24c74f3A0f8E64921C3D9);
-    address[] memory initialAdmins = new address[](1);
+    address[] memory initialAdmins = new address[](2);
     initialAdmins[0] = admin;
+    initialAdmins[1] = deployer;
     EarnVault vault = new EarnVault(strategyRegistry, admin, initialAdmins, nftDescriptor);
 
     FeeManager feeManager = new FeeManager(admin, initialAdmins, initialAdmins, Fees(0, 0, 500, 1000));
@@ -81,7 +82,7 @@ contract DeployPolygon is Script {
       strategyIdWETH, 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063, 1, block.timestamp + 10
     );
     */
-   
+
     vm.stopBroadcast();
   }
 }
