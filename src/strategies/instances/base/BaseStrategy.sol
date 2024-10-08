@@ -62,7 +62,8 @@ abstract contract BaseStrategy is
 
   /// @inheritdoc IERC165
   function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
-    return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId;
+    return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
+      || interfaceId == type(IERC165).interfaceId;
   }
 
   /// @inheritdoc IEarnStrategy
