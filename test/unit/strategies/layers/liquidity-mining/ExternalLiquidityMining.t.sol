@@ -140,10 +140,12 @@ contract ExternalLiquidityMiningTest is Test {
     );
 
     (uint256[] memory emissions, uint256[] memory multipliers) = liquidityMining.rewardEmissionsPerSecondPerAsset();
-    assertEq(emissions.length, 1);
+    assertEq(emissions.length, 2);
     assertEq(emissions[0], 1e10);
-    assertEq(multipliers.length, 1);
+    assertEq(emissions[1], 0);
+    assertEq(multipliers.length, 2);
     assertEq(multipliers[0], 1e10);
+    assertEq(multipliers[1], 1e30);
   }
 
   function test_deposited() public {

@@ -224,15 +224,19 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     for (uint256 i; i < rewardsTokens.length; ++i) {
       address rewardToken = rewardsTokens[i];
       (uint256 emissionPerSecond, uint256 deadline) = manager.campaignEmission(strategyId_, rewardToken);
+      uint256 multiplier = 1e30;
       // slither-disable-next-line timestamp
-      if (block.timestamp > deadline) continue;
+      if (block.timestamp > deadline) {
+        emissionPerSecond = 0;
+        multiplier = 0;
+      }
       (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
       if (isRepeated) {
         emissions[indexRepeated - 1] +=
           emissionPerSecond.mulDiv(underlyingMultipliers[indexRepeated - 1], totalAssets, Math.Rounding.Floor);
       } else {
-        emissions[index] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
-        multipliers[index++] = 1e30;
+        emissions[index] = emissionPerSecond.mulDiv(multiplier, totalAssets, Math.Rounding.Floor);
+        multipliers[index++] = multiplier;
       }
     }
 
