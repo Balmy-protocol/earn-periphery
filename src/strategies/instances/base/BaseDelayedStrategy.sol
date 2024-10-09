@@ -130,7 +130,7 @@ abstract contract BaseDelayedStrategy is
 
   /// @inheritdoc IEarnBalmyStrategy
   function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _connector_rewardEmissionsPerSecondPerAsset();
+    return _liquidity_mining_rewardEmissionsPerSecondPerAsset();
   }
 
   /// @inheritdoc IEarnStrategy
@@ -254,6 +254,15 @@ abstract contract BaseDelayedStrategy is
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_supportedWithdrawals();
+  }
+
+  function _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset()
+    internal
+    view
+    override
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  {
+    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
   function _liquidity_mining_underlying_deposited(

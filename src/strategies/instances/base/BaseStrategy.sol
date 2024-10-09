@@ -133,7 +133,7 @@ abstract contract BaseStrategy is
 
   /// @inheritdoc IEarnBalmyStrategy
   function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _connector_rewardEmissionsPerSecondPerAsset();
+    return _liquidity_mining_rewardEmissionsPerSecondPerAsset();
   }
 
   /// @notice Return the total amount of assets on the underlying farm
@@ -262,6 +262,15 @@ abstract contract BaseStrategy is
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_supportedWithdrawals();
+  }
+
+  function _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset()
+    internal
+    view
+    override
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  {
+    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
   function _liquidity_mining_underlying_deposited(
