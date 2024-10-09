@@ -174,6 +174,60 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     (tokens, withdrawable) = _combineArraysWithRewards(underlyingTokens, underlyingWithdrawable);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
+  function _liquidity_mining_rewardEmissionsPerSecondPerAsset()
+    internal
+    view
+    override
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  {
+    StrategyId strategyId_ = strategyId();
+    ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
+
+    // Fetch underlying data
+    (uint256[] memory underlyingEmissions, uint256[] memory underlyingMultipliers) =
+      _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset();
+    (address[] memory underlyingTokens, uint256[] memory balances) = _liquidity_mining_underlying_totalBalances();
+
+    // Fetch all reward tokens
+    address[] memory rewardsTokens = manager.rewards(strategyId_);
+
+    // Build arrays
+    emissions = new uint256[](underlyingEmissions.length + rewardsTokens.length);
+    multipliers = new uint256[](underlyingEmissions.length + rewardsTokens.length);
+
+    // Load underlying values
+    for (uint256 i; i < underlyingEmissions.length; ++i) {
+      emissions[i] = underlyingEmissions[i];
+      multipliers[i] = underlyingMultipliers[i];
+    }
+
+    // Add liquidity mining data
+    uint256 index = underlyingEmissions.length;
+    uint256 totalAssets = Math.max(balances[0], 1);
+    for (uint256 i; i < rewardsTokens.length; ++i) {
+      address rewardToken = rewardsTokens[i];
+      (uint256 emissionPerSecond, uint256 deadline) = manager.campaignEmission(strategyId_, rewardToken);
+      if (block.timestamp > deadline) continue;
+      (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
+      if (isRepeated) {
+        emissions[indexRepeated] +=
+          emissionPerSecond.mulDiv(underlyingMultipliers[i - 1], totalAssets, Math.Rounding.Floor);
+      } else {
+        emissions[index] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
+        multipliers[index++] = 1e30;
+      }
+    }
+
+    if (index < emissions.length) {
+      // solhint-disable-next-line no-inline-assembly
+      assembly {
+        mstore(emissions, index)
+        mstore(multipliers, index)
+      }
+    }
+  }
+
   // slither-disable-next-line dead-code
   function _getLiquidityMiningManager() private view returns (ILiquidityMiningManagerCore) {
     return ILiquidityMiningManagerCore(globalRegistry().getAddressOrFail(LIQUIDITY_MINING_MANAGER));

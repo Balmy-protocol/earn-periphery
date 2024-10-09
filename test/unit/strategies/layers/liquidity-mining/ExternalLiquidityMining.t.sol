@@ -523,4 +523,12 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
     return _liquidity_mining_supportedWithdrawals();
   }
+
+  function _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset()
+    internal
+    view
+    virtual
+    override
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  { }
 }

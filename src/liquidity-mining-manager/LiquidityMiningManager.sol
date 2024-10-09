@@ -64,6 +64,19 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
+  function campaignEmission(
+    StrategyId strategyId,
+    address token
+  )
+    external
+    view
+    returns (uint256 emissionPerSecond, uint256 deadline)
+  {
+    Campaign memory campaign = _campaigns[_key(strategyId, token)];
+    return (campaign.emissionPerSecond, campaign.deadline);
+  }
+
+  /// @inheritdoc ILiquidityMiningManagerCore
   //slither-disable-start timestamp
   function claim(
     StrategyId strategyId,

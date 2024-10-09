@@ -26,6 +26,21 @@ interface ILiquidityMiningManagerCore {
   function rewardAmount(StrategyId strategyId, address token) external view returns (uint256);
 
   /**
+   * @notice Returns the emission per second and deadline for a given campaign
+   * @param strategyId The id of the strategy
+   * @param token The token to get the campaign for
+   * @return emissionPerSecond The emission per second for the campaign
+   * @return deadline The deadline for the campaign
+   */
+  function campaignEmission(
+    StrategyId strategyId,
+    address token
+  )
+    external
+    view
+    returns (uint256 emissionPerSecond, uint256 deadline);
+
+  /**
    * @notice Claims the rewards for a given strategy and token, and sends them to the recipient
    * @param strategyId The id of the strategy
    * @param token The token to claim
