@@ -41,9 +41,6 @@ contract DeployPolygon is Script {
 
     TOSManager tosManager = new TOSManager(strategyRegistry, admin, initialAdmins);
 
-    initialAdmins = new address[](2);
-    initialAdmins[0] = admin;
-    initialAdmins[1] = deployer;
     LiquidityMiningManager liquidityMiningManager = new LiquidityMiningManager(strategyRegistry, admin, initialAdmins);
 
     GlobalEarnRegistry globalRegistry = new GlobalEarnRegistry(deployer);
