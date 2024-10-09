@@ -13,28 +13,25 @@ import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { BaseConnector, IDelayedWithdrawalAdapter } from "../../layers/connector/base/BaseConnector.sol";
 import { BaseCreationValidation } from "../../layers/creation-validation/base/BaseCreationValidation.sol";
 import { BaseFees } from "../../layers/fees/base/BaseFees.sol";
-import { BaseGuardian } from "../../layers/guardian/base/BaseGuardian.sol";
 import { BaseLiquidityMining } from "../../layers/liquidity-mining/base/BaseLiquidityMining.sol";
 
 /**
- * @title Earn base strategy
- * @notice This is a base strategy that implements the core functionality of an Earn Strategy. It has the following
- *         layers:
+ * @title Earn Base Strategy with Delayed Withdrawals support
+ * @notice This is a base strategy that implements the core functionality of an Earn Strategy and prepared to support
+ *         delayed withdrawals. It has the following layers:
  *         1. Liquidity mining
  *         2. Fees
- *         3. Guardian
- *         4. Creation validation
- *         5. Connector
+ *         3. Creation validation
+ *         4. Connector
  *
  *         They are executed in the same order as presented above. Strategies that inherit from this contract must
  *         define implementations for each of these layers, and they might need to implement some additional logic
  *         in the strategy itself.
  */
-abstract contract BaseStrategy is
+abstract contract BaseDelayedStrategy is
   IEarnBalmyStrategy,
   BaseLiquidityMining,
   BaseFees,
-  BaseGuardian,
   BaseCreationValidation,
   BaseConnector
 {
@@ -133,12 +130,7 @@ abstract contract BaseStrategy is
 
   /// @inheritdoc IEarnBalmyStrategy
   function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _liquidity_mining_rewardEmissionsPerSecondPerAsset();
-  }
-
-  /// @notice Return the total amount of assets on the underlying farm
-  function totalAssetsInFarm() external view returns (uint256) {
-    return _connector_totalAssetsInFarm();
+    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
   /// @inheritdoc IEarnStrategy
@@ -264,15 +256,6 @@ abstract contract BaseStrategy is
     return _connector_supportedWithdrawals();
   }
 
-  function _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset()
-    internal
-    view
-    override
-    returns (uint256[] memory emissions, uint256[] memory multipliers)
-  {
-    return _connector_rewardEmissionsPerSecondPerAsset();
-  }
-
   function _liquidity_mining_underlying_deposited(
     address depositToken,
     uint256 depositAmount
@@ -329,7 +312,7 @@ abstract contract BaseStrategy is
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    return _guardian_totalBalances();
+    return _connector_totalBalances();
   }
 
   function _fees_underlying_deposited(
@@ -340,7 +323,7 @@ abstract contract BaseStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _guardian_underlying_deposited(depositToken, depositAmount);
+    return _connector_deposit(depositToken, depositAmount);
   }
 
   function _fees_underlying_withdraw(
@@ -353,78 +336,10 @@ abstract contract BaseStrategy is
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
-  }
-
-  function _fees_underlying_specialWithdraw(
-    uint256 positionId,
-    SpecialWithdrawalCode withdrawalCode,
-    uint256[] calldata toWithdraw,
-    bytes calldata withdrawData,
-    address recipient
-  )
-    internal
-    override
-    returns (
-      uint256[] memory balanceChanges,
-      address[] memory actualWithdrawnTokens,
-      uint256[] memory actualWithdrawnAmounts,
-      bytes memory result
-    )
-  {
-    return _guardian_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
-  }
-
-  ////////////////////////////////////////////////////////
-  ///////////////////     GUARDIAN     ///////////////////
-  ////////////////////////////////////////////////////////
-  function _guardian_underlying_tokens() internal view override returns (address[] memory tokens) {
-    return _connector_allTokens();
-  }
-
-  function _guardian_underlying_maxWithdraw()
-    internal
-    view
-    override
-    returns (address[] memory tokens, uint256[] memory withdrawable)
-  {
-    return _connector_maxWithdraw();
-  }
-
-  function _guardian_underlying_totalBalances()
-    internal
-    view
-    override
-    returns (address[] memory tokens, uint256[] memory balances)
-  {
-    return _connector_totalBalances();
-  }
-
-  function _guardian_underlying_deposited(
-    address depositToken,
-    uint256 depositAmount
-  )
-    internal
-    override
-    returns (uint256 assetsDeposited)
-  {
-    return _connector_deposit(depositToken, depositAmount);
-  }
-
-  function _guardian_underlying_withdraw(
-    uint256 positionId,
-    address[] memory tokens,
-    uint256[] memory toWithdraw,
-    address recipient
-  )
-    internal
-    override
-    returns (IEarnStrategy.WithdrawalType[] memory)
-  {
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
-  function _guardian_underlying_specialWithdraw(
+  function _fees_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
     uint256[] calldata toWithdraw,
