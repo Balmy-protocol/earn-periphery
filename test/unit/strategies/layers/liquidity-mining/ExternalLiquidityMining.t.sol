@@ -96,6 +96,56 @@ contract ExternalLiquidityMiningTest is Test {
     assertTrue(supported[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
   }
 
+  function test_rewardEmissionsPerSecondPerAsset() public {
+    uint256 totalAssets = 1e20;
+    uint256 emissionsRewardRepeated = 1e12;
+    uint256 emissionsReward = 1e10;
+    liquidityMining.setUnderlyingBalance(asset, totalAssets);
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.campaignEmission.selector, strategyId, lmRewardRepeated),
+      abi.encode(emissionsRewardRepeated, block.timestamp)
+    );
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.campaignEmission.selector, strategyId, lmReward),
+      abi.encode(emissionsReward, block.timestamp)
+    );
+
+    (uint256[] memory emissions, uint256[] memory multipliers) = liquidityMining.rewardEmissionsPerSecondPerAsset();
+    assertEq(emissions.length, 2);
+    assertEq(emissions[0], 1e10 + emissionsRewardRepeated * 1e10 / totalAssets);
+    assertEq(emissions[1], emissionsReward * 1e30 / totalAssets);
+    assertEq(multipliers.length, 2);
+    assertEq(multipliers[0], 1e10);
+    assertEq(multipliers[1], 1e30);
+  }
+
+  function test_rewardEmissionsPerSecondPerAsset_expired() public {
+    uint256 totalAssets = 1e20;
+    uint256 emissionsRewardRepeated = 1e12;
+    uint256 emissionsReward = 1e10;
+    liquidityMining.setUnderlyingBalance(asset, totalAssets);
+
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.campaignEmission.selector, strategyId, lmRewardRepeated),
+      abi.encode(emissionsRewardRepeated, block.timestamp - 10)
+    );
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.campaignEmission.selector, strategyId, lmReward),
+      abi.encode(emissionsReward, block.timestamp - 10)
+    );
+
+    (uint256[] memory emissions, uint256[] memory multipliers) = liquidityMining.rewardEmissionsPerSecondPerAsset();
+    assertEq(emissions.length, 1);
+    assertEq(emissions[0], 1e10);
+    assertEq(multipliers.length, 1);
+    assertEq(multipliers[0], 1e10);
+  }
+
   function test_deposited() public {
     uint256 amount = 1000; // 1:1 asset to deposited
     vm.expectCall(
@@ -374,6 +424,14 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     return _liquidity_mining_supportedWithdrawals();
   }
 
+  function rewardEmissionsPerSecondPerAsset()
+    external
+    view
+    returns (uint256[] memory emissions, uint256[] memory multipliers)
+  {
+    return _liquidity_mining_rewardEmissionsPerSecondPerAsset();
+  }
+
   function deposited(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
     return _liquidity_mining_deposited(depositToken, depositAmount);
   }
@@ -530,5 +588,7 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     virtual
     override
     returns (uint256[] memory emissions, uint256[] memory multipliers)
-  { }
+  {
+    return (CommonUtils.arrayOf(1e10), CommonUtils.arrayOf(1e10));
+  }
 }

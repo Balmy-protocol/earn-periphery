@@ -224,11 +224,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     for (uint256 i; i < rewardsTokens.length; ++i) {
       address rewardToken = rewardsTokens[i];
       (uint256 emissionPerSecond, uint256 deadline) = manager.campaignEmission(strategyId_, rewardToken);
+      // slither-disable-next-line timestamp
       if (block.timestamp > deadline) continue;
       (bool isRepeated, uint256 indexRepeated) = _isRepeated(rewardToken, underlyingTokens);
       if (isRepeated) {
-        emissions[indexRepeated] +=
-          emissionPerSecond.mulDiv(underlyingMultipliers[i - 1], totalAssets, Math.Rounding.Floor);
+        emissions[indexRepeated - 1] +=
+          emissionPerSecond.mulDiv(underlyingMultipliers[indexRepeated - 1], totalAssets, Math.Rounding.Floor);
       } else {
         emissions[index] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
         multipliers[index++] = 1e30;
@@ -236,11 +237,13 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     }
 
     if (index < emissions.length) {
+      // slither-disable-start assembly
       // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(emissions, index)
         mstore(multipliers, index)
       }
+      // slither-disable-end assembly
     }
   }
 
