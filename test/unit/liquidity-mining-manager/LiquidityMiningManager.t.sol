@@ -73,12 +73,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.expectEmit();
     emit CampaignSet(strategyId, address(reward), 3, block.timestamp + 10);
     // Make sure it can be called without reverting
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
     assertEq(reward.balanceOf(address(manager)), balanceForCampaign);
@@ -90,19 +85,9 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
     anotherReward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(anotherReward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(anotherReward), emissionPerSecond: 3, duration: 10 });
     vm.stopPrank();
     assertEq(manager.rewards(strategyId)[0], address(reward));
     assertEq(manager.rewards(strategyId)[1], address(anotherReward));
@@ -112,22 +97,12 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
     balanceForCampaign = 3 * 100 - balanceForCampaign;
     uint256 previousBalance = reward.balanceOf(address(adminManageCampaigns));
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 100
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 100 });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
     assertEq(reward.balanceOf(address(manager)), balanceForCampaign + 3 * 10);
@@ -138,20 +113,10 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
 
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
     uint256 previousBalance = reward.balanceOf(address(adminManageCampaigns));
 
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 5
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 5 });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance + 3 * 5);
   }
@@ -209,12 +174,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     });
     uint256 previousBalance = address(adminManageCampaigns).balance;
 
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: Token.NATIVE_TOKEN,
-      emissionPerSecond: 3,
-      duration: 5
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: Token.NATIVE_TOKEN, emissionPerSecond: 3, duration: 5 });
     vm.stopPrank();
     assertEq(address(adminManageCampaigns).balance, previousBalance + 3 * 5);
   }
@@ -222,23 +182,13 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
   function test_setCampaign_RevertWhen_rewardIsStrategyAsset() public {
     vm.prank(adminManageCampaigns);
     vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InvalidReward.selector));
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(asset),
-      emissionPerSecond: 3,
-      duration: 1 days
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(asset), emissionPerSecond: 3, duration: 1 days });
   }
 
   function test_setCampaign_RevertWhen_Native_InsufficientBalance() public {
     vm.prank(adminManageCampaigns);
     vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InsufficientBalance.selector));
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: Token.NATIVE_TOKEN,
-      emissionPerSecond: 3,
-      duration: 1 days
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: Token.NATIVE_TOKEN, emissionPerSecond: 3, duration: 1 days });
   }
 
   function test_rewardAmounts_twoCampaigns() public {
@@ -249,12 +199,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
     anotherReward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 0); // No rewards yet
 
@@ -262,12 +207,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.warp(timestamp);
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(anotherReward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(anotherReward), emissionPerSecond: 3, duration: 10 });
 
     assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 0); // No rewards yet
 
@@ -286,12 +226,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
     timestamp += 5; // 5 seconds passed
     vm.warp(timestamp); // 5 seconds passed
@@ -299,12 +234,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
     balanceForCampaign = 10 * 100 - 3 * 5;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 10,
-      duration: 100
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 10, duration: 100 });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
 
@@ -315,12 +245,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
 
     balanceForCampaign = 5 * 100;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 5,
-      duration: 100
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 5, duration: 100 });
 
     timestamp += 15;
     vm.warp(timestamp); // 15 seconds passed
@@ -336,12 +261,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
     timestamp += 1000; // 1000 seconds passed, deadline reached
     vm.warp(timestamp);
@@ -368,12 +288,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
     reward.approve(address(manager), balanceForCampaign);
-    manager.setCampaign({
-      strategyId: strategyId,
-      reward: address(reward),
-      emissionPerSecond: 3,
-      duration: 10
-    });
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
 
     timestamp += 5; // 5 seconds passed
     vm.warp(timestamp);
