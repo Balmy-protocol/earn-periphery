@@ -77,7 +77,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
@@ -94,14 +94,14 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     manager.setCampaign({
       strategyId: strategyId,
       reward: address(anotherReward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
     vm.stopPrank();
     assertEq(manager.rewards(strategyId)[0], address(reward));
@@ -116,7 +116,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     balanceForCampaign = 3 * 100 - balanceForCampaign;
@@ -126,7 +126,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 100
+      duration: 100
     });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
@@ -142,7 +142,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
     uint256 previousBalance = reward.balanceOf(address(adminManageCampaigns));
 
@@ -150,7 +150,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 5
+      duration: 5
     });
     vm.stopPrank();
     assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance + 3 * 5);
@@ -167,7 +167,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
     vm.stopPrank();
     assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign);
@@ -181,7 +181,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     balanceForCampaign = 3 * 100 - balanceForCampaign;
@@ -190,7 +190,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 100
+      duration: 100
     });
     vm.stopPrank();
     assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign);
@@ -205,7 +205,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
     uint256 previousBalance = address(adminManageCampaigns).balance;
 
@@ -213,7 +213,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 5
+      duration: 5
     });
     vm.stopPrank();
     assertEq(address(adminManageCampaigns).balance, previousBalance + 3 * 5);
@@ -226,7 +226,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(asset),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 1 days
+      duration: 1 days
     });
   }
 
@@ -237,7 +237,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 1 days
+      duration: 1 days
     });
   }
 
@@ -253,7 +253,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 0); // No rewards yet
@@ -266,7 +266,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(anotherReward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     assertEq(manager.rewardAmount(strategyId, address(anotherReward)), 0); // No rewards yet
@@ -290,7 +290,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     timestamp += 5; // 5 seconds passed
@@ -303,7 +303,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 10,
-      deadline: block.timestamp + 100
+      duration: 100
     });
 
     assertEq(manager.rewardAmount(strategyId, address(reward)), 3 * 5);
@@ -319,7 +319,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 5,
-      deadline: block.timestamp + 100
+      duration: 100
     });
 
     timestamp += 15;
@@ -340,7 +340,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     timestamp += 1000; // 1000 seconds passed, deadline reached
@@ -372,7 +372,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: address(reward),
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     timestamp += 5; // 5 seconds passed
@@ -401,7 +401,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     timestamp += 1000; // 1000 seconds passed, deadline reached
@@ -432,7 +432,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
       strategyId: strategyId,
       reward: Token.NATIVE_TOKEN,
       emissionPerSecond: 3,
-      deadline: block.timestamp + 10
+      duration: 10
     });
 
     timestamp += 5; // 5 seconds passed

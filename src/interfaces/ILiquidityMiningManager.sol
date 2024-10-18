@@ -94,7 +94,7 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
     StrategyId strategyId,
     address reward,
     uint256 emissionPerSecond,
-    uint256 deadline
+    uint256 duration
   )
     external
     payable;
