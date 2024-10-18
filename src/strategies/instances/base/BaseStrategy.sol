@@ -340,7 +340,7 @@ abstract contract BaseStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _guardian_underlying_deposited(depositToken, depositAmount);
+    return _guardian_deposited(depositToken, depositAmount);
   }
 
   function _fees_underlying_withdraw(
