@@ -127,7 +127,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     StrategyId strategyId,
     address reward,
     uint256 emissionPerSecond,
-    uint256 deadline
+    uint256 duration
   )
     external
     payable
@@ -148,8 +148,8 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       // Update the pending rewards
       campaign.pendingFromLastUpdate = (_calculateRewardAmount(campaign)).toUint104();
     }
-
-    uint256 balanceNeeded = emissionPerSecond * (deadline - block.timestamp);
+    uint256 deadline = block.timestamp + duration;
+    uint256 balanceNeeded = emissionPerSecond * duration;
     uint256 currentBalance = (campaignMem.deadline > block.timestamp)
       ? campaignMem.emissionPerSecond * (campaignMem.deadline - block.timestamp)
       : 0;
