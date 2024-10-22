@@ -13,6 +13,9 @@ import { CommonUtils } from "../../utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
 contract GuardianManagerTest is PRBTest {
+  event RescueStarted(StrategyId strategyId);
+  event RescueCancelled(StrategyId strategyId);
+  event RescueConfirmed(StrategyId strategyId);
   event GuardiansAssigned(StrategyId strategyId, address[] accounts);
   event GuardiansRemoved(StrategyId strategyId, address[] accounts);
   event JudgesAssigned(StrategyId strategyId, address[] accounts);
@@ -151,18 +154,24 @@ contract GuardianManagerTest is PRBTest {
   }
 
   function test_rescueStarted() public {
-    // Make sure it can be called without reverting
-    manager.rescueStarted(StrategyId.wrap(1));
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectEmit();
+    emit RescueStarted(strategyId);
+    manager.rescueStarted(strategyId);
   }
 
   function test_rescueCancelled() public {
-    // Make sure it can be called without reverting
-    manager.rescueCancelled(StrategyId.wrap(1));
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectEmit();
+    emit RescueCancelled(strategyId);
+    manager.rescueCancelled(strategyId);
   }
 
   function test_rescueConfirmed() public {
-    // Make sure it can be called without reverting
-    manager.rescueConfirmed(StrategyId.wrap(1));
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectEmit();
+    emit RescueConfirmed(strategyId);
+    manager.rescueConfirmed(strategyId);
   }
 
   function test_assignGuardians() public {

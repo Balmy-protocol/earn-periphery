@@ -39,6 +39,9 @@ interface IGuardianManagerCore {
 }
 
 interface IGuardianManager is IGuardianManagerCore {
+  event RescueStarted(StrategyId strategyId);
+  event RescueCancelled(StrategyId strategyId);
+  event RescueConfirmed(StrategyId strategyId);
   event GuardiansAssigned(StrategyId strategyId, address[] accounts);
   event GuardiansRemoved(StrategyId strategyId, address[] accounts);
   event JudgesAssigned(StrategyId strategyId, address[] accounts);
