@@ -7,8 +7,8 @@ import { BaseConnectorDelayedWithdrawalTest } from "./base/BaseConnectorDelayedW
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 import { IDelayedWithdrawalAdapter } from "src/interfaces/IDelayedWithdrawalAdapter.sol";
 import { ERC4626DelayedConnector } from "src/strategies/layers/connector/ERC4626DelayedConnector.sol";
-import { DelayedWithdrawalAdapterMock } from
-  "../../../../mocks/delayed-withdrawal-adapter/DelayedWithdrawalAdapterMock.sol";
+import { ERC4626DelayedWithdrawalAdapterMock } from
+  "../../../../mocks/delayed-withdrawal-adapter/ERC4626DelayedWithdrawalAdapterMock.sol";
 
 contract ERC4626DelayedConnectorTest is BaseConnectorDelayedWithdrawalTest, BaseConnectorFarmTokenTest {
   address internal constant FARM_TOKEN_HOLDER = 0x18451C199Dea9563DE64A87b43045b0554E05ECD;
@@ -25,7 +25,7 @@ contract ERC4626DelayedConnectorTest is BaseConnectorDelayedWithdrawalTest, Base
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
-    return new ERC4626DelayedConnectorInstance(new DelayedWithdrawalAdapterMock(), FARM_TOKEN);
+    return new ERC4626DelayedConnectorInstance(new ERC4626DelayedWithdrawalAdapterMock(FARM_TOKEN), FARM_TOKEN);
   }
 
   function _farmToken() internal view virtual override returns (address) {

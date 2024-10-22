@@ -213,11 +213,10 @@ abstract contract ERC4626DelayedConnector is BaseConnector, Initializable {
   {
     IERC4626 vault = ERC4626Vault();
     // Note: we assume params are consistent and valid because they were validated by the EarnVault
-    IERC20(address(vault)).safeTransfer(
-      address(_connector_delayedWithdrawalAdapter(tokens[0])), vault.previewWithdraw(toWithdraw[0])
-    );
+    uint256 shares = vault.previewWithdraw(toWithdraw[0]);
+    IERC20(address(vault)).safeTransfer(address(_connector_delayedWithdrawalAdapter(tokens[0])), shares);
 
-    _connector_delayedWithdrawalAdapter(tokens[0]).initiateDelayedWithdrawal(positionId, tokens[0], toWithdraw[0]);
+    _connector_delayedWithdrawalAdapter(tokens[0]).initiateDelayedWithdrawal(positionId, tokens[0], shares);
 
     withdrawalTypes = _connector_supportedWithdrawals();
   }

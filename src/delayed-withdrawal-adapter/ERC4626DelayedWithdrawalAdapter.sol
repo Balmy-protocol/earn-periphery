@@ -78,7 +78,7 @@ contract ERC4626DelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
     Request[] storage requests = _pendingWithdrawals[positionId];
     bool needsToRegister = requests.length == 0;
-    requests.push(Request({ amount: IERC4626(_farmToken).previewWithdraw(amount), deadline: block.timestamp + _delay }));
+    requests.push(Request({ amount: amount, deadline: block.timestamp + _delay }));
     if (needsToRegister) {
       delayedWithdrawalManager.registerDelayedWithdraw(positionId, (IERC4626(_farmToken).asset()));
     }
@@ -99,7 +99,8 @@ contract ERC4626DelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     if (requests.length == 0) {
       return (0, 0);
     }
-    uint256 numberOfRequestsPending = 0;
+    uint256 numberOfRequestsPending;
+    uint256 farmTokenAmountToWithdraw;
     for (uint256 i; i < requests.length; ++i) {
       if (requests[i].deadline > block.timestamp) {
         stillPending += IERC4626(_farmToken).previewRedeem(requests[i].amount);
@@ -108,7 +109,7 @@ contract ERC4626DelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
         }
         ++numberOfRequestsPending;
       } else {
-        withdrawn += IERC4626(_farmToken).previewRedeem(requests[i].amount);
+        farmTokenAmountToWithdraw += requests[i].amount;
       }
     }
 
@@ -120,7 +121,7 @@ contract ERC4626DelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
       }
     }
     _pendingWithdrawals[positionId] = requests;
-    IERC4626(_farmToken).withdraw(withdrawn, recipient, address(this));
+    withdrawn = IERC4626(_farmToken).redeem(farmTokenAmountToWithdraw, recipient, address(this));
   }
 
   function manager() public view returns (IDelayedWithdrawalManager) {

@@ -87,11 +87,12 @@ contract ERC4626DelayedWithdrawalAdapterTest is PRBTest {
 
   function testFork_initiateDelayedWithdrawal() public {
     uint256 amount = 1000;
+    uint256 amountToTransfer = IERC4626(_FARM_TOKEN).previewWithdraw(uint256(amount));
     vm.prank(_FARM_TOKEN_HOLDER);
-    IERC20(_FARM_TOKEN).transfer(address(erc4626DelayedWithdrawalAdapter), uint256(amount));
+    IERC20(_FARM_TOKEN).transfer(address(erc4626DelayedWithdrawalAdapter), amountToTransfer);
     vm.startPrank(address(strategy));
 
-    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount);
+    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amountToTransfer);
     uint256 pendingAmount = erc4626DelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
     assertAlmostEq(pendingAmount, amount, 2);
 
@@ -107,7 +108,7 @@ contract ERC4626DelayedWithdrawalAdapterTest is PRBTest {
     IERC20(_FARM_TOKEN).transfer(address(erc4626DelayedWithdrawalAdapter), amountToTransfer);
 
     vm.startPrank(address(strategy));
-    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount);
+    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amountToTransfer);
 
     // Force the delayed to be finalized
     vm.warp(block.timestamp + 100);
@@ -137,8 +138,8 @@ contract ERC4626DelayedWithdrawalAdapterTest is PRBTest {
 
     vm.startPrank(address(strategy));
 
-    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount / 2);
-    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount / 2);
+    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amountToTransfer / 2);
+    erc4626DelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amountToTransfer / 2);
 
     // Force the delayed to be finalized
     vm.warp(block.timestamp + 100);
