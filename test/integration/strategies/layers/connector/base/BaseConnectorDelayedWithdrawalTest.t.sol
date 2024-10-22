@@ -54,6 +54,7 @@ abstract contract BaseConnectorDelayedWithdrawalTest is BaseConnectorTest {
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();
+
     for (uint256 i; i < tokens.length; ++i) {
       assertAlmostEq(adapters[i].estimatedPendingFunds(0, tokens[i]), toWithdraw[i], 1);
       assertAlmostEq(toWithdraw[i], balancesBefore[i] - balancesAfter[i], 1);
