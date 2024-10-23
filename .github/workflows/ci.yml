@@ -89,7 +89,7 @@ jobs:
         uses: crytic/slither-action@v0.4.0
         id: slither
         with:
-          target: ""
+          target: "./"
           node-version: 16
           fail-on: none
           slither-version: 0.10.3
