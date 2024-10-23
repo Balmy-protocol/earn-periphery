@@ -93,7 +93,8 @@ jobs:
           fail-on: none
           slither-version: 0.10.3
           slither-args:
-            --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/ --config-file slither.config.json
+            --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+            --config-file slither.config.json
 
       - name: Create/update checklist as PR comment
         uses: actions/github-script@v6
