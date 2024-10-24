@@ -75,20 +75,21 @@ interface ILiquidityMiningManagerCore {
 // solhint-disable-next-line no-empty-blocks
 interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
   event CampaignSet(StrategyId indexed strategyId, address indexed reward, uint256 emissionPerSecond, uint256 deadline);
-
+  event CampaignAborted(StrategyId indexed strategyId, address indexed reward);
   /**
    * @notice Returns the address of the strategy registry
    * @return The address of the strategy registry
    */
-  // slither-disable-next-line naming-convention
+  // slither-disable-start naming-convention
+
   function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
   /**
    * @notice Returns the role in charge of managing campaigns. Accounts with this role set campaigns
    * to individual strategies
    * @return The role in charge of managing campaigns
    */
-  // slither-disable-next-line naming-convention
   function MANAGE_CAMPAIGNS_ROLE() external view returns (bytes32);
+  // slither-disable-end naming-convention
 
   function setCampaign(
     StrategyId strategyId,
@@ -98,4 +99,6 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
   )
     external
     payable;
+
+  function abortCampaign(StrategyId strategyId, address reward, address recipient) external;
 }

@@ -179,6 +179,15 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     assertEq(address(adminManageCampaigns).balance, previousBalance + 3 * 5);
   }
 
+  function test_setCampaign_RevertWhen_callerDoesntHaveRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_CAMPAIGNS_ROLE()
+      )
+    );
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 1 days });
+  }
+
   function test_setCampaign_RevertWhen_rewardIsStrategyAsset() public {
     vm.prank(adminManageCampaigns);
     vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InvalidReward.selector));
@@ -366,5 +375,92 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     uint256 balance = manager.rewardAmount(strategyId, address(reward));
     vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.UnauthorizedCaller.selector));
     manager.claim(strategyId, address(reward), balance + 1, address(this));
+  }
+
+  function test_abortCampaign_erc20() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    address recipient = address(90);
+    vm.warp(timestamp);
+
+    // Set up a campaign
+    uint256 balanceForCampaign = 3 * 10;
+    vm.startPrank(adminManageCampaigns);
+    reward.approve(address(manager), balanceForCampaign);
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
+    vm.stopPrank();
+
+    // Make sure time has passed
+    timestamp += 5;
+    vm.warp(timestamp);
+    uint256 amount = manager.rewardAmount(strategyId, address(reward));
+    assertEq(amount, 3 * 5);
+
+    // Claim part of the reward
+    uint256 claimAmount = 2 * 5;
+    vm.prank(address(strategy));
+    manager.claim(strategyId, address(reward), claimAmount, adminManageCampaigns);
+
+    // Abort the campaign
+    vm.prank(adminManageCampaigns);
+    manager.abortCampaign(strategyId, address(reward), recipient);
+
+    // Check that the campaign is aborted and rewards are returned
+    uint256 finalRewardBalance = reward.balanceOf(address(manager));
+    assertEq(finalRewardBalance, 0);
+
+    uint256 recipientBalance = reward.balanceOf(recipient);
+    assertEq(recipientBalance, balanceForCampaign - claimAmount);
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 0);
+  }
+
+  function test_abortCampaign_native() public {
+    uint256 timestamp = 10; // Start at 10 seconds
+    address recipient = address(90);
+    vm.warp(timestamp);
+
+    // Set up a campaign with native token
+    uint256 balanceForCampaign = 3 * 10;
+    vm.startPrank(adminManageCampaigns);
+    manager.setCampaign{ value: balanceForCampaign }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      emissionPerSecond: 3,
+      duration: 10
+    });
+    vm.stopPrank();
+
+    // Make sure time has passed
+    timestamp += 5;
+    vm.warp(timestamp);
+    uint256 amount = manager.rewardAmount(strategyId, Token.NATIVE_TOKEN);
+    assertEq(amount, 3 * 5);
+
+    // Claim part of the reward
+    uint256 claimAmount = 2 * 5;
+    vm.prank(address(strategy));
+    manager.claim(strategyId, Token.NATIVE_TOKEN, claimAmount, adminManageCampaigns);
+
+    // Abort the campaign
+    vm.prank(adminManageCampaigns);
+    manager.abortCampaign(strategyId, Token.NATIVE_TOKEN, recipient);
+
+    // Check that the campaign is aborted and rewards are returned
+    uint256 finalRewardBalance = address(manager).balance;
+    assertEq(finalRewardBalance, 0);
+
+    uint256 recipientBalance = recipient.balance;
+    assertEq(recipientBalance, balanceForCampaign - claimAmount);
+
+    assertEq(manager.rewardAmount(strategyId, Token.NATIVE_TOKEN), 0);
+  }
+
+  function test_abortCampaign_RevertWhen_CallerDoesntHaveRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_CAMPAIGNS_ROLE()
+      )
+    );
+    manager.abortCampaign(strategyId, address(reward), address(this));
   }
 }

@@ -175,6 +175,32 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
   //slither-disable-end timestamp
 
+  /// @inheritdoc ILiquidityMiningManager
+  function abortCampaign(
+    StrategyId strategyId,
+    address reward,
+    address recipient
+  )
+    external
+    onlyRole(MANAGE_CAMPAIGNS_ROLE)
+  {
+    bytes32 key = _key(strategyId, reward);
+    Campaign memory campaign = _campaigns[key];
+
+    delete _campaigns[key];
+
+    uint256 remainingBalance = campaign.pendingFromLastUpdate
+      + (
+        campaign.lastUpdated < campaign.deadline
+          ? campaign.emissionPerSecond * (campaign.deadline - campaign.lastUpdated)
+          : 0
+      );
+
+    emit CampaignAborted(strategyId, reward);
+
+    reward.transfer({ recipient: recipient, amount: remainingBalance });
+  }
+
   function _assignRoles(bytes32 role, address[] memory accounts) internal {
     for (uint256 i; i < accounts.length; ++i) {
       _grantRole(role, accounts[i]);
