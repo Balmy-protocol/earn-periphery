@@ -179,6 +179,15 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     assertEq(address(adminManageCampaigns).balance, previousBalance + 3 * 5);
   }
 
+  function test_setCampaign_RevertWhen_callerDoesntHaveRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_CAMPAIGNS_ROLE()
+      )
+    );
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 1 days });
+  }
+
   function test_setCampaign_RevertWhen_rewardIsStrategyAsset() public {
     vm.prank(adminManageCampaigns);
     vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InvalidReward.selector));
@@ -444,5 +453,14 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     assertEq(recipientBalance, balanceForCampaign - claimAmount);
 
     assertEq(manager.rewardAmount(strategyId, Token.NATIVE_TOKEN), 0);
+  }
+
+  function test_abortCampaign_RevertWhen_CallerDoesntHaveRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_CAMPAIGNS_ROLE()
+      )
+    );
+    manager.abortCampaign(strategyId, address(reward), address(this));
   }
 }
