@@ -401,6 +401,8 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
 
     uint256 recipientBalance = reward.balanceOf(recipient);
     assertEq(recipientBalance, balanceForCampaign - claimAmount);
+
+    assertEq(manager.rewardAmount(strategyId, address(reward)), 0);
   }
 
   function test_abortCampaign_native() public {
@@ -440,5 +442,7 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
 
     uint256 recipientBalance = recipient.balance;
     assertEq(recipientBalance, balanceForCampaign - claimAmount);
+
+    assertEq(manager.rewardAmount(strategyId, Token.NATIVE_TOKEN), 0);
   }
 }

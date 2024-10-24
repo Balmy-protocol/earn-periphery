@@ -196,10 +196,9 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
           : 0
       );
 
-    // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
-    reward.transfer({ recipient: recipient, amount: remainingBalance });
-
     emit CampaignAborted(strategyId, reward);
+
+    reward.transfer({ recipient: recipient, amount: remainingBalance });
   }
 
   function _assignRoles(bytes32 role, address[] memory accounts) internal {

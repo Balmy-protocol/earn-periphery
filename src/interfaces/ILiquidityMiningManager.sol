@@ -80,7 +80,7 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
    * @notice Returns the address of the strategy registry
    * @return The address of the strategy registry
    */
-  // slither-disable-next-line naming-convention
+  // slither-disable-start naming-convention
 
   function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
   /**
@@ -88,8 +88,8 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
    * to individual strategies
    * @return The role in charge of managing campaigns
    */
-  // slither-disable-next-line naming-convention
   function MANAGE_CAMPAIGNS_ROLE() external view returns (bytes32);
+  // slither-disable-end naming-convention
 
   function setCampaign(
     StrategyId strategyId,
