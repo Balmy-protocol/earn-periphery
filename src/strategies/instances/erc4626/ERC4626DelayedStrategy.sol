@@ -80,5 +80,7 @@ contract ERC4626DelayedStrategy is
     return IERC20(ERC4626Vault().asset());
   }
 
-  function _delayedWithdrawalAdapter() internal view virtual override returns (IDelayedWithdrawalAdapter) { }
+  function _delayedWithdrawalAdapter() internal view virtual override returns (IDelayedWithdrawalAdapter) {
+    return __delayedWithdrawalAdapter;
+   }
 }
