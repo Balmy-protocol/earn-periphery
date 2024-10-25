@@ -174,6 +174,7 @@ abstract contract BaseDelayedStrategy is
     address recipient
   )
     external
+    onlyVault
     returns (
       uint256[] memory balanceChanges,
       address[] memory actualWithdrawnTokens,
