@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: TBD
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
