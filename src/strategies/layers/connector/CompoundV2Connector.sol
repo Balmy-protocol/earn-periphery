@@ -26,11 +26,13 @@ interface IComptroller {
   function claimComp(address[] memory holders, ICERC20[] memory cTokens, bool borrowers, bool suppliers) external;
   function compSpeeds(address cToken) external view returns (uint256);
   function compAccrued(address) external view returns (uint256);
+  function mintGuardianPaused(ICERC20 cToken) external view returns (bool);
 }
 
 abstract contract CompoundV2Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
+  using Token for address;
 
   error InvalidMint(uint256 errorCode);
   error InvalidRedeem(uint256 errorCode);
@@ -41,11 +43,15 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   function cToken() public view virtual returns (ICERC20);
   /// @notice Returns the comptroller, the rewards controller
   function comptroller() public view virtual returns (IComptroller);
-  function _asset() internal view virtual returns (IERC20);
+  function _asset() internal view virtual returns (address);
+
+  receive() external payable { }
 
   /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
   function maxApproveCToken() public {
-    _asset().forceApprove(address(cToken()), type(uint256).max);
+    if (_asset() != Token.NATIVE_TOKEN) {
+      IERC20(_asset()).forceApprove(address(cToken()), type(uint256).max);
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -82,7 +88,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     if (!_connector_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
-    return type(uint256).max;
+    return comptroller().mintGuardianPaused(cToken()) ? 0 : type(uint256).max;
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -93,7 +99,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return new IEarnStrategy.WithdrawalType[](_connector_allTokens().length); // IMMEDIATE
+    return new IEarnStrategy.WithdrawalType[](2); // IMMEDIATE
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -141,7 +147,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory balances)
   {
     tokens = _connector_allTokens();
-    balances = new uint256[](tokens.length);
+    balances = new uint256[](2);
     balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)));
     balances[1] = comp().balanceOf(address(this)) + comptroller().compAccrued(address(this));
   }
@@ -209,7 +215,13 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     if (depositToken == _connector_asset()) {
       uint256 balance = cToken().balanceOf(address(this));
-      uint256 errorCode = cToken().mint(depositAmount);
+      uint256 errorCode;
+      if (depositToken == Token.NATIVE_TOKEN) {
+        // transfer native is the same as minting
+        depositToken.transfer(address(cToken()), depositAmount);
+      } else {
+        errorCode = cToken().mint(depositAmount);
+      }
       if (errorCode != 0) {
         revert InvalidMint(errorCode);
       }
@@ -235,18 +247,18 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
-      IERC20 asset = _asset();
+      address asset = _asset();
       uint256 errorCode = cToken().redeem(_convertAssetsToShares(assets));
       if (errorCode != 0) {
         revert InvalidRedeem(errorCode);
       }
 
-      uint256 balance = asset.balanceOf(address(this));
+      uint256 balance = asset == Token.NATIVE_TOKEN ? address(this).balance : IERC20(asset).balanceOf(address(this));
       // If we have less assets than requested, we transfer the maximum
       if (assets > balance) {
         assets = balance;
       }
-      asset.safeTransfer(recipient, assets);
+      asset.transfer({ recipient: recipient, amount: assets });
     }
 
     if (toWithdraw[1] > 0) {
@@ -285,7 +297,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     )
   {
     address cToken_ = address(cToken());
-    balanceChanges = new uint256[](_connector_allTokens().length);
+    balanceChanges = new uint256[](2);
 
     actualWithdrawnTokens = new address[](1);
     actualWithdrawnAmounts = new uint256[](1);
