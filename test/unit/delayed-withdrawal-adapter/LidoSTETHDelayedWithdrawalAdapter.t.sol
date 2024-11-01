@@ -73,7 +73,9 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     IERC20(_stETH).transfer(address(strategy), uint256(amountToDeposit1));
 
     vm.mockCall(
-      address(vault), abi.encodeWithSelector(vault.positionsStrategy.selector, position), abi.encode(strategyId, strategy)
+      address(vault),
+      abi.encodeWithSelector(vault.positionsStrategy.selector, position),
+      abi.encode(strategyId, strategy)
     );
   }
 
