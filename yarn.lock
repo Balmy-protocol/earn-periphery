@@ -25,17 +25,17 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
-"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#5e2349fd972e2a64ce7cd51981662f64f7e7ddd7":
+"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#60376d6a43c053e2581151bda11701155e485daf":
   version "0.0.0"
-  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#5e2349fd972e2a64ce7cd51981662f64f7e7ddd7"
+  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#60376d6a43c053e2581151bda11701155e485daf"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
   resolved "https://codeload.github.com/balmy-protocol/nft-permissions/tar.gz/1e75f88d0da6e93f2afbd1069a8c37553f448638"
 
-"@openzeppelin@github:OpenZeppelin/openzeppelin-contracts#28aed34dc5e025e61ea0390c18cac875bfde1a78":
+"@openzeppelin@github:OpenZeppelin/openzeppelin-contracts#bcdfa848a6abb37216df861573d9576636e77824":
   version "5.1.0"
-  resolved "https://codeload.github.com/OpenZeppelin/openzeppelin-contracts/tar.gz/28aed34dc5e025e61ea0390c18cac875bfde1a78"
+  resolved "https://codeload.github.com/OpenZeppelin/openzeppelin-contracts/tar.gz/bcdfa848a6abb37216df861573d9576636e77824"
 
 "@prb/test@github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19":
   version "0.6.1"

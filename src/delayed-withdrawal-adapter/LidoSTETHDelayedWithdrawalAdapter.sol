@@ -6,7 +6,7 @@ import {
   IDelayedWithdrawalManager,
   IEarnVault
 } from "src/interfaces/IDelayedWithdrawalAdapter.sol";
-import { IEarnStrategy, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
@@ -101,8 +101,8 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
   function initiateDelayedWithdrawal(uint256 positionId, address, uint256) external override {
     IDelayedWithdrawalManager delayedWithdrawalManager = manager();
     IEarnVault vault_ = delayedWithdrawalManager.VAULT();
-    StrategyId strategyId = vault_.positionsStrategy(positionId);
-    IEarnStrategy strategy = vault_.STRATEGY_REGISTRY().getStrategy(strategyId);
+    // slither-disable-next-line unused-return
+    (, IEarnStrategy strategy) = vault_.positionsStrategy(positionId);
     if (msg.sender != address(strategy)) {
       revert UnauthorizedPositionStrategy();
     }

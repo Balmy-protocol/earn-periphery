@@ -48,13 +48,6 @@ interface IDelayedWithdrawalManager {
   function VAULT() external view returns (IEarnVault);
 
   /**
-   * @notice Returns the address of the strategy registry
-   * @return The address of the strategy registry
-   */
-  // slither-disable-next-line naming-convention
-  function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
-
-  /**
    * @notice Returns the estimated amount of funds that are pending for withdrawal. Note that this amount is estimated
    *         because the underlying farm might not be able to guarantee an exit amount when it is first started
    * @param positionId The position that executed the withdrawal

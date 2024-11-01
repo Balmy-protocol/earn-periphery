@@ -80,7 +80,6 @@ contract DelayedWithdrawalManagerTest is PRBTest {
 
   function test_constructor() public {
     assertEq(address(delayedWithdrawalManager.VAULT()), address(vault));
-    assertEq(address(delayedWithdrawalManager.STRATEGY_REGISTRY()), address(vault.STRATEGY_REGISTRY()));
   }
 
   function test_registerDelayedWithdraw() public {
@@ -157,7 +156,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
 
       (address[] memory positionTokens, uint256[] memory estimatedPending, uint256[] memory withdrawable) =
         delayedWithdrawalManager.allPositionFunds(positions[i]);
-      (address[] memory vaultTokens,,) = delayedWithdrawalManager.VAULT().position(positions[i]);
+      (address[] memory vaultTokens,,,) = delayedWithdrawalManager.VAULT().position(positions[i]);
 
       assertEq(positionTokens, vaultTokens);
       for (uint256 j; j < positionTokens.length; j++) {
@@ -177,7 +176,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
     vm.stopPrank();
 
     // Update strategy to register a new adapter
-    IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.STRATEGY_REGISTRY();
+    IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.VAULT().STRATEGY_REGISTRY();
     IEarnBalmyStrategy newStrategy = BalmyStrategyUtils.deployBalmyStrategy(tokens);
     strategyRegistry.proposeStrategyUpdate(strategyId, newStrategy, "0x");
     vm.warp(block.timestamp + strategyRegistry.STRATEGY_UPDATE_DELAY()); //Waiting for the delay...
@@ -210,7 +209,7 @@ contract DelayedWithdrawalManagerTest is PRBTest {
 
     (address[] memory positionTokens, uint256[] memory estimatedPending, uint256[] memory withdrawable) =
       delayedWithdrawalManager.allPositionFunds(positionId);
-    (address[] memory vaultTokens,,) = delayedWithdrawalManager.VAULT().position(positionId);
+    (address[] memory vaultTokens,,,) = delayedWithdrawalManager.VAULT().position(positionId);
 
     assertEq(positionTokens, vaultTokens);
     for (uint256 i; i < positionTokens.length; i++) {

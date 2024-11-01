@@ -36,7 +36,4 @@ contract DelayedWithdrawalManagerMock is IDelayedWithdrawalManager {
 
   // solhint-disable-next-line no-empty-blocks
   function VAULT() external view override returns (IEarnVault) { }
-
-  // solhint-disable-next-line no-empty-blocks
-  function STRATEGY_REGISTRY() external view override returns (IEarnStrategyRegistry) { }
 }
