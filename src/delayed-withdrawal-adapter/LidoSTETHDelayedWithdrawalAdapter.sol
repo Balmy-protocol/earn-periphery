@@ -101,6 +101,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
   function initiateDelayedWithdrawal(uint256 positionId, address, uint256) external override {
     IDelayedWithdrawalManager delayedWithdrawalManager = manager();
     IEarnVault vault_ = delayedWithdrawalManager.VAULT();
+    // slither-disable-next-line unused-return
     (, IEarnStrategy strategy) = vault_.positionsStrategy(positionId);
     if (msg.sender != address(strategy)) {
       revert UnauthorizedPositionStrategy();
