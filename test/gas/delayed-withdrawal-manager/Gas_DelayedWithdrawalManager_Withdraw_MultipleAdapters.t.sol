@@ -42,7 +42,7 @@ contract GasDelayedWithdrawalManagerWithdraw is BaseDelayedWithdrawalGasTest {
     delayedWithdrawalManager.registerDelayedWithdraw(positions[2], tokenByPosition[positions[2]]);
 
     // Update strategy to register a new adapter
-    IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.STRATEGY_REGISTRY();
+    IEarnStrategyRegistry strategyRegistry = delayedWithdrawalManager.VAULT().STRATEGY_REGISTRY();
     IEarnBalmyStrategy newStrategy = BalmyStrategyUtils.deployBalmyStrategy(tokens);
     strategyRegistry.proposeStrategyUpdate(strategyId, newStrategy, "0x");
     vm.warp(block.timestamp + strategyRegistry.STRATEGY_UPDATE_DELAY()); //Waiting for the delay...
