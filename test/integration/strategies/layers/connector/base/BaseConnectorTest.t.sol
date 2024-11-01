@@ -111,8 +111,8 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     for (uint256 i; i < supported.length; ++i) {
       (, uint256[] memory balancesBefore) = connector.totalBalances();
       address depositToken = supported[i];
-      _give(depositToken, address(connector), 10e18);
-      uint256 assetsDeposited = connector.deposit(depositToken, 10e18);
+      _give(depositToken, address(connector), 10e12);
+      uint256 assetsDeposited = connector.deposit(depositToken, 10e12);
       (, uint256[] memory balancesAfter) = connector.totalBalances();
       assertAlmostEq(assetsDeposited, balancesAfter[0] - balancesBefore[0], 1);
     }

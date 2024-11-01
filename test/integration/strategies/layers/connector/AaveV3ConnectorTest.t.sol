@@ -9,7 +9,7 @@ import {
   IAaveV3Rewards,
   IAToken
 } from "src/strategies/layers/connector/AaveV3Connector.sol";
-import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
+import { BaseConnectorInstance, BaseConnector } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 
@@ -100,7 +100,7 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     }
   }
 
-  function _generateYield() internal virtual override {
+  function _generateYield(BaseConnector) internal virtual override {
     // Roll the fork to generate some rewards
     vm.rollFork(123_000_000);
   }
