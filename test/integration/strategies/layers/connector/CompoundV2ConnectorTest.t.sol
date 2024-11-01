@@ -2,11 +2,7 @@
 pragma solidity >=0.8.22;
 
 import {
-  CompoundV2Connector,
-  SafeERC20,
-  IERC20,
-  ICERC20,
-  IComptroller
+  CompoundV2Connector, IERC20, ICERC20, IComptroller
 } from "src/strategies/layers/connector/CompoundV2Connector.sol";
 import { BaseConnectorInstance, BaseConnector } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
@@ -120,7 +116,7 @@ contract CompoundV2ConnectorInstance is BaseConnectorInstance, CompoundV2Connect
 contract CompoundV2ComptrollerMock is IComptroller {
   IERC20 internal _comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
 
-  uint256 yieldGenerated = 0;
+  uint256 internal yieldGenerated = 0;
 
   function compSpeeds(address) external pure returns (uint256) {
     return 1e10;
@@ -132,6 +128,7 @@ contract CompoundV2ComptrollerMock is IComptroller {
 
   function claimComp(address[] memory holders, ICERC20[] memory, bool, bool) external override {
     _comp.transfer(holders[0], yieldGenerated);
+    // solhint-disable-next-line reentrancy
     yieldGenerated = 0;
   }
 
@@ -149,7 +146,7 @@ contract CompoundV2ConnectorTestERC20 is CompoundV2ConnectorTest {
   IERC20 internal asset = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F); // DAI
   IERC20 internal comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
   // We need a holder for the cToken token
-  address internal _CTOKEN_HOLDER = 0xB0b0F6F13A5158eB67724282F586a552E75b5728; // cDAI holder
+  address internal cTokenHolder = 0xB0b0F6F13A5158eB67724282F586a552E75b5728; // cDAI holder
 
   function _asset() internal view override returns (address) {
     return address(asset);
@@ -164,7 +161,7 @@ contract CompoundV2ConnectorTestERC20 is CompoundV2ConnectorTest {
   }
 
   function _cTokenHolder() internal view override returns (address) {
-    return _CTOKEN_HOLDER;
+    return cTokenHolder;
   }
 }
 
@@ -174,7 +171,7 @@ contract CompoundV2ConnectorTestNative is CompoundV2ConnectorTest {
   IERC20 internal comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
 
   // We need a holder for the cToken token
-  address internal _CTOKEN_HOLDER = 0x08CFd293D687B6CEe139219a607ACBBC10A6eb25; // cETH holder
+  address internal cTokenHolder = 0x08CFd293D687B6CEe139219a607ACBBC10A6eb25; // cETH holder
 
   function _asset() internal view override returns (address) {
     return asset;
@@ -189,6 +186,6 @@ contract CompoundV2ConnectorTestNative is CompoundV2ConnectorTest {
   }
 
   function _cTokenHolder() internal view override returns (address) {
-    return _CTOKEN_HOLDER;
+    return cTokenHolder;
   }
 }
