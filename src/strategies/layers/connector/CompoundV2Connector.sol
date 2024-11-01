@@ -16,9 +16,7 @@ import { Token } from "@balmy/earn-core/libraries/Token.sol";
 
 interface ICERC20 is IERC20 {
   function mint(uint256 underlyingAmount) external returns (uint256);
-  function redeemUnderlying(uint256 underlyingAmount) external returns (uint256);
   function redeem(uint256 shares) external returns (uint256);
-  function balanceOfUnderlying(address) external returns (uint256);
   function exchangeRateStored() external view returns (uint256);
   function decimals() external view returns (uint256);
   function totalReserves() external view returns (uint256);
@@ -34,7 +32,8 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
 
-  error InvalidWithdrawal(uint256 errorCode);
+  error InvalidMint(uint256 errorCode);
+  error InvalidRedeem(uint256 errorCode);
 
   /// @notice Returns the comp token address
   function comp() public view virtual returns (IERC20);
@@ -44,7 +43,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   function comptroller() public view virtual returns (IComptroller);
   function _asset() internal view virtual returns (IERC20);
 
-  /// @notice Performs a max approve to the pool, so that we can deposit without any worries
+  /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
   function maxApproveCToken() public {
     _asset().forceApprove(address(cToken()), type(uint256).max);
   }
@@ -54,26 +53,31 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     maxApproveCToken();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view virtual override returns (address) {
     return address(_asset());
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view virtual override returns (address[] memory tokens) {
     tokens = new address[](2);
     tokens[0] = _connector_asset();
     tokens[1] = address(comp());
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(cToken());
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view virtual override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
     supported[1] = address(cToken());
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
     if (!_connector_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
@@ -81,6 +85,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return type(uint256).max;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedWithdrawals()
     internal
     view
@@ -91,6 +96,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return new IEarnStrategy.WithdrawalType[](_connector_allTokens().length); // IMMEDIATE
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
     internal
     view
@@ -102,6 +108,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedSpecialWithdrawals()
     internal
     view
@@ -114,6 +121,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     codes[1] = SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxWithdraw()
     internal
     view
@@ -124,6 +132,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     (tokens, withdrawable) = _connector_totalBalances();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_totalBalances()
     internal
     view
@@ -137,6 +146,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     balances[1] = comp().balanceOf(address(this)) + comptroller().compAccrued(address(this));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_delayedWithdrawalAdapter(address)
     internal
     view
@@ -147,6 +157,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return IDelayedWithdrawalAdapter(address(0));
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_assetYieldCoefficient()
     internal
     view
@@ -164,6 +175,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_rewardEmissionsPerSecondPerAsset()
     internal
     view
@@ -180,10 +192,12 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     emissions[0] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_totalAssetsInFarm() internal view virtual override returns (uint256) {
     return cToken().totalSupply();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount
@@ -195,7 +209,10 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     if (depositToken == _connector_asset()) {
       uint256 balance = cToken().balanceOf(address(this));
-      cToken().mint(depositAmount);
+      uint256 errorCode = cToken().mint(depositAmount);
+      if (errorCode != 0) {
+        revert InvalidMint(errorCode);
+      }
       return _convertSharesToAssets(cToken().balanceOf(address(this)) - balance);
     } else if (depositToken == address(cToken())) {
       return _convertSharesToAssets(depositAmount);
@@ -204,6 +221,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
     address[] memory,
@@ -220,7 +238,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       IERC20 asset = _asset();
       uint256 errorCode = cToken().redeem(_convertAssetsToShares(assets));
       if (errorCode != 0) {
-        revert InvalidWithdrawal(errorCode);
+        revert InvalidRedeem(errorCode);
       }
 
       uint256 balance = asset.balanceOf(address(this));
@@ -248,6 +266,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return _connector_supportedWithdrawals();
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_specialWithdraw(
     uint256,
     SpecialWithdrawalCode withdrawalCode,
@@ -290,6 +309,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_migrateToNewStrategy(
     IEarnStrategy newStrategy,
     bytes calldata
@@ -304,6 +324,8 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return abi.encode(balance);
   }
 
+  // solhint-disable no-empty-blocks
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_strategyRegistered(
     StrategyId strategyId,
     IEarnStrategy oldStrategy,
