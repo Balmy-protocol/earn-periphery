@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import {
-  IDelayedWithdrawalManager, IEarnVault, IEarnStrategyRegistry
-} from "src/interfaces/IDelayedWithdrawalManager.sol";
+import { IDelayedWithdrawalManager, IEarnVault } from "src/interfaces/IDelayedWithdrawalManager.sol";
 
 contract DelayedWithdrawalManagerMock is IDelayedWithdrawalManager {
   // solhint-disable-next-line no-empty-blocks

@@ -2,9 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
-import {
-  IDelayedWithdrawalManager, IEarnVault, IEarnStrategyRegistry
-} from "../interfaces/IDelayedWithdrawalManager.sol";
+import { IDelayedWithdrawalManager, IEarnVault } from "../interfaces/IDelayedWithdrawalManager.sol";
 import { IDelayedWithdrawalAdapter } from "../interfaces/IDelayedWithdrawalAdapter.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy, IEarnStrategy } from "../interfaces/IEarnBalmyStrategy.sol";

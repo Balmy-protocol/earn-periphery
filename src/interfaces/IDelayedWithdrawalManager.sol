@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.8;
 
-import { IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnVault.sol";
+import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 
 /**
  * @title Delayed Withdrawal Manager Interface
