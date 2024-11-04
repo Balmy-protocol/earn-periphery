@@ -41,7 +41,7 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     (uint256[] memory emissions, uint256[] memory multipliers) = compoundV2Connector.rewardEmissionsPerSecondPerAsset();
 
     assertEq(emissions.length, 1);
-    assertEq(emissions[0], 1e10 * 1e30 / IERC20(address(_cToken())).totalSupply());
+    assertEq(emissions[0], 1e10 * 1e30 / _cToken().getCash());
     assertEq(multipliers.length, 1);
     assertEq(multipliers[0], 1e30);
   }

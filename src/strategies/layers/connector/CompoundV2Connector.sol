@@ -19,7 +19,7 @@ interface ICERC20 is IERC20 {
   function redeem(uint256 shares) external returns (uint256);
   function exchangeRateStored() external view returns (uint256);
   function decimals() external view returns (uint256);
-  function totalReserves() external view returns (uint256);
+  function getCash() external view returns (uint256);
 }
 
 interface IComptroller {
@@ -49,8 +49,9 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
   function maxApproveCToken() public {
-    if (_asset() != Token.NATIVE_TOKEN) {
-      IERC20(_asset()).forceApprove(address(cToken()), type(uint256).max);
+    address asset = _asset();
+    if (asset != Token.NATIVE_TOKEN) {
+      IERC20(asset).forceApprove(address(cToken()), type(uint256).max);
     }
   }
 
@@ -61,7 +62,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_asset() internal view virtual override returns (address) {
-    return address(_asset());
+    return _asset();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -136,6 +137,10 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
     (tokens, withdrawable) = _connector_totalBalances();
+    uint256 totalAssets = cToken().getCash();
+    if (totalAssets < withdrawable[0]) {
+      withdrawable[0] = totalAssets;
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -148,7 +153,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     tokens = _connector_allTokens();
     balances = new uint256[](2);
-    balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)));
+    balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)), Math.Rounding.Ceil);
     balances[1] = comp().balanceOf(address(this)) + comptroller().compAccrued(address(this));
   }
 
@@ -177,7 +182,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     if (shares == 0) {
       return (multiplier, multiplier);
     }
-    uint256 assets = cToken_.totalReserves();
+    uint256 assets = cToken_.getCash();
     coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
@@ -190,7 +195,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (uint256[] memory emissions, uint256[] memory multipliers)
   {
     ICERC20 cToken_ = cToken();
-    uint256 totalAssets = Math.max(cToken_.totalSupply(), 1);
+    uint256 totalAssets = Math.max(cToken_.getCash(), 1);
     emissions = new uint256[](1);
     multipliers = new uint256[](1);
     uint256 emissionPerSecond = comptroller().compSpeeds(address(cToken_));
@@ -200,7 +205,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_totalAssetsInFarm() internal view virtual override returns (uint256) {
-    return cToken().totalSupply();
+    return cToken().getCash();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -215,19 +220,19 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     if (depositToken == _connector_asset()) {
       uint256 balance = cToken().balanceOf(address(this));
-      uint256 errorCode;
       if (depositToken == Token.NATIVE_TOKEN) {
         // transfer native is the same as minting
         depositToken.transfer(address(cToken()), depositAmount);
       } else {
-        errorCode = cToken().mint(depositAmount);
+        uint256 errorCode = cToken().mint(depositAmount);
+        if (errorCode != 0) {
+          revert InvalidMint(errorCode);
+        }
       }
-      if (errorCode != 0) {
-        revert InvalidMint(errorCode);
-      }
-      return _convertSharesToAssets(cToken().balanceOf(address(this)) - balance);
+
+      return _convertSharesToAssets(cToken().balanceOf(address(this)) - balance, Math.Rounding.Floor);
     } else if (depositToken == address(cToken())) {
-      return _convertSharesToAssets(depositAmount);
+      return _convertSharesToAssets(depositAmount, Math.Rounding.Floor);
     } else {
       revert InvalidDepositToken(depositToken);
     }
@@ -248,7 +253,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
       address asset = _asset();
-      uint256 errorCode = cToken().redeem(_convertAssetsToShares(assets));
+      uint256 errorCode = cToken().redeem(_convertAssetsToShares(assets, Math.Rounding.Ceil));
       if (errorCode != 0) {
         revert InvalidRedeem(errorCode);
       }
@@ -260,19 +265,20 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       }
       asset.transfer({ recipient: recipient, amount: assets });
     }
-
-    if (toWithdraw[1] > 0) {
+    uint256 rewardAmount = toWithdraw[1];
+    if (rewardAmount > 0) {
       uint256 rewardBalance = comp().balanceOf(address(this));
-      if (rewardBalance < toWithdraw[1]) {
+      IERC20 comp_ = comp();
+      if (rewardBalance < rewardAmount) {
         // Claim all rewards
         address[] memory holders = new address[](1);
         holders[0] = address(this);
         ICERC20[] memory cTokens = new ICERC20[](1);
         cTokens[0] = cToken();
         comptroller().claimComp(holders, cTokens, false, true);
-        rewardBalance = comp().balanceOf(address(this));
+        rewardBalance = comp_.balanceOf(address(this));
       }
-      comp().safeTransfer(recipient, toWithdraw[1]);
+      comp_.safeTransfer(recipient, rewardAmount);
     }
 
     return _connector_supportedWithdrawals();
@@ -304,14 +310,14 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     result = "";
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = toWithdraw[0];
-      uint256 assets = _convertSharesToAssets(shares);
+      uint256 assets = _convertSharesToAssets(shares, Math.Rounding.Ceil);
       IERC20(cToken_).safeTransfer(recipient, shares);
       balanceChanges[0] = assets;
       actualWithdrawnTokens[0] = cToken_;
       actualWithdrawnAmounts[0] = shares;
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
       uint256 assets = toWithdraw[0];
-      uint256 shares = _convertAssetsToShares(assets);
+      uint256 shares = _convertAssetsToShares(assets, Math.Rounding.Ceil);
       IERC20(cToken_).safeTransfer(recipient, shares);
       balanceChanges[0] = assets;
       actualWithdrawnTokens[0] = cToken_;
@@ -331,8 +337,9 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     override
     returns (bytes memory)
   {
-    uint256 balance = cToken().balanceOf(address(this));
-    IERC20(cToken()).safeTransfer(address(newStrategy), balance);
+    IERC20 cToken_ = IERC20(cToken());
+    uint256 balance = cToken_.balanceOf(address(this));
+    cToken_.safeTransfer(address(newStrategy), balance);
     return abi.encode(balance);
   }
 
@@ -349,18 +356,18 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   { }
 
   // slither-disable-next-line dead-code
-  function _convertSharesToAssets(uint256 shares) private view returns (uint256) {
-    uint256 underlyingTokenDecimals =
-      Token.NATIVE_TOKEN == address(_asset()) ? 18 : ICERC20(address(_asset())).decimals();
+  function _convertSharesToAssets(uint256 shares, Math.Rounding rounding) private view returns (uint256) {
+    address asset = _asset();
+    uint256 underlyingTokenDecimals = Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals();
     uint256 magnitude = (10 + underlyingTokenDecimals);
-    return shares.mulDiv(cToken().exchangeRateStored(), 10 ** magnitude, Math.Rounding.Ceil);
+    return shares.mulDiv(cToken().exchangeRateStored(), 10 ** magnitude, rounding);
   }
 
   // slither-disable-next-line dead-code
-  function _convertAssetsToShares(uint256 assets) private view returns (uint256) {
-    uint256 underlyingTokenDecimals =
-      Token.NATIVE_TOKEN == address(_asset()) ? 18 : ICERC20(address(_asset())).decimals();
+  function _convertAssetsToShares(uint256 assets, Math.Rounding rounding) private view returns (uint256) {
+    address asset = _asset();
+    uint256 underlyingTokenDecimals = Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals();
     uint256 magnitude = (10 + underlyingTokenDecimals);
-    return assets.mulDiv(10 ** magnitude, cToken().exchangeRateStored(), Math.Rounding.Floor);
+    return assets.mulDiv(10 ** magnitude, cToken().exchangeRateStored(), rounding);
   }
 }
