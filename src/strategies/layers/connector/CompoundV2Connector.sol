@@ -377,6 +377,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     return assets.mulDiv(10 ** magnitude, cToken().exchangeRateStored(), rounding);
   }
 
+  // slither-disable-next-line dead-code
   function _totalAssets() internal view returns (uint256) {
     ICERC20 cToken_ = cToken();
     return cToken_.getCash() + cToken_.totalBorrows() - cToken_.totalReserves();
