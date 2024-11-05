@@ -41,7 +41,7 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     (uint256[] memory emissions, uint256[] memory multipliers) = compoundV2Connector.rewardEmissionsPerSecondPerAsset();
 
     assertEq(emissions.length, 1);
-    assertEq(emissions[0], 1e10 * 1e30 / _cToken().getCash());
+    assertEq(emissions[0], 1e10 * 1e30 / (_cToken().getCash() + _cToken().totalBorrows() - _cToken().totalReserves()));
     assertEq(multipliers.length, 1);
     assertEq(multipliers[0], 1e30);
   }
@@ -69,11 +69,11 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     comptrollerMock._generateYield(1e3);
   }
 
-  function _connectorBalanceOfFarmToken() internal pure override returns (uint256) {
+  function _connectorBalanceOfFarmToken() internal pure virtual override returns (uint256) {
     return 10e12;
   }
 
-  function _amountToWithdraw() internal pure override returns (uint256) {
+  function _amountToWithdraw() internal pure virtual override returns (uint256) {
     return 2e5;
   }
 }
@@ -141,7 +141,7 @@ contract CompoundV2ComptrollerMock is IComptroller {
   }
 }
 
-contract CompoundV2ConnectorTestERC20 is CompoundV2ConnectorTest {
+contract CompoundV2ConnectorTestDAI is CompoundV2ConnectorTest {
   ICERC20 internal cToken = ICERC20(0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643); // cDAI
   IERC20 internal asset = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F); // DAI
   IERC20 internal comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
@@ -162,6 +162,81 @@ contract CompoundV2ConnectorTestERC20 is CompoundV2ConnectorTest {
 
   function _cTokenHolder() internal view override returns (address) {
     return cTokenHolder;
+  }
+}
+
+contract CompoundV2ConnectorTestWBTC is CompoundV2ConnectorTest {
+  ICERC20 internal cToken = ICERC20(0xccF4429DB6322D5C611ee964527D42E5d685DD6a); // cWBTC2
+  IERC20 internal asset = IERC20(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599); // WBTC
+  IERC20 internal comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
+  // We need a holder for the cToken token
+  address internal cTokenHolder = 0xceEf57F6C40A7CB2392eaAD101Ee0440aA43bA42; // cWBTC2 holder
+
+  function _asset() internal view override returns (address) {
+    return address(asset);
+  }
+
+  function _comp() internal view override returns (IERC20) {
+    return comp;
+  }
+
+  function _cToken() internal view override returns (ICERC20) {
+    return cToken;
+  }
+
+  function _cTokenHolder() internal view override returns (address) {
+    return cTokenHolder;
+  }
+
+  function _connectorBalanceOfFarmToken() internal pure override returns (uint256) {
+    return 10e10;
+  }
+
+  function _amountToWithdraw() internal pure override returns (uint256) {
+    return 2e5;
+  }
+
+  // We need to override because cWBTC has less assets than shares
+  function testFork_assetYieldCoefficient() public override {
+    (, uint256 multiplier) = connector.assetYieldCoefficient();
+    assertEq(multiplier, 1e18);
+  }
+}
+
+contract CompoundV2ConnectorTestUSDT is CompoundV2ConnectorTest {
+  ICERC20 internal cToken = ICERC20(0xf650C3d88D12dB855b8bf7D11Be6C55A4e07dCC9); // cUSDT
+  IERC20 internal asset = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7); // USDT
+  IERC20 internal comp = IERC20(0xc00e94Cb662C3520282E6f5717214004A7f26888); // COMP
+  // We need a holder for the cToken token
+  address internal cTokenHolder = 0xb99CC7e10Fe0Acc68C50C7829F473d81e23249cc; // cUSDT holder
+
+  function _asset() internal view override returns (address) {
+    return address(asset);
+  }
+
+  function _comp() internal view override returns (IERC20) {
+    return comp;
+  }
+
+  function _cToken() internal view override returns (ICERC20) {
+    return cToken;
+  }
+
+  function _cTokenHolder() internal view override returns (address) {
+    return cTokenHolder;
+  }
+
+  function _connectorBalanceOfFarmToken() internal pure override returns (uint256) {
+    return 10e10;
+  }
+
+  function _amountToWithdraw() internal pure override returns (uint256) {
+    return 2e5;
+  }
+
+  function testFork_assetYieldCoefficient() public override {
+    (, uint256 multiplier) = connector.assetYieldCoefficient();
+    assertEq(multiplier, 1e18);
   }
 }
 

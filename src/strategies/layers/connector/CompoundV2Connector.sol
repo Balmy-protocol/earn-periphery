@@ -16,10 +16,12 @@ import { Token } from "@balmy/earn-core/libraries/Token.sol";
 
 interface ICERC20 is IERC20 {
   function mint(uint256 underlyingAmount) external returns (uint256);
-  function redeem(uint256 shares) external returns (uint256);
+  function redeemUnderlying(uint256 underlyingAmount) external returns (uint256);
   function exchangeRateStored() external view returns (uint256);
   function decimals() external view returns (uint256);
   function getCash() external view returns (uint256);
+  function totalReserves() external view returns (uint256);
+  function totalBorrows() external view returns (uint256);
 }
 
 interface IComptroller {
@@ -137,7 +139,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
     (tokens, withdrawable) = _connector_totalBalances();
-    uint256 totalAssets = cToken().getCash();
+    uint256 totalAssets = _totalAssets();
     if (totalAssets < withdrawable[0]) {
       withdrawable[0] = totalAssets;
     }
@@ -182,7 +184,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     if (shares == 0) {
       return (multiplier, multiplier);
     }
-    uint256 assets = cToken_.getCash();
+    uint256 assets = _totalAssets();
     coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
@@ -195,7 +197,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (uint256[] memory emissions, uint256[] memory multipliers)
   {
     ICERC20 cToken_ = cToken();
-    uint256 totalAssets = Math.max(cToken_.getCash(), 1);
+    uint256 totalAssets = Math.max(_totalAssets(), 1);
     emissions = new uint256[](1);
     multipliers = new uint256[](1);
     uint256 emissionPerSecond = comptroller().compSpeeds(address(cToken_));
@@ -205,7 +207,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_totalAssetsInFarm() internal view virtual override returns (uint256) {
-    return cToken().getCash();
+    return _totalAssets();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -253,7 +255,11 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
       address asset = _asset();
-      uint256 errorCode = cToken().redeem(_convertAssetsToShares(assets, Math.Rounding.Ceil));
+      // redeemUnderlying expects the amount in the asset's decimals minus cToken's decimals
+      // if asset has less than 8 decimals, we don't need to adjust
+      uint256 assetDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
+      uint256 assetsToRedeem = assets * (10 ** (assetDecimals - 8));
+      uint256 errorCode = cToken().redeemUnderlying(assetsToRedeem);
       if (errorCode != 0) {
         revert InvalidRedeem(errorCode);
       }
@@ -358,7 +364,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line dead-code
   function _convertSharesToAssets(uint256 shares, Math.Rounding rounding) private view returns (uint256) {
     address asset = _asset();
-    uint256 underlyingTokenDecimals = Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals();
+    uint256 underlyingTokenDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
     uint256 magnitude = (10 + underlyingTokenDecimals);
     return shares.mulDiv(cToken().exchangeRateStored(), 10 ** magnitude, rounding);
   }
@@ -366,8 +372,13 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line dead-code
   function _convertAssetsToShares(uint256 assets, Math.Rounding rounding) private view returns (uint256) {
     address asset = _asset();
-    uint256 underlyingTokenDecimals = Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals();
+    uint256 underlyingTokenDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
     uint256 magnitude = (10 + underlyingTokenDecimals);
     return assets.mulDiv(10 ** magnitude, cToken().exchangeRateStored(), rounding);
+  }
+
+  function _totalAssets() internal view returns (uint256) {
+    ICERC20 cToken_ = cToken();
+    return cToken_.getCash() + cToken_.totalBorrows() - cToken_.totalReserves();
   }
 }
