@@ -32,7 +32,8 @@ contract DeployFortaPolygon is Script {
     vm.startBroadcast(deployerPrivateKey);
 
     EarnStrategyRegistry strategyRegistry = new EarnStrategyRegistry();
-    EarnNFTDescriptor nftDescriptor = EarnNFTDescriptor(0xAe84114Aa7a651F765B24c74f3A0f8E64921C3D9); // Recycle NFT descriptor
+    EarnNFTDescriptor nftDescriptor = EarnNFTDescriptor(0xAe84114Aa7a651F765B24c74f3A0f8E64921C3D9); // Recycle NFT
+      // descriptor
     address[] memory initialAdmins = new address[](2);
     initialAdmins[0] = admin;
     initialAdmins[1] = deployer;
@@ -106,7 +107,8 @@ contract DeployFortaPolygon is Script {
         - Stablecoin
         - TOS
     */
-    AaveV3StrategyFactory aaveV3Factory = AaveV3StrategyFactory(0x5463cfE67361da69dffeBfB1e526de0d4bDCDE78); // Recycle Aave v3 factory
+    AaveV3StrategyFactory aaveV3Factory = AaveV3StrategyFactory(0x5463cfE67361da69dffeBfB1e526de0d4bDCDE78); // Recycle
+      // Aave v3 factory
     (, StrategyId strategyId) = aaveV3Factory.cloneAndRegister(
       AaveV3StrategyImmutableData(
         strategyRegistry,

@@ -79,7 +79,7 @@ contract DeployFortaPolygon is Script {
         - Stablecoin
         - Reward: ETH
     */
-    (,StrategyId strategyIdMorpho) = erc4626Factory.cloneAndRegister(
+    (, StrategyId strategyIdMorpho) = erc4626Factory.cloneAndRegister(
       vault.STRATEGY_REGISTRY(),
       admin,
       vault,
@@ -92,12 +92,10 @@ contract DeployFortaPolygon is Script {
     );
 
     // Needs ETH to create the campaign
-    
-    liquidityMiningManager.setCampaign{value: 0.00001 ether}(
-      strategyIdMorpho, Token.NATIVE_TOKEN, 0.000000000001 ether, 10000000
-    );
-    
 
+    liquidityMiningManager.setCampaign{ value: 0.00001 ether }(
+      strategyIdMorpho, Token.NATIVE_TOKEN, 0.000000000001 ether, 10_000_000
+    );
 
     BeefyStrategy beefyStrategy = new BeefyStrategy();
     BeefyStrategyFactory beefyStrategyFactory = new BeefyStrategyFactory(beefyStrategy);
@@ -106,7 +104,7 @@ contract DeployFortaPolygon is Script {
         - WETH
         - TOS
     */
-    (,StrategyId strategyIdBeefy) = beefyStrategyFactory.cloneAndRegister(
+    (, StrategyId strategyIdBeefy) = beefyStrategyFactory.cloneAndRegister(
       vault.STRATEGY_REGISTRY(),
       admin,
       vault,
