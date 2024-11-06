@@ -30,17 +30,17 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
-"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#6a56c216468a730cfd6d2c12570285251408fbbd":
+"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#1a59b2896649e50dd0b2855ade4a39f7ff0f92e1":
   version "0.0.0"
-  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#6a56c216468a730cfd6d2c12570285251408fbbd"
+  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#1a59b2896649e50dd0b2855ade4a39f7ff0f92e1"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
   resolved "https://codeload.github.com/balmy-protocol/nft-permissions/tar.gz/1e75f88d0da6e93f2afbd1069a8c37553f448638"
 
-"@forta/firewall@github:forta-network/forta-firewall-contracts#abd618903aa81dfde63575069694de2bb1fa382d":
+"@forta/firewall@github:forta-network/forta-firewall-contracts#ee4fa2f6fe5c3a407843c2928750b6f2b5502ca3":
   version "1.0.0"
-  resolved "https://codeload.github.com/forta-network/forta-firewall-contracts/tar.gz/abd618903aa81dfde63575069694de2bb1fa382d"
+  resolved "https://codeload.github.com/forta-network/forta-firewall-contracts/tar.gz/ee4fa2f6fe5c3a407843c2928750b6f2b5502ca3"
   dependencies:
     axios "^1.7.2"
     dotenv "^16.4.5"
