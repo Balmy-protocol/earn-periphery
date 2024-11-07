@@ -46,22 +46,6 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     assertEq(multipliers[0], 1e30);
   }
 
-  function _setBalance(address asset, address account, uint256 amount) internal override {
-    if (asset == address(_cToken())) {
-      // We need to set the balance of the account to 0
-      uint256 balance = IERC20(asset).balanceOf(account);
-      if (balance > amount) {
-        vm.prank(account);
-        IERC20(asset).transfer(_cTokenHolder(), balance - amount);
-      } else if (balance < amount) {
-        vm.prank(_cTokenHolder());
-        IERC20(asset).transfer(account, amount - balance);
-      }
-    } else {
-      return super._setBalance(asset, account, amount);
-    }
-  }
-
   function _generateYield(BaseConnector _connector) internal virtual override {
     CompoundV2ComptrollerMock comptrollerMock =
       CompoundV2ComptrollerMock(payable(address(CompoundV2Connector(payable(address(_connector))).comptroller())));

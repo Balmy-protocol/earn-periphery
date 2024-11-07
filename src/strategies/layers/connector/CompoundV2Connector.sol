@@ -184,7 +184,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     if (shares == 0) {
       return (multiplier, multiplier);
     }
-    uint256 assets = _totalAssets();
+    uint256 assets = _totalAssets(cToken_);
     coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
   }
 
@@ -197,7 +197,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (uint256[] memory emissions, uint256[] memory multipliers)
   {
     ICERC20 cToken_ = cToken();
-    uint256 totalAssets = Math.max(_totalAssets(), 1);
+    uint256 totalAssets = Math.max(_totalAssets(cToken_), 1);
     emissions = new uint256[](1);
     multipliers = new uint256[](1);
     uint256 emissionPerSecond = comptroller().compSpeeds(address(cToken_));
@@ -220,20 +220,21 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     override
     returns (uint256 assetsDeposited)
   {
+    ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
-      uint256 balance = cToken().balanceOf(address(this));
+      uint256 balance = cToken_.balanceOf(address(this));
       if (depositToken == Token.NATIVE_TOKEN) {
         // transfer native is the same as minting
         depositToken.transfer(address(cToken()), depositAmount);
       } else {
-        uint256 errorCode = cToken().mint(depositAmount);
+        uint256 errorCode = cToken_.mint(depositAmount);
         if (errorCode != 0) {
           revert InvalidMint(errorCode);
         }
       }
 
-      return _convertSharesToAssets(cToken().balanceOf(address(this)) - balance, Math.Rounding.Floor);
-    } else if (depositToken == address(cToken())) {
+      return _convertSharesToAssets(cToken_.balanceOf(address(this)) - balance, Math.Rounding.Floor);
+    } else if (depositToken == address(cToken_)) {
       return _convertSharesToAssets(depositAmount, Math.Rounding.Floor);
     } else {
       revert InvalidDepositToken(depositToken);
@@ -271,10 +272,10 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       }
       asset.transfer({ recipient: recipient, amount: assets });
     }
+    IERC20 comp_ = comp();
     uint256 rewardAmount = toWithdraw[1];
     if (rewardAmount > 0) {
-      uint256 rewardBalance = comp().balanceOf(address(this));
-      IERC20 comp_ = comp();
+      uint256 rewardBalance = comp_.balanceOf(address(this));
       if (rewardBalance < rewardAmount) {
         // Claim all rewards
         address[] memory holders = new address[](1);
@@ -378,8 +379,12 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line dead-code
-  function _totalAssets() internal view returns (uint256) {
-    ICERC20 cToken_ = cToken();
+  function _totalAssets() private view returns (uint256) {
+    return _totalAssets(cToken());
+  }
+
+  // slither-disable-next-line dead-code
+  function _totalAssets(ICERC20 cToken_) private view returns (uint256) {
     return cToken_.getCash() + cToken_.totalBorrows() - cToken_.totalReserves();
   }
 }
