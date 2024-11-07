@@ -23,6 +23,10 @@ import "src/strategies/instances/beefy/BeefyStrategyFactory.sol";
 import "@forta/firewall/ExternalFirewall.sol";
 import "@forta/firewall/FirewallAccess.sol";
 import "@forta/firewall/SecurityValidator.sol";
+import "@forta/firewall/FirewallRouter.sol";
+
+import "@forta/firewall/interfaces/ICheckpointHook.sol";
+import  "@forta/firewall/interfaces/Checkpoint.sol";
 
 contract DeployFortaPolygon is Script {
   function run() external {
@@ -38,21 +42,46 @@ contract DeployFortaPolygon is Script {
     initialAdmins[1] = deployer;
 
     // FORTA
-    bytes32 attesterControllerId = bytes32("123");
-    SecurityValidator validator = new SecurityValidator(address(this));
-    FirewallAccess firewallAccess = new FirewallAccess(address(this));
-    IExternalFirewall externalFirewall =
+    bytes32 attesterControllerId = bytes32("9999");
+    ISecurityValidator validator = ISecurityValidator(0xc9b1AeD0895Dd647A82e35Cafff421B6CcFe690C);
+    FirewallAccess firewallAccess = new FirewallAccess(deployer);
+    ExternalFirewall externalFirewall =
       new ExternalFirewall(validator, ICheckpointHook(address(0)), attesterControllerId, firewallAccess);
+
+    FirewallRouter firewallRouter = new FirewallRouter(externalFirewall, firewallAccess);
     FirewalledEarnVault vault =
-      new FirewalledEarnVault(strategyRegistry, admin, initialAdmins, nftDescriptor, externalFirewall);
+      new FirewalledEarnVault(strategyRegistry, admin, initialAdmins, nftDescriptor, firewallRouter);
 
     FirewalledEarnVaultCompanion companion = new FirewalledEarnVaultCompanion(
       0xED306e38BB930ec9646FF3D917B2e513a97530b1,
       address(0),
       admin,
       IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3),
-      externalFirewall
+      firewallRouter
     );
+
+    /// will renounce later below
+    firewallAccess.grantRole(FIREWALL_ADMIN_ROLE, deployer);
+    firewallAccess.grantRole(PROTOCOL_ADMIN_ROLE, deployer);
+    firewallAccess.grantRole(ATTESTER_MANAGER_ROLE, deployer);
+
+    /// let protected contract execute checkpoints on the external firewall
+    firewallAccess.grantRole(CHECKPOINT_EXECUTOR_ROLE, address(vault));
+    firewallAccess.grantRole(CHECKPOINT_EXECUTOR_ROLE, address(companion));
+    firewallAccess.grantRole(CHECKPOINT_EXECUTOR_ROLE, address(firewallRouter));
+
+    /// set the trusted attester:
+    /// this will be necessary when "foo()" receives an attested call later.
+    firewallAccess.grantRole(TRUSTED_ATTESTER_ROLE, deployer);
+
+    Checkpoint memory checkpoint =
+      Checkpoint({ threshold: 0, refStart: 4, refEnd: 36, activation: Activation.AlwaysActive, trustedOrigin: false });
+
+    externalFirewall.setCheckpoint(vault.withdraw.selector, checkpoint);
+    externalFirewall.setCheckpoint(vault.specialWithdraw.selector, checkpoint);
+
+    externalFirewall.setCheckpoint(companion.withdraw.selector, checkpoint);
+    externalFirewall.setCheckpoint(companion.specialWithdraw.selector, checkpoint);
 
     FeeManager feeManager = new FeeManager(admin, initialAdmins, initialAdmins, Fees(0, 0, 500, 1000));
     GuardianManager guardianManager =
