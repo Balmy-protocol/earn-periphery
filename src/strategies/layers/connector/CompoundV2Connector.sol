@@ -155,7 +155,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     tokens = _connector_allTokens();
     balances = new uint256[](2);
-    balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)), Math.Rounding.Ceil);
+    balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)), Math.Rounding.Floor);
     balances[1] = comp().balanceOf(address(this)) + comptroller().compAccrued(address(this));
   }
 
