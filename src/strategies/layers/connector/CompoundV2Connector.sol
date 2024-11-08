@@ -225,7 +225,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       uint256 balance = cToken_.balanceOf(address(this));
       if (depositToken == Token.NATIVE_TOKEN) {
         // transfer native is the same as minting
-        depositToken.transfer(address(cToken()), depositAmount);
+        depositToken.transfer(address(cToken_), depositAmount);
       } else {
         uint256 errorCode = cToken_.mint(depositAmount);
         if (errorCode != 0) {
