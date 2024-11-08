@@ -28,7 +28,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     connector.deposit(connector.asset(), 10e12);
 
     // Generate yield if connector handles it
-    _generateYield(connector);
+    _generateYield();
 
     // Check previous state
     address[] memory tokens = connector.allTokens();
@@ -61,5 +61,5 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
   }
 
   // solhint-disable no-empty-blocks
-  function _generateYield(BaseConnector connector) internal virtual { }
+  function _generateYield() internal virtual { }
 }

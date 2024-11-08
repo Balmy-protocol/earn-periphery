@@ -18,6 +18,8 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
   function _cToken() internal view virtual returns (ICERC20);
   function _cTokenHolder() internal view virtual returns (address);
 
+  CompoundV2ComptrollerMock private comptrollerMock;
+
   function _configureFork() internal override {
     uint256 mainnetFork = vm.createFork(vm.rpcUrl("mainnet"));
     vm.selectFork(mainnetFork);
@@ -27,7 +29,8 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
-    return new CompoundV2ConnectorInstance(_cToken(), _asset(), new CompoundV2ComptrollerMock(), _comp());
+    comptrollerMock = new CompoundV2ComptrollerMock();
+    return new CompoundV2ConnectorInstance(_cToken(), _asset(), comptrollerMock, _comp());
   }
 
   function _farmToken() internal view virtual override returns (address) {
@@ -46,9 +49,7 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     assertEq(multipliers[0], 1e30);
   }
 
-  function _generateYield(BaseConnector _connector) internal virtual override {
-    CompoundV2ComptrollerMock comptrollerMock =
-      CompoundV2ComptrollerMock(payable(address(CompoundV2Connector(payable(address(_connector))).comptroller())));
+  function _generateYield() internal virtual override {
     _setBalance(address(_comp()), address(comptrollerMock), 1e13);
     comptrollerMock._generateYield(1e3);
   }

@@ -100,7 +100,7 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     }
   }
 
-  function _generateYield(BaseConnector) internal virtual override {
+  function _generateYield() internal virtual override {
     // Roll the fork to generate some rewards
     vm.rollFork(123_000_000);
   }
