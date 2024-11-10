@@ -7,9 +7,10 @@
     "url": "https://github.com/balmy-protocol"
   },
   "devDependencies": {
-    "@balmy/earn-core": "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#5e2349fd972e2a64ce7cd51981662f64f7e7ddd7",
+    "@balmy/earn-core": "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#1a59b2896649e50dd0b2855ade4a39f7ff0f92e1",
     "@balmy/nft-permissions": "github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638",
-    "@openzeppelin": "github:OpenZeppelin/openzeppelin-contracts#28aed34dc5e025e61ea0390c18cac875bfde1a78",
+    "@forta/firewall": "github:forta-network/forta-firewall-contracts#ee4fa2f6fe5c3a407843c2928750b6f2b5502ca3",
+    "@openzeppelin": "github:OpenZeppelin/openzeppelin-contracts#bcdfa848a6abb37216df861573d9576636e77824",
     "@prb/test": "github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19",
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d",
@@ -33,8 +34,8 @@
     "clean": "rm -rf cache out",
     "lint": "yarn lint:sol && yarn prettier:check",
     "lint:sol": "forge fmt --check && yarn solhint \"{script,src,test}/**/*.sol\"",
-    "lint:fix": "forge fmt && prettier --write \"**/*.{json,md,yml}\"",
-    "prettier:check": "prettier --check \"**/*.{json,md,yml}\"",
+    "lint:fix": "forge fmt && prettier --write \"**/*.{json,yml}\"",
+    "prettier:check": "prettier --check \"**/*.{json,yml}\"",
     "prepublishOnly": "cp -r ./src ./contracts",
     "postpublish": "rm -r ./contracts"
   },

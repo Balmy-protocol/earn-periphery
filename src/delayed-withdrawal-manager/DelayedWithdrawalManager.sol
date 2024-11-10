@@ -2,9 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
-import {
-  IDelayedWithdrawalManager, IEarnVault, IEarnStrategyRegistry
-} from "../interfaces/IDelayedWithdrawalManager.sol";
+import { IDelayedWithdrawalManager, IEarnVault } from "../interfaces/IDelayedWithdrawalManager.sol";
 import { IDelayedWithdrawalAdapter } from "../interfaces/IDelayedWithdrawalAdapter.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy, IEarnStrategy } from "../interfaces/IEarnBalmyStrategy.sol";
@@ -22,9 +20,6 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
   /// @inheritdoc IDelayedWithdrawalManager
   // solhint-disable-next-line var-name-mixedcase
   IEarnVault public immutable VAULT;
-  /// @inheritdoc IDelayedWithdrawalManager
-  // solhint-disable-next-line var-name-mixedcase
-  IEarnStrategyRegistry public immutable STRATEGY_REGISTRY;
   // solhint-disable-next-line var-name-mixedcase
   INFTPermissions.Permission private immutable WITHDRAW_PERMISSION;
 
@@ -32,7 +27,6 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
 
   constructor(IEarnVault vault) {
     VAULT = vault;
-    STRATEGY_REGISTRY = vault.STRATEGY_REGISTRY();
     WITHDRAW_PERMISSION = vault.WITHDRAW_PERMISSION();
   }
 
@@ -82,7 +76,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
     returns (address[] memory tokens, uint256[] memory estimatedPending, uint256[] memory withdrawable)
   {
     // slither-disable-next-line unused-return
-    (tokens,,) = VAULT.position(positionId);
+    (tokens,,,) = VAULT.position(positionId);
     uint256 tokensQuantity = tokens.length;
     estimatedPending = new uint256[](tokensQuantity);
     withdrawable = new uint256[](tokensQuantity);
@@ -168,9 +162,8 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
   }
 
   function _revertIfNotCurrentStrategyAdapter(uint256 positionId, address token) internal view {
-    StrategyId strategyId = VAULT.positionsStrategy(positionId);
+    (StrategyId strategyId, IEarnStrategy strategy) = VAULT.positionsStrategy(positionId);
     if (strategyId == StrategyIdConstants.NO_STRATEGY) revert AdapterMismatch();
-    IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
     if (!strategy.supportsInterface(type(IEarnBalmyStrategy).interfaceId)) revert AdapterMismatch();
     IDelayedWithdrawalAdapter adapter = IEarnBalmyStrategy(address(strategy)).delayedWithdrawalAdapter(token);
     if (address(adapter) != msg.sender) revert AdapterMismatch();

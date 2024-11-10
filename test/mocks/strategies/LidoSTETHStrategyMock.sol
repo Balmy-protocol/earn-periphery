@@ -12,7 +12,7 @@ import {
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 
-import { LidoSTETHConnector } from "src/strategies/layers/connector/LidoSTETHConnector.sol";
+import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
 
 contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   /// @inheritdoc IEarnStrategy
