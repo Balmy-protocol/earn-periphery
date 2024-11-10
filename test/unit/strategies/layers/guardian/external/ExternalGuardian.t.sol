@@ -10,8 +10,8 @@ import {
   IGlobalEarnRegistry,
   StrategyId,
   IEarnStrategy
-} from "src/strategies/layers/guardian/ExternalGuardian.sol";
-import { CommonUtils } from "../../../../utils/CommonUtils.sol";
+} from "src/strategies/layers/guardian/external/ExternalGuardian.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 contract ExternalGuardianTest is Test {
   ExternalGuardianInstance private guardian;

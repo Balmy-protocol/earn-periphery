@@ -10,8 +10,8 @@ import {
   StrategyId,
   Fees,
   IEarnStrategy
-} from "src/strategies/layers/fees/ExternalFees.sol";
-import { CommonUtils } from "../../../../utils/CommonUtils.sol";
+} from "src/strategies/layers/fees/external/ExternalFees.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 contract ExternalFeesTest is Test {
   ExternalFeesInstance private fees;

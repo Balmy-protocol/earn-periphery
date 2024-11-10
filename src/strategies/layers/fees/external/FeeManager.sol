@@ -3,8 +3,8 @@ pragma solidity >=0.8.22;
 
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import { IFeeManager, IFeeManagerCore, StrategyId } from "../interfaces/IFeeManager.sol";
-import { Fees } from "../types/Fees.sol";
+import { IFeeManager, IFeeManagerCore, StrategyId } from "src/interfaces/IFeeManager.sol";
+import { Fees } from "src/types/Fees.sol";
 
 struct StrategyFees {
   bool isSet;

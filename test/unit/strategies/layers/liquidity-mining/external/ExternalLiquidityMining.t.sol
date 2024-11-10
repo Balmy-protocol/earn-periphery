@@ -4,9 +4,9 @@ pragma solidity >=0.8.22;
 import { Test } from "forge-std/Test.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
-import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/ExternalLiquidityMining.sol";
+import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { CommonUtils } from "../../../../utils/CommonUtils.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 contract ExternalLiquidityMiningTest is Test {
   ExternalLiquidityMiningInstance private liquidityMining;

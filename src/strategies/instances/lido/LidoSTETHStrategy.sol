@@ -4,10 +4,11 @@ pragma solidity >=0.8.22;
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
-import { LidoSTETHConnector } from "src/strategies/layers/connector/LidoSTETHConnector.sol";
-import { ExternalFees } from "../../layers/fees/ExternalFees.sol";
-import { ExternalTOSCreationValidation } from "../../layers/creation-validation/ExternalTOSCreationValidation.sol";
-import { ExternalLiquidityMining } from "../../layers/liquidity-mining/ExternalLiquidityMining.sol";
+import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
+import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
+import { ExternalTOSCreationValidation } from
+  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseDelayedStrategy } from "../base/BaseDelayedStrategy.sol";
 
 contract LidoSTETHStrategy is

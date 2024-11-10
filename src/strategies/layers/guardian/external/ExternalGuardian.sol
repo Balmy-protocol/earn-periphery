@@ -5,9 +5,9 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { IEarnStrategy, SpecialWithdrawalCode, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
-import { IGuardianManagerCore } from "../../../interfaces/IGuardianManager.sol";
-import { BaseGuardian } from "./base/BaseGuardian.sol";
+import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
+import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
+import { BaseGuardian } from "../base/BaseGuardian.sol";
 
 /**
  * @notice A guardian implementation that validates the rescue process with an external manager

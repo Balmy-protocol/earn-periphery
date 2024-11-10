@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import { BaseLiquidityMining } from "./base/BaseLiquidityMining.sol";
+import { BaseLiquidityMining } from "../base/BaseLiquidityMining.sol";
 import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";

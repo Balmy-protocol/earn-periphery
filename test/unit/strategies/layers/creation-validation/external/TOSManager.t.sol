@@ -3,8 +3,13 @@ pragma solidity >=0.8.22;
 
 // solhint-disable no-unused-import
 import { Test } from "forge-std/Test.sol";
-import { ITOSManager, TOSManager, StrategyId, IEarnStrategyRegistry } from "src/tos-manager/TOSManager.sol";
-import { CommonUtils } from "../../utils/CommonUtils.sol";
+import {
+  ITOSManager,
+  TOSManager,
+  StrategyId,
+  IEarnStrategyRegistry
+} from "src/strategies/layers/creation-validation/external/TOSManager.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 import { VmSafe } from "forge-std/Vm.sol";
 import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";

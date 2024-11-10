@@ -2,13 +2,12 @@
 pragma solidity >=0.8.22;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { BaseConnectorInstance } from "./base/BaseConnectorTest.t.sol";
-import { BaseConnectorDelayedWithdrawalTest } from "./base/BaseConnectorDelayedWithdrawalTest.t.sol";
-import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
+import { BaseConnectorInstance } from "../base/BaseConnectorTest.t.sol";
+import { BaseConnectorDelayedWithdrawalTest } from "../base/BaseConnectorDelayedWithdrawalTest.t.sol";
+import { BaseConnectorFarmTokenTest } from "../base/BaseConnectorFarmTokenTest.t.sol";
 import { IDelayedWithdrawalAdapter } from "src/interfaces/IDelayedWithdrawalAdapter.sol";
-import { LidoSTETHConnector } from "src/strategies/layers/connector/LidoSTETHConnector.sol";
-import { DelayedWithdrawalAdapterMock } from
-  "../../../../mocks/delayed-withdrawal-adapter/DelayedWithdrawalAdapterMock.sol";
+import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
+import { DelayedWithdrawalAdapterMock } from "test/mocks/delayed-withdrawal-adapter/DelayedWithdrawalAdapterMock.sol";
 
 contract LidoSTETHConnectorTest is BaseConnectorDelayedWithdrawalTest, BaseConnectorFarmTokenTest {
   // solhint-disable-next-line const-name-snakecase

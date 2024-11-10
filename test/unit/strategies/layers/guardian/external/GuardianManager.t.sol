@@ -8,8 +8,8 @@ import {
   IGuardianManager,
   StrategyId,
   IEarnStrategyRegistry
-} from "../../../src/guardian-manager/GuardianManager.sol";
-import { CommonUtils } from "../../utils/CommonUtils.sol";
+} from "src/strategies/layers/guardian/external/GuardianManager.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
 contract GuardianManagerTest is PRBTest {

@@ -7,7 +7,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
-import { ITOSManager, ITOSManagerCore, IEarnStrategyRegistry } from "../interfaces/ITOSManager.sol";
+import { ITOSManager, ITOSManagerCore, IEarnStrategyRegistry } from "src/interfaces/ITOSManager.sol";
 
 contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   using MessageHashUtils for bytes;

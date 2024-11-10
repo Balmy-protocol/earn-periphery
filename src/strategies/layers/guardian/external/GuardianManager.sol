@@ -5,7 +5,7 @@ import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import { IEarnStrategy, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
-import { IGuardianManager, IGuardianManagerCore, IEarnStrategyRegistry } from "../interfaces/IGuardianManager.sol";
+import { IGuardianManager, IGuardianManagerCore, IEarnStrategyRegistry } from "src/interfaces/IGuardianManager.sol";
 
 /**
  * @notice A guardian manager that allows strategies to configure their own guardians and judges

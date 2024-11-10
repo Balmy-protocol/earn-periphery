@@ -3,8 +3,8 @@ pragma solidity >=0.8.22;
 
 // solhint-disable no-unused-import
 import { PRBTest } from "@prb/test/PRBTest.sol";
-import { FeeManager, IFeeManager, Fees, StrategyId } from "../../../src/fee-manager/FeeManager.sol";
-import { CommonUtils } from "../../utils/CommonUtils.sol";
+import { FeeManager, IFeeManager, Fees, StrategyId } from "src/strategies/layers/fees/external/FeeManager.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
 contract FeeManagerTest is PRBTest {

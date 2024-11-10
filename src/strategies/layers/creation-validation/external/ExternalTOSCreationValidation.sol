@@ -2,9 +2,9 @@
 pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
-import { ITOSManagerCore, StrategyId } from "../../../interfaces/ITOSManager.sol";
-import { BaseCreationValidation } from "./base/BaseCreationValidation.sol";
+import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
+import { ITOSManagerCore, StrategyId } from "src/interfaces/ITOSManager.sol";
+import { BaseCreationValidation } from "../base/BaseCreationValidation.sol";
 
 abstract contract ExternalTOSCreationValidation is BaseCreationValidation, Initializable {
   /// @notice The id for the TOS Manager

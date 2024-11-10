@@ -2,7 +2,8 @@
 pragma solidity >=0.8.22;
 
 import { PRBTest } from "@prb/test/PRBTest.sol";
-import { LidoSTETHDelayedWithdrawalAdapter } from "src/delayed-withdrawal-adapter/LidoSTETHDelayedWithdrawalAdapter.sol";
+import { LidoSTETHDelayedWithdrawalAdapter } from
+  "src/strategies/layers/connector/lido/LidoSTETHDelayedWithdrawalAdapter.sol";
 import {
   IDelayedWithdrawalManager,
   DelayedWithdrawalManager
@@ -12,11 +13,11 @@ import { EarnVault, IEarnVault, StrategyId, IEarnNFTDescriptor } from "@balmy/ea
 import {
   EarnStrategyRegistry, IEarnStrategyRegistry
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import { CommonUtils } from "../../utils/CommonUtils.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
-import { LidoSTETHStrategyMock } from "../../mocks/strategies/LidoSTETHStrategyMock.sol";
+import { LidoSTETHStrategyMock } from "test/mocks/strategies/LidoSTETHStrategyMock.sol";
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { LidoSTETHQueueMock } from "./mocks/ILidoSTETHQueueMock.sol";

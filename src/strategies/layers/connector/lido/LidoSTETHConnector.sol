@@ -7,7 +7,7 @@ import {
   SpecialWithdrawalCode,
   IDelayedWithdrawalAdapter,
   StrategyId
-} from "./base/BaseConnector.sol";
+} from "../base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";

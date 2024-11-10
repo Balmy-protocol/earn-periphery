@@ -4,7 +4,7 @@ pragma solidity >=0.8.22;
 import {
   ILidoSTETHQueue,
   WithdrawalRequestStatus
-} from "src/delayed-withdrawal-adapter/LidoSTETHDelayedWithdrawalAdapter.sol";
+} from "src/strategies/layers/connector/lido/LidoSTETHDelayedWithdrawalAdapter.sol";
 
 contract LidoSTETHQueueMock is ILidoSTETHQueue {
   bool internal timeToWithdraw = false;

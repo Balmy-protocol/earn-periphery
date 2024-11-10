@@ -6,10 +6,11 @@ import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfac
 import { Clone } from "@clones/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
-import { ExternalFees } from "../../layers/fees/ExternalFees.sol";
-import { ExternalGuardian } from "../../layers/guardian/ExternalGuardian.sol";
-import { ExternalTOSCreationValidation } from "../../layers/creation-validation/ExternalTOSCreationValidation.sol";
-import { ExternalLiquidityMining } from "../../layers/liquidity-mining/ExternalLiquidityMining.sol";
+import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
+import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
+import { ExternalTOSCreationValidation } from
+  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
 contract ERC4626Strategy is

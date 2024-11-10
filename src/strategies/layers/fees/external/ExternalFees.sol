@@ -4,10 +4,11 @@ pragma solidity >=0.8.22;
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
-import { IFeeManagerCore, StrategyId, Fees } from "../../../interfaces/IFeeManager.sol";
-import { BaseFees } from "./base/BaseFees.sol";
+import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
+import { IFeeManagerCore, StrategyId, Fees } from "src/interfaces/IFeeManager.sol";
+import { BaseFees } from "../base/BaseFees.sol";
 
+/// @dev This fees layer implementation only supports performance fees
 abstract contract ExternalFees is BaseFees, Initializable {
   error CantWithdrawFees();
   error NotEnoughFees();

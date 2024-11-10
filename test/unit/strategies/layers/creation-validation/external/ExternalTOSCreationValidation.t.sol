@@ -7,7 +7,7 @@ import {
   ExternalTOSCreationValidation,
   StrategyId,
   IGlobalEarnRegistry
-} from "src/strategies/layers/creation-validation/ExternalTOSCreationValidation.sol";
+} from "src/strategies/layers/creation-validation/external/ExternalTOSCreationValidation.sol";
 
 contract ExternalTOSCreationValidationTest is Test {
   bytes32 private constant GROUP_1 = keccak256("group1");
