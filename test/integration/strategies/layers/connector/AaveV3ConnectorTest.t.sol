@@ -9,7 +9,7 @@ import {
   IAaveV3Rewards,
   IAToken
 } from "src/strategies/layers/connector/AaveV3Connector.sol";
-import { BaseConnectorInstance, BaseConnector } from "./base/BaseConnectorInstance.sol";
+import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 

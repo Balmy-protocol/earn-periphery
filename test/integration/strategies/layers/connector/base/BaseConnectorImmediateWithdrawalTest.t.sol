@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { BaseConnectorTest, IEarnStrategy, BaseConnector } from "./BaseConnectorTest.t.sol";
+import { BaseConnectorTest, IEarnStrategy } from "./BaseConnectorTest.t.sol";
 
 /// @notice A test for connectors that have immediate withdrawals
 abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {

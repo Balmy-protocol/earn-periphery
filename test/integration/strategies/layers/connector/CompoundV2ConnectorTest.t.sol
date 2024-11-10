@@ -4,7 +4,7 @@ pragma solidity >=0.8.22;
 import {
   CompoundV2Connector, IERC20, ICERC20, IComptroller
 } from "src/strategies/layers/connector/CompoundV2Connector.sol";
-import { BaseConnectorInstance, BaseConnector } from "./base/BaseConnectorInstance.sol";
+import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";

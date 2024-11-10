@@ -344,10 +344,22 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     override
     returns (bytes memory)
   {
-    IERC20 cToken_ = IERC20(cToken());
-    uint256 balance = cToken_.balanceOf(address(this));
-    cToken_.safeTransfer(address(newStrategy), balance);
-    return abi.encode(balance);
+    // Transfer cToken
+    ICERC20 cToken_ = cToken();
+    uint256 cTokenBalance = cToken_.balanceOf(address(this));
+    IERC20(cToken_).safeTransfer(address(newStrategy), cTokenBalance);
+
+    // Claim and transfer comp
+    IERC20 comp_ = comp();
+    address[] memory holders = new address[](1);
+    holders[0] = address(this);
+    ICERC20[] memory cTokens = new ICERC20[](1);
+    cTokens[0] = cToken_;
+    comptroller().claimComp(holders, cTokens, false, true);
+    uint256 compBalance = comp_.balanceOf(address(this));
+    comp_.safeTransfer(address(newStrategy), compBalance);
+
+    return abi.encode(cTokenBalance, compBalance);
   }
 
   // solhint-disable no-empty-blocks
