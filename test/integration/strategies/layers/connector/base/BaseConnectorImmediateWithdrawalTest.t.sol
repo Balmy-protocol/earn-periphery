@@ -21,11 +21,11 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
 
   function testFork_withdraw_immediateWithdrawal() public {
     // Set recipient to 0
-    address recipient = address(1);
+    address recipient = address(0xea4);
 
     // Deposit tokens
-    _give(connector.asset(), address(connector), 10e18);
-    connector.deposit(connector.asset(), 10e18);
+    _give(connector.asset(), address(connector), 10e12);
+    connector.deposit(connector.asset(), 10e12);
 
     // Generate yield if connector handles it
     _generateYield();
@@ -44,7 +44,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     for (uint256 i; i < tokens.length; ++i) {
       recipientBalancesBefore[i] = _balance(tokens[i], recipient);
     }
-    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(1, tokens, toWithdraw, address(1));
+    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(1, tokens, toWithdraw, recipient);
 
     // Check result
     assertEq(withdrawalTypes.length, tokens.length);
