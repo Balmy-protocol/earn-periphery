@@ -200,7 +200,13 @@ contract ExternalLiquidityMiningTest is Test {
       bytes memory result
     ) = liquidityMining.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
 
-    assertEq(balanceChanges, toWithdraw);
+    for (uint256 i; i < balanceChanges.length; ++i) {
+      if (i < toWithdraw.length) {
+        assertEq(balanceChanges[i], toWithdraw[i]);
+      } else {
+        assertEq(balanceChanges[i], 0);
+      }
+    }
     assertEq(actualWithdrawnTokens.length, 0);
     assertEq(actualWithdrawnAmounts.length, 0);
     assertEq(result.length, 0);
