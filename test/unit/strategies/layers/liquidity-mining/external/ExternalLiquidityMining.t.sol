@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { PRBTest } from "@prb/test/PRBTest.sol";
+import { Test } from "forge-std/Test.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 
-contract ExternalLiquidityMiningTest is PRBTest {
+contract ExternalLiquidityMiningTest is Test {
   ExternalLiquidityMiningInstance private liquidityMining;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
   ILiquidityMiningManagerCore private manager = ILiquidityMiningManagerCore(address(2));
@@ -200,7 +200,13 @@ contract ExternalLiquidityMiningTest is PRBTest {
       bytes memory result
     ) = liquidityMining.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
 
-    assertGte(balanceChanges.length, toWithdraw.length);
+    for (uint256 i; i < balanceChanges.length; ++i) {
+      if (i < toWithdraw.length) {
+        assertEq(balanceChanges[i], toWithdraw[i]);
+      } else {
+        assertEq(balanceChanges[i], 0);
+      }
+    }
     assertEq(actualWithdrawnTokens.length, 0);
     assertEq(actualWithdrawnAmounts.length, 0);
     assertEq(result.length, 0);
