@@ -7,10 +7,11 @@ import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol
 import {
   AaveV3Connector, IAToken, IERC20, IAaveV3Pool, IAaveV3Rewards
 } from "../../layers/connector/AaveV3Connector.sol";
-import { ExternalFees } from "../../layers/fees/ExternalFees.sol";
-import { ExternalGuardian } from "../../layers/guardian/ExternalGuardian.sol";
-import { ExternalTOSCreationValidation } from "../../layers/creation-validation/ExternalTOSCreationValidation.sol";
-import { ExternalLiquidityMining } from "../../layers/liquidity-mining/ExternalLiquidityMining.sol";
+import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
+import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
+import { ExternalTOSCreationValidation } from
+  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
 contract AaveV3Strategy is

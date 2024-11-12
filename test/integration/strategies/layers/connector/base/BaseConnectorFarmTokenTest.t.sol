@@ -24,10 +24,10 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertTrue(codes.contains(SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT));
   }
 
-  function testFork_specialWithdraw_farmToken_withdrawFarmTokenFarByAmount() public {
+  function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAmount() public {
     address recipient = address(1);
-    uint256 originalConnectorBalance = 10e18;
-    uint256 amountToWithdraw = 2e18;
+    uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
+    uint256 amountToWithdraw = _amountToWithdraw();
     uint256[] memory toWithdraw = new uint256[](1);
     toWithdraw[0] = amountToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
@@ -65,8 +65,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
 
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAssetAmount() public {
     address recipient = address(1);
-    uint256 originalConnectorBalance = 10e18;
-    uint256 assetsToWithdraw = 2e18;
+    uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
+    uint256 assetsToWithdraw = _amountToWithdraw();
     uint256[] memory toWithdraw = new uint256[](1);
     toWithdraw[0] = assetsToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
@@ -105,6 +105,14 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
   }
 
   function _farmToken() internal view virtual returns (address);
+
+  function _connectorBalanceOfFarmToken() internal pure virtual returns (uint256) {
+    return 10e18;
+  }
+
+  function _amountToWithdraw() internal pure virtual returns (uint256) {
+    return 2e18;
+  }
 }
 
 library ArrayHelper {
