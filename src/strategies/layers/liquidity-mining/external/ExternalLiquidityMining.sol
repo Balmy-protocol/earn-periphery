@@ -156,10 +156,20 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
       bytes memory result
     )
   {
-    (balanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+    uint256[] memory underlyingBalanceChanges;
+    (underlyingBalanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
       _liquidity_mining_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
-    manager.withdrew(strategyId(), balanceChanges[0]);
+    manager.withdrew(strategyId(), underlyingBalanceChanges[0]);
+    address[] memory tokens = _liquidity_mining_allTokens();
+    if (tokens.length == underlyingBalanceChanges.length) {
+      balanceChanges = underlyingBalanceChanges;
+    } else {
+      balanceChanges = new uint256[](tokens.length);
+      for (uint256 i; i < underlyingBalanceChanges.length; ++i) {
+        balanceChanges[i] = underlyingBalanceChanges[i];
+      }
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
