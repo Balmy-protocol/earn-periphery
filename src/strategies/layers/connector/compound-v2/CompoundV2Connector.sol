@@ -7,22 +7,14 @@ import {
   SpecialWithdrawalCode,
   IDelayedWithdrawalAdapter,
   StrategyId
-} from "./base/BaseConnector.sol";
+} from "../base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-
-interface ICERC20 is IERC20 {
-  function mint(uint256 underlyingAmount) external returns (uint256);
-  function redeemUnderlying(uint256 underlyingAmount) external returns (uint256);
-  function exchangeRateStored() external view returns (uint256);
-  function decimals() external view returns (uint256);
-  function getCash() external view returns (uint256);
-  function totalReserves() external view returns (uint256);
-  function totalBorrows() external view returns (uint256);
-}
+import { ICERC20 } from "./ICERC20.sol";
+import { LibCompound } from "./LibCompound.sol";
 
 interface IComptroller {
   function claimComp(address[] memory holders, ICERC20[] memory cTokens, bool borrowers, bool suppliers) external;
@@ -35,6 +27,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
   using Token for address;
+  using LibCompound for ICERC20;
 
   error InvalidMint(uint256 errorCode);
   error InvalidRedeem(uint256 errorCode);
@@ -139,9 +132,9 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
     (tokens, withdrawable) = _connector_totalBalances();
-    uint256 totalAssets = _totalAssets();
-    if (totalAssets < withdrawable[0]) {
-      withdrawable[0] = totalAssets;
+    uint256 cash = cToken().getCash();
+    if (cash < withdrawable[0]) {
+      withdrawable[0] = cash;
     }
   }
 
@@ -155,7 +148,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   {
     tokens = _connector_allTokens();
     balances = new uint256[](2);
-    balances[0] = _convertSharesToAssets(cToken().balanceOf(address(this)), Math.Rounding.Floor);
+    balances[0] = cToken().viewUnderlyingBalanceOf(address(this));
     balances[1] = comp().balanceOf(address(this)) + comptroller().compAccrued(address(this));
   }
 
@@ -256,19 +249,9 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
       address asset = _asset();
-      // redeemUnderlying expects the amount in the asset's decimals minus cToken's decimals
-      // if asset has less than 8 decimals, we don't need to adjust
-      uint256 assetDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
-      uint256 assetsToRedeem = assets * (10 ** (assetDecimals - 8));
-      uint256 errorCode = cToken().redeemUnderlying(assetsToRedeem);
+      uint256 errorCode = cToken().redeemUnderlying(assets);
       if (errorCode != 0) {
         revert InvalidRedeem(errorCode);
-      }
-
-      uint256 balance = asset == Token.NATIVE_TOKEN ? address(this).balance : IERC20(asset).balanceOf(address(this));
-      // If we have less assets than requested, we transfer the maximum
-      if (assets > balance) {
-        assets = balance;
       }
       asset.transfer({ recipient: recipient, amount: assets });
     }
@@ -283,7 +266,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
         ICERC20[] memory cTokens = new ICERC20[](1);
         cTokens[0] = cToken();
         comptroller().claimComp(holders, cTokens, false, true);
-        rewardBalance = comp_.balanceOf(address(this));
       }
       comp_.safeTransfer(recipient, rewardAmount);
     }
@@ -376,18 +358,12 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line dead-code
   function _convertSharesToAssets(uint256 shares, Math.Rounding rounding) private view returns (uint256) {
-    address asset = _asset();
-    uint256 underlyingTokenDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
-    uint256 magnitude = (10 + underlyingTokenDecimals);
-    return shares.mulDiv(cToken().exchangeRateStored(), 10 ** magnitude, rounding);
+    return shares.mulDiv(cToken().viewExchangeRate(), 1e18, rounding);
   }
 
   // slither-disable-next-line dead-code
   function _convertAssetsToShares(uint256 assets, Math.Rounding rounding) private view returns (uint256) {
-    address asset = _asset();
-    uint256 underlyingTokenDecimals = Math.max(Token.NATIVE_TOKEN == asset ? 18 : ICERC20(asset).decimals(), 8);
-    uint256 magnitude = (10 + underlyingTokenDecimals);
-    return assets.mulDiv(10 ** magnitude, cToken().exchangeRateStored(), rounding);
+    return assets.mulDiv(1e18, cToken().viewExchangeRate(), rounding);
   }
 
   // slither-disable-next-line dead-code
