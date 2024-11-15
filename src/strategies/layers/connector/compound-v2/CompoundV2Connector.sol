@@ -291,7 +291,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       bytes memory result
     )
   {
-    address cToken_ = address(cToken());
+    ICERC20 cToken_ = cToken();
     balanceChanges = new uint256[](2);
 
     actualWithdrawnTokens = new address[](1);
@@ -299,17 +299,21 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     result = "";
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = toWithdraw[0];
-      uint256 assets = _convertSharesToAssets(shares, Math.Rounding.Ceil);
+      uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
       IERC20(cToken_).safeTransfer(recipient, shares);
-      balanceChanges[0] = assets;
-      actualWithdrawnTokens[0] = cToken_;
+      uint256 balanceAfter = cToken_.viewUnderlyingBalanceOf(address(this));
+      balanceChanges[0] = balanceBefore - balanceAfter;
+      actualWithdrawnTokens[0] = address(cToken_);
       actualWithdrawnAmounts[0] = shares;
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
-      uint256 assets = toWithdraw[0];
-      uint256 shares = _convertAssetsToShares(assets, Math.Rounding.Ceil);
+      // Note: we round down because if we were to round up, we might end up withdrawing more than the position's
+      // balance, which would end up reverting on the vault
+      uint256 shares = _convertAssetsToShares(toWithdraw[0], Math.Rounding.Floor);
+      uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
       IERC20(cToken_).safeTransfer(recipient, shares);
-      balanceChanges[0] = assets;
-      actualWithdrawnTokens[0] = cToken_;
+      uint256 balanceAfter = cToken_.viewUnderlyingBalanceOf(address(this));
+      balanceChanges[0] = balanceBefore - balanceAfter;
+      actualWithdrawnTokens[0] = address(cToken_);
       actualWithdrawnAmounts[0] = shares;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);

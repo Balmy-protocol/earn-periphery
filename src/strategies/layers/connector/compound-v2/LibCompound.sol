@@ -18,6 +18,7 @@ library LibCompound {
   function viewExchangeRate(ICERC20 cToken) internal view returns (uint256) {
     uint256 accrualBlockNumberPrior = cToken.accrualBlockNumber();
 
+    // slither-disable-next-line incorrect-equality
     if (accrualBlockNumberPrior == block.number) {
       return cToken.exchangeRateStored();
     }

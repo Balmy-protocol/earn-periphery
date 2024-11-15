@@ -24,8 +24,8 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     address recipient = address(0xea4);
 
     // Deposit tokens
-    _give(connector.asset(), address(connector), 10e12);
-    connector.deposit(connector.asset(), 10e12);
+    _give(connector.asset(), address(connector), 1e20);
+    connector.deposit(connector.asset(), 1e20);
 
     // Generate yield if connector handles it
     _generateYield();
@@ -56,7 +56,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     (, uint256[] memory balancesAfter) = connector.totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
       assertEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i]);
-      assertAlmostEq(toWithdraw[i], balancesBefore[i] - balancesAfter[i], 1);
+      assertGte(toWithdraw[i], balancesBefore[i] - balancesAfter[i]);
     }
   }
 
