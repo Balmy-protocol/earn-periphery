@@ -214,8 +214,8 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (uint256 assetsDeposited)
   {
     ICERC20 cToken_ = cToken();
-    uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
     if (depositToken == _connector_asset()) {
+      uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
       if (depositToken == Token.NATIVE_TOKEN) {
         // transfer native is the same as minting
         depositToken.transfer(address(cToken_), depositAmount);
