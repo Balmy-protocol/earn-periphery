@@ -13,7 +13,7 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 
-interface ILidoSTETH {
+interface ILidoSTETH is IERC20 {
   function submit(address _referral) external payable returns (uint256);
   function getTotalPooledEther() external view returns (uint256);
   function getTotalShares() external view returns (uint256);
@@ -69,9 +69,11 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
     returns (uint256 assetsDeposited)
   {
     if (depositToken == _connector_asset()) {
+      uint256 balanceBefore = IERC20(_stETH).balanceOf(address(this));
       // slither-disable-next-line unused-return
       _stETH.submit{ value: depositAmount }(address(0));
-      return depositAmount;
+      uint256 balanceAfter = IERC20(_stETH).balanceOf(address(this));
+      return balanceAfter - balanceBefore;
     } else if (depositToken == address(_stETH)) {
       return depositAmount;
     } else {
