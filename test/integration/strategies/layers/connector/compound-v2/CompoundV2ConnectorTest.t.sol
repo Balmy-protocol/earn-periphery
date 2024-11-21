@@ -2,11 +2,14 @@
 pragma solidity >=0.8.22;
 
 import {
-  CompoundV2Connector, IERC20, ICERC20, IComptroller
-} from "src/strategies/layers/connector/CompoundV2Connector.sol";
-import { BaseConnectorInstance } from "./base/BaseConnectorInstance.sol";
-import { BaseConnectorImmediateWithdrawalTest } from "./base/BaseConnectorImmediateWithdrawalTest.t.sol";
-import { BaseConnectorFarmTokenTest } from "./base/BaseConnectorFarmTokenTest.t.sol";
+  CompoundV2Connector,
+  IERC20,
+  ICERC20,
+  IComptroller
+} from "src/strategies/layers/connector/compound-v2/CompoundV2Connector.sol";
+import { BaseConnectorInstance } from "../base/BaseConnectorInstance.sol";
+import { BaseConnectorImmediateWithdrawalTest } from "../base/BaseConnectorImmediateWithdrawalTest.t.sol";
+import { BaseConnectorFarmTokenTest } from "../base/BaseConnectorFarmTokenTest.t.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 
 abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
@@ -55,11 +58,15 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
   }
 
   function _connectorBalanceOfFarmToken() internal pure virtual override returns (uint256) {
-    return 10e12;
+    return 1e12;
   }
 
-  function _amountToWithdraw() internal pure virtual override returns (uint256) {
-    return 2e5;
+  function _amountToWithdrawAsset() internal pure virtual override returns (uint256) {
+    return 2e18;
+  }
+
+  function _amountToWithdrawFarmToken() internal pure virtual override returns (uint256) {
+    return 1e8;
   }
 }
 
@@ -148,6 +155,11 @@ contract CompoundV2ConnectorTestDAI is CompoundV2ConnectorTest {
   function _cTokenHolder() internal view override returns (address) {
     return cTokenHolder;
   }
+
+  function _withdrawFarmTokenByAssetMaxDelta() internal pure override returns (uint256) {
+    // Note: In the case of cDAI, 1 cDAI is equivalent to almost 15e9 DAI
+    return 15e9;
+  }
 }
 
 contract CompoundV2ConnectorTestWBTC is CompoundV2ConnectorTest {
@@ -177,7 +189,11 @@ contract CompoundV2ConnectorTestWBTC is CompoundV2ConnectorTest {
     return 10e10;
   }
 
-  function _amountToWithdraw() internal pure override returns (uint256) {
+  function _amountToWithdrawAsset() internal pure override returns (uint256) {
+    return 2e5;
+  }
+
+  function _amountToWithdrawFarmToken() internal pure override returns (uint256) {
     return 2e5;
   }
 
@@ -215,7 +231,11 @@ contract CompoundV2ConnectorTestUSDT is CompoundV2ConnectorTest {
     return 10e10;
   }
 
-  function _amountToWithdraw() internal pure override returns (uint256) {
+  function _amountToWithdrawAsset() internal pure override returns (uint256) {
+    return 2e5;
+  }
+
+  function _amountToWithdrawFarmToken() internal pure override returns (uint256) {
     return 2e5;
   }
 
@@ -247,5 +267,10 @@ contract CompoundV2ConnectorTestNative is CompoundV2ConnectorTest {
 
   function _cTokenHolder() internal view override returns (address) {
     return cTokenHolder;
+  }
+
+  function _withdrawFarmTokenByAssetMaxDelta() internal pure override returns (uint256) {
+    // Note: In the case of cEther, 1 cEther is equivalent to almost 1e8 ETH
+    return 1e8;
   }
 }

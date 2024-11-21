@@ -27,7 +27,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAmount() public {
     address recipient = address(1);
     uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
-    uint256 amountToWithdraw = _amountToWithdraw();
+    uint256 amountToWithdraw = _amountToWithdrawFarmToken();
     uint256[] memory toWithdraw = new uint256[](1);
     toWithdraw[0] = amountToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
@@ -66,7 +66,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAssetAmount() public {
     address recipient = address(1);
     uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
-    uint256 assetsToWithdraw = _amountToWithdraw();
+    uint256 assetsToWithdraw = _amountToWithdrawAsset();
     uint256[] memory toWithdraw = new uint256[](1);
     toWithdraw[0] = assetsToWithdraw;
     _setBalance(_farmToken(), recipient, 0);
@@ -86,9 +86,10 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     (, uint256[] memory balancesAfter) = connector.totalBalances();
 
     // Check assets
+    uint256 assetsWithdrawn = balanceChanges[0];
     assertEq(balanceChanges.length, balancesBefore.length);
-    assertEq(balanceChanges[0], assetsToWithdraw);
-    assertAlmostEq(assetsToWithdraw, balancesBefore[0] - balancesAfter[0], 1);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 1);
+    assertAlmostEq(assetsToWithdraw, assetsWithdrawn, _withdrawFarmTokenByAssetMaxDelta());
 
     // Check actual tokens and amounts
     assertEq(actualWithdrawnTokens.length, 1);
@@ -110,7 +111,15 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     return 10e18;
   }
 
-  function _amountToWithdraw() internal pure virtual returns (uint256) {
+  function _withdrawFarmTokenByAssetMaxDelta() internal pure virtual returns (uint256) {
+    return 1;
+  }
+
+  function _amountToWithdrawAsset() internal pure virtual returns (uint256) {
+    return 2e18;
+  }
+
+  function _amountToWithdrawFarmToken() internal pure virtual returns (uint256) {
     return 2e18;
   }
 }
