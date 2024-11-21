@@ -155,22 +155,82 @@ contract GuardianManagerTest is PRBTest {
 
   function test_rescueStarted() public {
     StrategyId strategyId = StrategyId.wrap(1);
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+
+    vm.prank(strategy);
     vm.expectEmit();
     emit RescueStarted(strategyId);
     manager.rescueStarted(strategyId);
   }
 
+  function test_rescueStarted_revertWhen_callerIsNotStrategy() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(address(4))
+    );
+    vm.expectRevert(abi.encodeWithSelector(GuardianManager.UnauthorizedCaller.selector));
+    manager.rescueStarted(strategyId);
+  }
+
   function test_rescueCancelled() public {
     StrategyId strategyId = StrategyId.wrap(1);
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+
+    vm.prank(strategy);
     vm.expectEmit();
     emit RescueCancelled(strategyId);
     manager.rescueCancelled(strategyId);
   }
 
+  function test_rescueCancelled_revertWhen_callerIsNotStrategy() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(address(4))
+    );
+    vm.expectRevert(abi.encodeWithSelector(GuardianManager.UnauthorizedCaller.selector));
+    manager.rescueCancelled(strategyId);
+  }
+
   function test_rescueConfirmed() public {
     StrategyId strategyId = StrategyId.wrap(1);
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(strategy)
+    );
+
+    vm.prank(strategy);
     vm.expectEmit();
     emit RescueConfirmed(strategyId);
+    manager.rescueConfirmed(strategyId);
+  }
+
+  function test_rescueConfirmed_revertWhen_callerIsNotStrategy() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.getStrategy.selector, strategyId),
+      abi.encode(address(4))
+    );
+    vm.expectRevert(abi.encodeWithSelector(GuardianManager.UnauthorizedCaller.selector));
     manager.rescueConfirmed(strategyId);
   }
 

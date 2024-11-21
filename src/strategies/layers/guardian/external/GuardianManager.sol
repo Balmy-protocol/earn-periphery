@@ -98,17 +98,17 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
   }
   /// @inheritdoc IGuardianManagerCore
 
-  function rescueStarted(StrategyId strategyId) external {
+  function rescueStarted(StrategyId strategyId) external onlyStrategy(strategyId) {
     emit RescueStarted(strategyId);
   }
   /// @inheritdoc IGuardianManagerCore
 
-  function rescueCancelled(StrategyId strategyId) external {
+  function rescueCancelled(StrategyId strategyId) external onlyStrategy(strategyId) {
     emit RescueCancelled(strategyId);
   }
   /// @inheritdoc IGuardianManagerCore
 
-  function rescueConfirmed(StrategyId strategyId) external {
+  function rescueConfirmed(StrategyId strategyId) external onlyStrategy(strategyId) {
     emit RescueConfirmed(strategyId);
   }
 
@@ -172,5 +172,13 @@ contract GuardianManager is IGuardianManager, AccessControlDefaultAdminRules {
 
   function _key(StrategyId strategyId, address account) internal pure returns (bytes32) {
     return keccak256(abi.encodePacked(strategyId, account));
+  }
+
+  modifier onlyStrategy(StrategyId strategyId) {
+    IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
+    if (msg.sender != address(strategy)) {
+      revert UnauthorizedCaller();
+    }
+    _;
   }
 }
