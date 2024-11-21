@@ -6,9 +6,9 @@ import {
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
-import { ExternalFees } from "../../layers/fees/ExternalFees.sol";
-import { ExternalTOSCreationValidation } from "../../layers/creation-validation/ExternalTOSCreationValidation.sol";
-import { ExternalLiquidityMining } from "../../layers/liquidity-mining/ExternalLiquidityMining.sol";
+import { ExternalFees } from "src/strategies/layers/fees/external/ExternalFees.sol";
+import { ExternalTOSCreationValidation } from "src/strategies/layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseDelayedStrategy } from "../base/BaseDelayedStrategy.sol";
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { ERC4626DelayedConnector } from "../../layers/connector/ERC4626DelayedConnector.sol";

@@ -8,12 +8,14 @@ import "@balmy/earn-core/nft-descriptor/EarnNFTDescriptor.sol";
 import "src/companion/FirewalledEarnVaultCompanion.sol";
 
 import "src/global-registry/GlobalEarnRegistry.sol";
-import "src/fee-manager/FeeManager.sol";
-import "src/guardian-manager/GuardianManager.sol";
-import "src/liquidity-mining-manager/LiquidityMiningManager.sol";
+import "src/strategies/layers/fees/external/FeeManager.sol";
+import "src/strategies/layers/guardian/external/GuardianManager.sol";
+import "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
 import "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
-import "src/tos-manager/TOSManager.sol";
+import "src/strategies/layers/creation-validation/external/TOSManager.sol";
 
+import "src/strategies/instances/erc4626/ERC4626DelayedStrategy.sol";
+import "src/strategies/layers/connector/lido/ERC4626DelayedWithdrawalAdapter.sol";
 import "src/strategies/instances/erc4626/ERC4626Strategy.sol";
 import "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
 
