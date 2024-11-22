@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { StrategyId, IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { BaseStrategyFactory } from "../base/BaseStrategyFactory.sol";
@@ -26,6 +27,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     clone.init(tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function cloneStrategyAndRegister(
@@ -45,6 +47,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, strategyId);
   }
 
   function clone2Strategy(
@@ -63,6 +66,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     clone.init(tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function clone2StrategyAndRegister(
@@ -82,6 +86,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, strategyId);
   }
 
   function clone3Strategy(
@@ -101,6 +106,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     clone.init(tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function clone3StrategyAndRegister(
@@ -121,6 +127,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    emit StrategyCloned(clone, strategyId);
   }
 
   function addressOfClone2(

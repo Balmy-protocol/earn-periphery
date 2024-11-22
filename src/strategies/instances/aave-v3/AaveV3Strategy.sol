@@ -26,6 +26,7 @@ contract AaveV3Strategy is
   /// @inheritdoc IEarnStrategy
   string public description;
 
+  // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
     bytes calldata tosData,

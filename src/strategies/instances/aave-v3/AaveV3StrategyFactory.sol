@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { StrategyId, IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { BaseStrategyFactory } from "../base/BaseStrategyFactory.sol";
@@ -27,6 +28,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function cloneStrategyAndRegister(
@@ -42,6 +44,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    emit StrategyCloned(clone, strategyId);
   }
 
   function clone2Strategy(AaveV3StrategyData calldata strategyData) external returns (AaveV3Strategy clone) {
@@ -49,6 +52,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function clone2StrategyAndRegister(
@@ -64,6 +68,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    emit StrategyCloned(clone, strategyId);
   }
 
   function clone3Strategy(
@@ -77,6 +82,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = AaveV3Strategy(payable(address(clone_)));
     clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
   }
 
   function clone3StrategyAndRegister(
@@ -93,6 +99,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    emit StrategyCloned(clone, strategyId);
   }
 
   function addressOfClone2(

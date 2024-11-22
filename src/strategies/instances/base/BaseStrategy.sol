@@ -229,6 +229,7 @@ abstract contract BaseStrategy is
     _;
   }
 
+  // slither-disable-start naming-convention,dead-code
   function _baseStrategy_registerStrategy(address owner) internal returns (StrategyId) {
     return registry().registerStrategy(owner);
   }
@@ -237,7 +238,6 @@ abstract contract BaseStrategy is
   ///////////////////    LIQ MINING    ///////////////////
   ////////////////////////////////////////////////////////
 
-  // slither-disable-start naming-convention,dead-code
   function _liquidity_mining_underlying_allTokens() internal view override returns (address[] memory tokens) {
     return _connector_allTokens();
   }

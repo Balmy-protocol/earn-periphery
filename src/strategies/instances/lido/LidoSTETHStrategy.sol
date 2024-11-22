@@ -42,6 +42,7 @@ contract LidoSTETHStrategy is
 
     // TODO: add tests for this scenario
     if (owner != address(0)) {
+      // slither-disable-next-line unused-return
       registry().registerStrategy(owner);
     }
   }
