@@ -31,12 +31,19 @@ contract LidoSTETHStrategy is
     IGlobalEarnRegistry globalRegistry_,
     IEarnVault vault_,
     string memory description_,
-    IDelayedWithdrawalAdapter delayedWithdrawalAdapter_
+    IDelayedWithdrawalAdapter delayedWithdrawalAdapter_,
+    // Strategy registry
+    address owner
   ) {
     _globalRegistry = globalRegistry_;
     _vault = vault_;
     description = description_;
     __delayedWithdrawalAdapter = delayedWithdrawalAdapter_;
+
+    // TODO: add tests for this scenario
+    if (owner != address(0)) {
+      registry().registerStrategy(owner);
+    }
   }
 
   function _delayedWithdrawalAdapter() internal view override returns (IDelayedWithdrawalAdapter) {

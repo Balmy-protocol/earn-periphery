@@ -25,6 +25,20 @@ contract ERC4626Strategy is
   /// @inheritdoc IEarnStrategy
   string public description;
 
+  function initAndRegister(
+    address owner,
+    bytes calldata tosData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    external
+    returns (StrategyId strategyId_)
+  {
+    strategyId_ = _baseStrategy_registerStrategy(owner);
+    init(tosData, guardianData, feesData, description_);
+  }
+
   // slither-disable-next-line reentrancy-benign
   function init(
     bytes calldata tosData,
@@ -32,7 +46,7 @@ contract ERC4626Strategy is
     bytes calldata feesData,
     string calldata description_
   )
-    external
+    public
     initializer
   {
     _creationValidation_init(tosData);

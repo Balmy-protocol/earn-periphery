@@ -32,6 +32,6 @@ library BalmyStrategyUtils {
   {
     require(tokens.length > 0, "Invalid");
     strategy = new EarnBalmyStrategyStateBalanceMock(tokens, withdrawalTypes);
-    strategyId = registry.registerStrategy(address(this), strategy);
+    strategyId = strategy.registerStrategy(registry, address(this));
   }
 }

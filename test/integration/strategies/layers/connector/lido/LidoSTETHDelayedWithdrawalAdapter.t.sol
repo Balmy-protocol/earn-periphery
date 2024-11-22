@@ -34,7 +34,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
   LidoSTETHDelayedWithdrawalAdapter private lidoSTETHDelayedWithdrawalAdapter;
   IEarnVault private vault;
   address[] private tokens = new address[](1);
-  IEarnBalmyStrategy private strategy;
+  LidoSTETHStrategyMock private strategy;
   StrategyId private strategyId;
   IDelayedWithdrawalManager private delayedWithdrawalManager;
   GlobalEarnRegistry private globalRegistry;
@@ -64,7 +64,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     lidoSTETHDelayedWithdrawalAdapter = new LidoSTETHDelayedWithdrawalAdapter(globalRegistry, queue);
 
     strategy = new LidoSTETHStrategyMock(vault, "LidoSTETHStrategy", lidoSTETHDelayedWithdrawalAdapter);
-    strategyId = strategyRegistry.registerStrategy(owner, strategy);
+    strategyId = strategy.registerStrategy(owner);
 
     (position,) = vault.createPosition{ value: amountToDeposit1 }(
       strategyId, tokens[0], amountToDeposit1, owner, PermissionUtils.buildEmptyPermissionSet(), "", ""

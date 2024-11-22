@@ -221,6 +221,10 @@ abstract contract BaseDelayedStrategy is
     _;
   }
 
+  function _baseStrategy_registerStrategy(address owner) internal returns (StrategyId) {
+    return registry().registerStrategy(owner);
+  }
+
   ////////////////////////////////////////////////////////
   ///////////////////    LIQ MINING    ///////////////////
   ////////////////////////////////////////////////////////

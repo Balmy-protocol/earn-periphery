@@ -71,29 +71,57 @@ contract ERC4626StrategyTest is Test {
     vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.approve.selector), abi.encode(true));
   }
 
-  function test_cloneAndRegister() public {
+  function test_cloneStrategy() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
     vm.expectCall(
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.cloneAndRegister(
-      strategyRegistry, owner, vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description
+    ERC4626Strategy clone =
+      factory.cloneStrategy(vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description);
+
+    _assertStrategyWasDeployedCorrectly(clone);
+  }
+
+  function test_cloneStrategyAndRegister() public {
+    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
+    vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
+    vm.expectCall(
+      address(guardianManager),
+      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
+    );
+    (ERC4626Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
+      owner, vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
   }
 
-  function test_clone2AndRegister() public {
+  function test_clone2Strategy() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
     vm.expectCall(
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2AndRegister(
-      strategyRegistry, owner, vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description
+    ERC4626Strategy clone =
+      factory.clone2Strategy(vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description);
+
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault);
+    assertEq(cloneAddress, address(clone));
+    _assertStrategyWasDeployedCorrectly(clone);
+  }
+
+  function clone2StrategyAndRegister() public {
+    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
+    vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
+    vm.expectCall(
+      address(guardianManager),
+      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
+    );
+    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
+      owner, vault, globalRegistry, erc4626Vault, tosData, guardianData, feesData, description
     );
 
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault);
@@ -101,7 +129,7 @@ contract ERC4626StrategyTest is Test {
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
   }
 
-  function test_clone3AndRegister() public {
+  function test_clone3Strategy() public {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
@@ -109,8 +137,24 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone3AndRegister(
-      strategyRegistry, owner, vault, globalRegistry, erc4626Vault, salt, tosData, guardianData, feesData, description
+    (ERC4626Strategy clone) =
+      factory.clone3Strategy(vault, globalRegistry, erc4626Vault, salt, tosData, guardianData, feesData, description);
+
+    address cloneAddress = factory.addressOfClone3(salt);
+    assertEq(cloneAddress, address(clone));
+    _assertStrategyWasDeployedCorrectly(clone);
+  }
+
+  function test_clone3StrategyAndRegister() public {
+    bytes32 salt = bytes32(uint256(12_345));
+    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
+    vm.expectCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, tosData));
+    vm.expectCall(
+      address(guardianManager),
+      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
+    );
+    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
+      owner, vault, globalRegistry, erc4626Vault, salt, tosData, guardianData, feesData, description
     );
 
     address cloneAddress = factory.addressOfClone3(salt);
@@ -120,8 +164,12 @@ contract ERC4626StrategyTest is Test {
 
   function _assertStrategyWasDeployedCorrectly(ERC4626Strategy clone, StrategyId strategyId_) private {
     assertTrue(strategyId_ == strategyId);
-    assertEq(address(clone.ERC4626Vault()), address(erc4626Vault));
     assertTrue(clone.strategyId() == strategyId);
+    _assertStrategyWasDeployedCorrectly(clone);
+  }
+
+  function _assertStrategyWasDeployedCorrectly(ERC4626Strategy clone) private {
+    assertEq(address(clone.ERC4626Vault()), address(erc4626Vault));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
     assertEq(clone.description(), description);
@@ -129,8 +177,8 @@ contract ERC4626StrategyTest is Test {
 }
 
 contract MockStrategyRegistry {
-  function registerStrategy(address, IEarnStrategy strategy) external returns (StrategyId strategyId) {
+  function registerStrategy(address) external returns (StrategyId strategyId) {
     strategyId = StrategyId.wrap(1);
-    strategy.strategyRegistered(strategyId, IEarnStrategy(address(0)), "");
+    IEarnStrategy(msg.sender).strategyRegistered(strategyId, IEarnStrategy(address(0)), "");
   }
 }
