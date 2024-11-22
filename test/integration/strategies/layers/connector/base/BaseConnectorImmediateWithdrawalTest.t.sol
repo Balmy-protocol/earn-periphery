@@ -60,7 +60,4 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
       assertGte(balancesAfter[i], balancesBefore[i] - toWithdraw[i] - 1);
     }
   }
-
-  // solhint-disable no-empty-blocks
-  function _generateYield() internal virtual { }
 }

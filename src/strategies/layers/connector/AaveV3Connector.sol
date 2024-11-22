@@ -61,7 +61,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
 
   /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and
   /// deposits them
-  function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
+  function claimAndDepositAssetRewards() public returns (uint256 amountToClaim) {
     IAaveV3Rewards rewards_ = rewards();
     address[] memory asset = new address[](1);
     asset[0] = address(aToken());
@@ -335,7 +335,8 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     returns (bytes memory)
   {
     // Claim and deposit the asset rewards
-    this.claimAndDepositAssetRewards();
+    // slither-disable-next-line unused-return
+    claimAndDepositAssetRewards();
 
     // Migrate the aToken
     IERC20 vault_ = aToken();
@@ -344,10 +345,10 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
 
     // Claim and migrate the rewards
     IAaveV3Rewards rewards_ = rewards();
-    address[] memory tokens = _connector_allTokens();
+    address[] memory tokens = rewards_.getRewardsByAsset(address(vault_));
     address[] memory asset = new address[](1);
     asset[0] = address(vault_);
-    for (uint256 i = 1; i < tokens.length; ++i) {
+    for (uint256 i = 0; i < tokens.length; ++i) {
       uint256 amount = rewards_.getUserRewards(asset, address(this), tokens[i]);
       if (amount > 0) {
         rewards_.claimRewards(asset, amount, address(newStrategy), tokens[i]);

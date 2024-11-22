@@ -125,8 +125,16 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   }
 
   function testFork_migrateToNewStrategy() public {
+    _give(connector.asset(), address(connector), 10e18);
+    connector.deposit(connector.asset(), 10e18);
+
+    // Generate yield if connector handles it
+    _generateYield();
+
     BaseConnectorInstance newConnector = _buildNewConnector();
+
     (, uint256[] memory oldConnectorBalancesBefore) = connector.totalBalances();
+    (, uint256[] memory newConnectorBalancesBefore) = newConnector.totalBalances();
 
     // Migrate
     connector.migrateToNewStrategy(IEarnStrategy(address(newConnector)), "");
@@ -134,8 +142,12 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     // Make sure balances were migrated correctly
     (, uint256[] memory oldConnectorBalancesAfter) = connector.totalBalances();
     (, uint256[] memory newConnectorBalancesAfter) = newConnector.totalBalances();
-    assertEq(oldConnectorBalancesBefore, newConnectorBalancesAfter);
-    assertEq(oldConnectorBalancesAfter, new uint256[](oldConnectorBalancesAfter.length));
+
+    for (uint256 i; i < oldConnectorBalancesAfter.length; ++i) {
+      // Allow for some loss due to rebasing tokens transfers
+      assertAlmostEq(newConnectorBalancesAfter[i] - newConnectorBalancesBefore[i], oldConnectorBalancesBefore[i], 2);
+      assertAlmostEq(oldConnectorBalancesAfter[i], 0, 2);
+    }
   }
 
   function testFork_strategyRegistered() public {
@@ -166,4 +178,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     _setBalance(asset, account, balance + amount);
     return balance + amount;
   }
+
+  // solhint-disable no-empty-blocks
+  function _generateYield() internal virtual { }
 }
