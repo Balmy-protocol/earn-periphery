@@ -38,6 +38,10 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
 
   receive() external payable { }
 
+  function registerStrategy(address owner) external returns (StrategyId) {
+    return registry().registerStrategy(owner);
+  }
+
   /// @inheritdoc IEarnStrategy
   function registry() public view returns (IEarnStrategyRegistry) {
     return vault.STRATEGY_REGISTRY();

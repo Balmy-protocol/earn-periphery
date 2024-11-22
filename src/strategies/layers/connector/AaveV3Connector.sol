@@ -16,7 +16,7 @@ import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol
 interface IAToken is IERC20 {
   function scaledTotalSupply() external view returns (uint256);
   // slither-disable-next-line naming-convention
-  function UNDERLYING_ASSET_ADDRESS() external returns (address);
+  function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 }
 
 interface IAaveV3Pool {

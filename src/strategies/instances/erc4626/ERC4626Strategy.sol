@@ -26,13 +26,28 @@ contract ERC4626Strategy is
   string public description;
 
   // slither-disable-next-line reentrancy-benign
-  function init(
+  function initAndRegister(
+    address owner,
     bytes calldata tosData,
     bytes calldata guardianData,
     bytes calldata feesData,
     string calldata description_
   )
     external
+    returns (StrategyId strategyId_)
+  {
+    strategyId_ = _baseStrategy_registerStrategy(owner);
+    init(tosData, guardianData, feesData, description_);
+  }
+
+  // slither-disable-next-line reentrancy-benign
+  function init(
+    bytes calldata tosData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    public
     initializer
   {
     _creationValidation_init(tosData);
