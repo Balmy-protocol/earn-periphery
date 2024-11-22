@@ -26,8 +26,8 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
-    clone.init(tosData, guardianData, feesData, description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(tosData, guardianData, feesData, description);
   }
 
   function cloneStrategyAndRegister(
@@ -47,6 +47,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 
@@ -65,8 +66,8 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
-    clone.init(tosData, guardianData, feesData, description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(tosData, guardianData, feesData, description);
   }
 
   function clone2StrategyAndRegister(
@@ -86,6 +87,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 
@@ -105,8 +107,8 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
     IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
-    clone.init(tosData, guardianData, feesData, description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(tosData, guardianData, feesData, description);
   }
 
   function clone3StrategyAndRegister(
@@ -127,6 +129,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 

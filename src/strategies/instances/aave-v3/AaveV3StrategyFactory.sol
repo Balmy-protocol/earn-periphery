@@ -27,8 +27,8 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
   }
 
   function cloneStrategyAndRegister(
@@ -44,6 +44,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 
@@ -51,8 +52,8 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
   }
 
   function clone2StrategyAndRegister(
@@ -68,6 +69,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 
@@ -81,8 +83,8 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = AaveV3Strategy(payable(address(clone_)));
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
   }
 
   function clone3StrategyAndRegister(
@@ -99,6 +101,7 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     strategyId = clone.initAndRegister(
       owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
     );
+    // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
 
