@@ -15,4 +15,5 @@ interface ICERC20 is IERC20 {
   function borrowRatePerBlock() external view returns (uint256);
   function reserveFactorMantissa() external view returns (uint256);
   function initialExchangeRateMantissa() external view returns (uint256);
+  function underlying() external view returns (IERC20);
 }
