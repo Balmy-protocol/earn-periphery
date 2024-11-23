@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
