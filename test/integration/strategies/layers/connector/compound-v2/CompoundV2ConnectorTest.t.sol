@@ -40,18 +40,6 @@ abstract contract CompoundV2ConnectorTest is BaseConnectorImmediateWithdrawalTes
     return address(_cToken());
   }
 
-  function testFork_rewardEmissionsPerSecondPerAsset() public {
-    CompoundV2ConnectorInstance compoundV2Connector =
-      new CompoundV2ConnectorInstance(_cToken(), _asset(), new CompoundV2ComptrollerMock(), _comp());
-
-    (uint256[] memory emissions, uint256[] memory multipliers) = compoundV2Connector.rewardEmissionsPerSecondPerAsset();
-
-    assertEq(emissions.length, 1);
-    assertEq(emissions[0], 1e10 * 1e30 / (_cToken().getCash() + _cToken().totalBorrows() - _cToken().totalReserves()));
-    assertEq(multipliers.length, 1);
-    assertEq(multipliers[0], 1e30);
-  }
-
   function _generateYield() internal virtual override {
     _setBalance(address(_comp()), address(comptrollerMock), 1e13);
     comptrollerMock._generateYield(1e3);
@@ -94,10 +82,6 @@ contract CompoundV2ConnectorInstance is BaseConnectorInstance, CompoundV2Connect
 
   function _asset() internal view override returns (address) {
     return address(__asset);
-  }
-
-  function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
   function comp() public view virtual override returns (IERC20) {
@@ -196,12 +180,6 @@ contract CompoundV2ConnectorTestWBTC is CompoundV2ConnectorTest {
   function _amountToWithdrawFarmToken() internal pure override returns (uint256) {
     return 2e5;
   }
-
-  // We need to override because cWBTC has less assets than shares
-  function testFork_assetYieldCoefficient() public override {
-    (, uint256 multiplier) = connector.assetYieldCoefficient();
-    assertEq(multiplier, 1e18);
-  }
 }
 
 contract CompoundV2ConnectorTestUSDT is CompoundV2ConnectorTest {
@@ -237,11 +215,6 @@ contract CompoundV2ConnectorTestUSDT is CompoundV2ConnectorTest {
 
   function _amountToWithdrawFarmToken() internal pure override returns (uint256) {
     return 2e5;
-  }
-
-  function testFork_assetYieldCoefficient() public override {
-    (, uint256 multiplier) = connector.assetYieldCoefficient();
-    assertEq(multiplier, 1e18);
   }
 }
 
