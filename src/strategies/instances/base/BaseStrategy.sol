@@ -188,7 +188,7 @@ abstract contract BaseStrategy is
     returns (bytes memory)
   {
     _strategyId = StrategyIdConstants.NO_STRATEGY;
-    return _connector_migrateToNewStrategy(newStrategy, migrationData);
+    return _guardian_migrateToNewStrategy(newStrategy, migrationData);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -422,6 +422,17 @@ abstract contract BaseStrategy is
     )
   {
     return _connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  function _guardian_underlying_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    return _connector_migrateToNewStrategy(newStrategy, migrationData);
   }
 
   ////////////////////////////////////////////////////////
