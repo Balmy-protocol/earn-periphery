@@ -161,14 +161,19 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     returns (address[] memory tokens, uint256[] memory balances)
   {
     RescueStatus status = rescueConfig.status;
-    if (status == RescueStatus.RESCUED) {
+    if (status == RescueStatus.OK) {
+      return _guardian_underlying_totalBalances();
+    } else if (status == RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+      (tokens, balances) = _guardian_underlying_totalBalances();
+      // We might have withdrawn some of the assets, so we add that to the balance. Also, like we explained before, we
+      // assume that the underlying layer will consider the rewards on the contract as part of the balance
+      balances[0] += tokens[0].balanceOf(address(this));
+    } else {
       tokens = _guardian_underlying_tokens();
       balances = new uint256[](tokens.length);
       for (uint256 i = 0; i < tokens.length; ++i) {
         balances[i] = tokens[i].balanceOf(address(this));
       }
-    } else {
-      return _guardian_underlying_totalBalances();
     }
   }
 
@@ -181,8 +186,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     override
     returns (uint256 assetsDeposited)
   {
-    RescueStatus status = rescueConfig.status;
-    if (status != RescueStatus.OK) {
+    if (rescueConfig.status != RescueStatus.OK) {
       revert InvalidRescueStatus();
     }
     return _guardian_underlying_deposited(depositToken, depositAmount);
@@ -239,8 +243,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   {
     // Note: even though the contract might have reward balance, special withdrawals are very particular and depend on
     //       the underlying implementation. So we won't use this balance in this case
-    RescueStatus status = rescueConfig.status;
-    if (status != RescueStatus.OK) {
+    if (rescueConfig.status != RescueStatus.OK) {
       revert InvalidRescueStatus();
     }
     return _guardian_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);

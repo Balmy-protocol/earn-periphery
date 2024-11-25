@@ -240,32 +240,21 @@ contract ExternalGuardianTest is Test {
   }
 
   function test_totalBalances_needsConfirmation() public {
-    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 assetUnderlyingBalance = 12_345_678;
     uint256 assetBalanceInContract = 345_789;
     uint256 rewardUnderlyingBalance = 987_655;
-    uint256 rewardBalanceInContract = 123_890;
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
-    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(asset, assetUnderlyingBalance);
     guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
     vm.mockCall(
       address(asset),
       abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
       abi.encode(assetBalanceInContract)
     );
-    vm.mockCall(
-      address(reward),
-      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
-      abi.encode(rewardBalanceInContract)
-    );
 
     (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(
-      balances,
-      CommonUtils.arrayOf(
-        assetUndelyingBalance + assetBalanceInContract, rewardUnderlyingBalance + rewardBalanceInContract
-      )
-    );
+    assertEq(balances, CommonUtils.arrayOf(assetUnderlyingBalance + assetBalanceInContract, rewardUnderlyingBalance));
   }
 
   function test_totalBalances_rescued() public {
