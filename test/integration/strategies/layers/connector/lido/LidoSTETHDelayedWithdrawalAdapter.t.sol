@@ -15,7 +15,6 @@ import {
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
 import { LidoSTETHStrategyMock } from "test/mocks/strategies/LidoSTETHStrategyMock.sol";
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";

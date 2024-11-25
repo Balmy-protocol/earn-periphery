@@ -43,20 +43,6 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     return address(aAaveV3Vault);
   }
 
-  function testFork_rewardEmissionsPerSecondPerAsset() public {
-    IAaveV3Rewards aAaveV3RewardsControllerMock = new AaveV3RewardsMock();
-
-    AaveV3ConnectorInstance aaveV3Connector =
-      new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
-
-    (uint256[] memory emissions, uint256[] memory multipliers) = aaveV3Connector.rewardEmissionsPerSecondPerAsset();
-
-    assertEq(emissions.length, 1);
-    assertEq(emissions[0], 1e10 * 1e30 / aAaveV3Vault.totalSupply());
-    assertEq(multipliers.length, 1);
-    assertEq(multipliers[0], 1e30);
-  }
-
   function testFork_claimRewardTokens() public {
     // Mock the rewards controller to include the asset as a reward
     IAaveV3Rewards aAaveV3RewardsControllerMock =
@@ -134,10 +120,6 @@ contract AaveV3ConnectorInstance is BaseConnectorInstance, AaveV3Connector {
 
   function rewards() public view override returns (IAaveV3Rewards) {
     return _rewards;
-  }
-
-  function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 }
 

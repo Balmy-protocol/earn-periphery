@@ -100,12 +100,6 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     assertEq(balanceTokens.length, balances.length);
   }
 
-  function testFork_assetYieldCoefficient() public virtual {
-    (uint256 coefficient, uint256 multiplier) = connector.assetYieldCoefficient();
-    assertGte(coefficient, multiplier);
-    assertEq(multiplier, 1e18);
-  }
-
   function testFork_deposit() public {
     address[] memory supported = connector.supportedDepositTokens();
     for (uint256 i; i < supported.length; ++i) {

@@ -11,7 +11,6 @@ import {
   IERC4626,
   IEarnVault,
   IGlobalEarnRegistry,
-  IEarnStrategyRegistry,
   StrategyIdConstants,
   BaseStrategyFactory,
   IEarnBalmyStrategy
@@ -22,7 +21,7 @@ import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 contract ERC4626StrategyTest is Test {
-  IEarnStrategyRegistry private strategyRegistry;
+  MockStrategyRegistry private strategyRegistry;
   address private owner = address(2);
   IEarnVault private vault = IEarnVault(address(3));
   IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
@@ -41,7 +40,7 @@ contract ERC4626StrategyTest is Test {
   function setUp() public virtual {
     ERC4626Strategy implementation = new ERC4626Strategy();
     factory = new ERC4626StrategyFactory(implementation);
-    strategyRegistry = IEarnStrategyRegistry(address(new MockStrategyRegistry()));
+    strategyRegistry = new MockStrategyRegistry();
     vm.mockCall(
       address(vault),
       abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector),
