@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { ClonesWithImmutableArgs } from "@clones/ClonesWithImmutableArgs.sol";
-import { IEarnStrategyRegistry, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
+import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 
 abstract contract BaseStrategyFactory {

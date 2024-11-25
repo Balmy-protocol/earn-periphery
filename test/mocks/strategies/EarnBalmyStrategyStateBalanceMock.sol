@@ -34,12 +34,4 @@ contract EarnBalmyStrategyStateBalanceMock is EarnStrategyStateBalanceMock, IEar
     return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
       || interfaceId == type(IERC165).interfaceId;
   }
-
-  function assetYieldCoefficient() external pure override returns (uint256, uint256) {
-    return (1e18, 1e18);
-  }
-
-  function rewardEmissionsPerSecondPerAsset() external pure override returns (uint256[] memory, uint256[] memory) {
-    return (new uint256[](0), new uint256[](0));
-  }
 }

@@ -162,46 +162,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_assetYieldCoefficient()
-    internal
-    view
-    virtual
-    override
-    returns (uint256 coefficient, uint256 multiplier)
-  {
-    multiplier = 1e18;
-    ICERC20 cToken_ = cToken();
-    uint256 shares = cToken_.totalSupply();
-    if (shares == 0) {
-      return (multiplier, multiplier);
-    }
-    uint256 assets = _totalAssets(cToken_);
-    coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_rewardEmissionsPerSecondPerAsset()
-    internal
-    view
-    virtual
-    override
-    returns (uint256[] memory emissions, uint256[] memory multipliers)
-  {
-    ICERC20 cToken_ = cToken();
-    uint256 totalAssets = Math.max(_totalAssets(cToken_), 1);
-    emissions = new uint256[](1);
-    multipliers = new uint256[](1);
-    uint256 emissionPerSecond = comptroller().compSpeeds(address(cToken_));
-    multipliers[0] = 1e30;
-    emissions[0] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_totalAssetsInFarm() internal view virtual override returns (uint256) {
-    return _totalAssets();
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
     uint256 depositAmount

@@ -13,11 +13,15 @@ import { BaseGuardian } from "../base/BaseGuardian.sol";
  * @notice A guardian implementation that validates the rescue process with an external manager
  * @dev It's important to note that this implementation will only work when all tokens support immediate withdrawals.
  *      A rescue with delayed withdrawals will revert
+ *      Another important aspect to note is that this layer withdraws all funds when trying to rescue them. But it keeps
+ *      them in the strategy's contract until the rescue is either confirmed or cancelled. If the rescue is cancelled,
+ *      then all assets are re-deposited, but rescued rewards are left on the strategy's contract. This implementation
+ *      assumes that the underlying layer will consider these rewards as part of the balance, and will know how to
+ *      handle them during a withdrawal
  */
 abstract contract ExternalGuardian is BaseGuardian, Initializable {
   enum RescueStatus {
     OK,
-    OK_WITH_BALANCE_ON_STRATEGY,
     RESCUE_NEEDS_CONFIRMATION,
     RESCUED
   }
@@ -107,11 +111,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     uint256 assetBalance = tokens[0].balanceOf(address(this));
     _guardian_underlying_deposited(tokens[0], assetBalance);
 
-    rescueConfig = RescueConfig({
-      feeBps: 0,
-      feeRecipient: address(0),
-      status: _isThereRewardBalanceOnContract(tokens) ? RescueStatus.OK_WITH_BALANCE_ON_STRATEGY : RescueStatus.OK
-    });
+    rescueConfig = RescueConfig({ feeBps: 0, feeRecipient: address(0), status: RescueStatus.OK });
 
     manager.rescueCancelled(strategyId_);
   }
@@ -163,11 +163,11 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     RescueStatus status = rescueConfig.status;
     if (status == RescueStatus.OK) {
       return _guardian_underlying_totalBalances();
-    } else if (status == RescueStatus.OK_WITH_BALANCE_ON_STRATEGY || status == RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
+    } else if (status == RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
       (tokens, balances) = _guardian_underlying_totalBalances();
-      for (uint256 i = 0; i < tokens.length; ++i) {
-        balances[i] += tokens[i].balanceOf(address(this));
-      }
+      // We might have withdrawn some of the assets, so we add that to the balance. Also, like we explained before, we
+      // assume that the underlying layer will consider the rewards on the contract as part of the balance
+      balances[0] += tokens[0].balanceOf(address(this));
     } else {
       tokens = _guardian_underlying_tokens();
       balances = new uint256[](tokens.length);
@@ -186,8 +186,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     override
     returns (uint256 assetsDeposited)
   {
-    RescueStatus status = rescueConfig.status;
-    if (status != RescueStatus.OK && status != RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
+    if (rescueConfig.status != RescueStatus.OK) {
       revert InvalidRescueStatus();
     }
     return _guardian_underlying_deposited(depositToken, depositAmount);
@@ -211,37 +210,6 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     if (status == RescueStatus.OK) {
       // In this case, we just withdraw from the underlying layer
       return _guardian_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
-    } else if (status == RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
-      // In this case, we will try to use the balance on the strategy first, and withdraw the rest from the underlying
-      // layer
-      uint256[] memory toWithdrawUnderlying = new uint256[](tokens.length);
-      toWithdrawUnderlying[0] = toWithdraw[0];
-
-      bool shouldWithdrawUnderlying = toWithdraw[0] > 0;
-      bool continuesToHaveRewardBalance = false;
-
-      for (uint256 i = 1; i < tokens.length; ++i) {
-        uint256 toWithdrawToken = toWithdraw[i];
-        uint256 balance = tokens[i].balanceOf(address(this));
-        uint256 toTransfer = Math.min(balance, toWithdrawToken);
-        tokens[i].transfer(recipient, toTransfer);
-        toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
-
-        if (toWithdrawUnderlying[i] > 0) {
-          shouldWithdrawUnderlying = true;
-        }
-        if (balance > toTransfer) {
-          continuesToHaveRewardBalance = true;
-        }
-      }
-
-      if (!continuesToHaveRewardBalance) {
-        // solhint-disable-next-line reentrancy
-        rescueConfig.status = RescueStatus.OK;
-      }
-      if (shouldWithdrawUnderlying) {
-        return _guardian_underlying_withdraw(positionId, tokens, toWithdrawUnderlying, recipient);
-      }
     } else if (status == RescueStatus.RESCUED) {
       // If we are in "rescued" mode, then we simply transfer balance on the strategy
       for (uint256 i = 0; i < tokens.length; ++i) {
@@ -275,8 +243,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   {
     // Note: even though the contract might have reward balance, special withdrawals are very particular and depend on
     //       the underlying implementation. So we won't use this balance in this case
-    RescueStatus status = rescueConfig.status;
-    if (status != RescueStatus.OK && status != RescueStatus.OK_WITH_BALANCE_ON_STRATEGY) {
+    if (rescueConfig.status != RescueStatus.OK) {
       revert InvalidRescueStatus();
     }
     return _guardian_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
@@ -285,16 +252,6 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
     return IGuardianManagerCore(globalRegistry().getAddressOrFail(GUARDIAN_MANAGER));
-  }
-
-  function _isThereRewardBalanceOnContract(address[] memory tokens) private view returns (bool) {
-    for (uint256 i = 1; i < tokens.length; ++i) {
-      uint256 balance = tokens[i].balanceOf(address(this));
-      if (balance > 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   function _areAllImmediate(IEarnStrategy.WithdrawalType[] memory types) private pure returns (bool) {
