@@ -6,7 +6,7 @@ import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interface
 /**
  * @notice The base layer for guardian implementations
  * @dev Ideally we would also overwrite other strategy functions like `maxDeposit` and `maxWithdraw`, but we want to
- *      keep the contract as small as possible and those are not as relevant as the currently overwriten functions
+ *      keep the contract as small as possible and those are not as relevant as the currently overwritten functions
  */
 abstract contract BaseGuardian {
   // slither-disable-start naming-convention
