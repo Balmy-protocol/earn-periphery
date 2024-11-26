@@ -72,6 +72,8 @@ contract CompoundV2ConnectorInstance is BaseConnectorInstance, CompoundV2Connect
     _connector_init();
   }
 
+  receive() external payable { }
+
   function comptroller() public view override returns (IComptroller) {
     return _cCompoundV2Comptroller;
   }

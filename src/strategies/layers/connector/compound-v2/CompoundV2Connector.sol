@@ -40,8 +40,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   function comptroller() public view virtual returns (IComptroller);
   function _asset() internal view virtual returns (address);
 
-  receive() external payable { }
-
   /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
   function maxApproveCToken() public {
     address asset = _asset();
