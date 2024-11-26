@@ -249,6 +249,21 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     return _guardian_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
+  function _guardian_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    if (rescueConfig.status != RescueStatus.OK) {
+      revert InvalidRescueStatus();
+    }
+    return _guardian_underlying_migrateToNewStrategy(newStrategy, migrationData);
+  }
+
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
     return IGuardianManagerCore(globalRegistry().getAddressOrFail(GUARDIAN_MANAGER));

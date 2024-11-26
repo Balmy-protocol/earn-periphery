@@ -53,6 +53,13 @@ abstract contract BaseGuardian {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
+  function _guardian_underlying_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    virtual
+    returns (bytes memory);
 
   // Guardian
   function _guardian_totalBalances() internal view virtual returns (address[] memory tokens, uint256[] memory balances);
@@ -87,5 +94,12 @@ abstract contract BaseGuardian {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
+  function _guardian_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    virtual
+    returns (bytes memory);
   // slither-disable-end naming-convention
 }

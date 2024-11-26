@@ -391,6 +391,28 @@ contract ExternalGuardianTest is Test {
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
     guardian.specialWithdraw(2, SpecialWithdrawalCode.wrap(10), CommonUtils.arrayOf(1000, 1000), "12345", address(15));
   }
+
+  function test_migrateToNewStrategy_ok() public {
+    IEarnStrategy newStrategy = IEarnStrategy(address(0));
+    bytes memory migrationData = "12345";
+    bytes memory result = guardian.migrateToNewStrategy(newStrategy, migrationData);
+    assertEq(result, "return");
+    ExternalGuardianInstance.Migration memory migration = guardian.lastMigration();
+    assertEq(address(migration.newStrategy), address(newStrategy));
+    assertEq(migration.migrationData, migrationData);
+  }
+
+  function test_migrateToNewStrategy_needsConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.migrateToNewStrategy(IEarnStrategy(address(0)), "");
+  }
+
+  function test_migrateToNewStrategy_rescued() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.migrateToNewStrategy(IEarnStrategy(address(0)), "");
+  }
 }
 
 contract ExternalGuardianInstance is ExternalGuardian {
@@ -414,6 +436,11 @@ contract ExternalGuardianInstance is ExternalGuardian {
     address recipient;
   }
 
+  struct Migration {
+    IEarnStrategy newStrategy;
+    bytes migrationData;
+  }
+
   IEarnStrategy.WithdrawalType private _withdrawalType = IEarnStrategy.WithdrawalType.IMMEDIATE;
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
@@ -422,6 +449,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   SpecialWithdrawal private _specialWithdrawal;
   Deposit private _deposit;
   mapping(address token => uint256 balance) private _underlyingBalance;
+  Migration private _migration;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -479,6 +507,16 @@ contract ExternalGuardianInstance is ExternalGuardian {
     return _guardian_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
+  function migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    external
+    returns (bytes memory)
+  {
+    return _guardian_migrateToNewStrategy(newStrategy, migrationData);
+  }
+
   function lastDeposit() external view returns (Deposit memory) {
     return _deposit;
   }
@@ -489,6 +527,10 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
     return _specialWithdrawal;
+  }
+
+  function lastMigration() external view returns (Migration memory) {
+    return _migration;
   }
 
   function setStatus(RescueStatus status) external {
@@ -574,6 +616,18 @@ contract ExternalGuardianInstance is ExternalGuardian {
     actualWithdrawnTokens = new address[](0);
     actualWithdrawnAmounts = new uint256[](0);
     result = "";
+  }
+
+  function _guardian_underlying_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    _migration = Migration(newStrategy, migrationData);
+    return "return";
   }
 
   function _guardian_underlying_tokens() internal view override returns (address[] memory tokens) {
