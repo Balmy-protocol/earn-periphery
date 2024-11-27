@@ -16,7 +16,7 @@ import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol
 interface IAToken is IERC20 {
   function scaledTotalSupply() external view returns (uint256);
   // slither-disable-next-line naming-convention
-  function UNDERLYING_ASSET_ADDRESS() external returns (address);
+  function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 }
 
 interface IAaveV3Pool {
@@ -189,48 +189,6 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_delayedWithdrawalAdapter(address) internal pure override returns (IDelayedWithdrawalAdapter) {
     return IDelayedWithdrawalAdapter(address(0));
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_assetYieldCoefficient() internal view override returns (uint256 coefficient, uint256 multiplier) {
-    multiplier = 1e18;
-    IAToken vault_ = aToken();
-    uint256 shares = vault_.scaledTotalSupply();
-    if (shares == 0) {
-      return (multiplier, multiplier);
-    }
-    uint256 assets = vault_.totalSupply();
-    coefficient = assets.mulDiv(multiplier, shares, Math.Rounding.Floor);
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_rewardEmissionsPerSecondPerAsset()
-    internal
-    view
-    override
-    returns (uint256[] memory emissions, uint256[] memory multipliers)
-  {
-    IAaveV3Rewards rewardsController = rewards();
-    IAToken aToken_ = aToken();
-    uint256 totalAssets = Math.max(aToken_.totalSupply(), 1);
-    address[] memory rewardsList = rewardsController.getRewardsByAsset(address(aToken_));
-    emissions = new uint256[](rewardsList.length);
-    multipliers = new uint256[](rewardsList.length);
-    for (uint256 i; i < rewardsList.length; ++i) {
-      // slither-disable-next-line unused-return
-      (, uint256 emissionPerSecond,, uint256 distributionEnd) =
-        rewardsController.getRewardsData(address(aToken_), rewardsList[i]);
-      // slither-disable-next-line timestamp
-      if (block.timestamp <= distributionEnd) {
-        multipliers[i] = 1e30;
-        emissions[i] = emissionPerSecond.mulDiv(1e30, totalAssets, Math.Rounding.Floor);
-      }
-    }
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_totalAssetsInFarm() internal view override returns (uint256) {
-    return aToken().totalSupply();
   }
 
   // slither-disable-next-line naming-convention,dead-code

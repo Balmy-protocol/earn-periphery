@@ -126,21 +126,6 @@ abstract contract BaseStrategy is
     return _liquidity_mining_totalBalances();
   }
 
-  /// @inheritdoc IEarnBalmyStrategy
-  function assetYieldCoefficient() external view returns (uint256, uint256) {
-    return _connector_assetYieldCoefficient();
-  }
-
-  /// @inheritdoc IEarnBalmyStrategy
-  function rewardEmissionsPerSecondPerAsset() external view returns (uint256[] memory, uint256[] memory) {
-    return _liquidity_mining_rewardEmissionsPerSecondPerAsset();
-  }
-
-  /// @notice Return the total amount of assets on the underlying farm
-  function totalAssetsInFarm() external view returns (uint256) {
-    return _connector_totalAssetsInFarm();
-  }
-
   /// @inheritdoc IEarnStrategy
   function validatePositionCreation(address sender, bytes calldata creationData) external view {
     _creationValidation_validate(sender, creationData);
@@ -203,7 +188,7 @@ abstract contract BaseStrategy is
     returns (bytes memory)
   {
     _strategyId = StrategyIdConstants.NO_STRATEGY;
-    return _connector_migrateToNewStrategy(newStrategy, migrationData);
+    return _guardian_migrateToNewStrategy(newStrategy, migrationData);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -229,11 +214,15 @@ abstract contract BaseStrategy is
     _;
   }
 
+  // slither-disable-start naming-convention,dead-code
+  function _baseStrategy_registerStrategy(address owner) internal returns (StrategyId) {
+    return registry().registerStrategy(owner);
+  }
+
   ////////////////////////////////////////////////////////
   ///////////////////    LIQ MINING    ///////////////////
   ////////////////////////////////////////////////////////
 
-  // slither-disable-start naming-convention,dead-code
   function _liquidity_mining_underlying_allTokens() internal view override returns (address[] memory tokens) {
     return _connector_allTokens();
   }
@@ -263,15 +252,6 @@ abstract contract BaseStrategy is
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_supportedWithdrawals();
-  }
-
-  function _liquidity_mining_underlying_rewardEmissionsPerSecondPerAsset()
-    internal
-    view
-    override
-    returns (uint256[] memory emissions, uint256[] memory multipliers)
-  {
-    return _connector_rewardEmissionsPerSecondPerAsset();
   }
 
   function _liquidity_mining_underlying_deposited(
@@ -442,6 +422,17 @@ abstract contract BaseStrategy is
     )
   {
     return _connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  function _guardian_underlying_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    return _connector_migrateToNewStrategy(newStrategy, migrationData);
   }
 
   ////////////////////////////////////////////////////////

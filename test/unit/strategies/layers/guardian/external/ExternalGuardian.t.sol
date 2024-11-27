@@ -68,31 +68,6 @@ contract ExternalGuardianTest is Test {
     assertTrue(status == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
   }
 
-  function test_rescue_okWithBalances() public {
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
-    address feeRecipient = address(10);
-
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector, strategyId, address(this)),
-      abi.encode(true)
-    );
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueStarted.selector, strategyId));
-    (address[] memory tokens, uint256[] memory withdrawn) = guardian.rescue(feeRecipient);
-
-    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(withdrawn, CommonUtils.arrayOf(10_000, 20_000));
-
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
-    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(withdrawal.amounts, CommonUtils.arrayOf(10_000, 20_000));
-    assertEq(withdrawal.recipient, address(guardian));
-    (uint16 feeBps, address configuredFeeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
-    assertEq(feeBps, 12_345);
-    assertEq(configuredFeeRecipient, feeRecipient);
-    assertTrue(status == ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
-  }
-
   function test_rescue_rescueNeedsConfirmation() public {
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
     address feeRecipient = address(10);
@@ -174,34 +149,6 @@ contract ExternalGuardianTest is Test {
     assertEq(feeBps, 0);
     assertEq(feeRecipient, address(0));
     assertTrue(status == ExternalGuardian.RescueStatus.OK);
-  }
-
-  function test_cancelRescue_withBalances() public {
-    uint256 assetBalance = 12_345_678;
-    uint256 rewardBalance = 987_655;
-    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
-
-    vm.mockCall(
-      address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(assetBalance)
-    );
-    vm.mockCall(
-      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(rewardBalance)
-    );
-    vm.mockCall(
-      address(manager),
-      abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
-      abi.encode(true)
-    );
-    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
-    guardian.cancelRescue();
-
-    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
-    assertEq(deposit.token, asset);
-    assertEq(deposit.amount, assetBalance);
-    (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
-    assertEq(feeBps, 0);
-    assertEq(feeRecipient, address(0));
-    assertTrue(status == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
   }
 
   function test_cancelRescue_revertWhen_noNeedForConfirmation() public {
@@ -292,62 +239,22 @@ contract ExternalGuardianTest is Test {
     assertEq(balances, CommonUtils.arrayOf(assetUndelyingBalance, rewardUnderlyingBalance));
   }
 
-  function test_totalBalances_withBalances() public {
-    uint256 assetUndelyingBalance = 12_345_678;
-    uint256 assetBalanceInContract = 345_789;
-    uint256 rewardUnderlyingBalance = 987_655;
-    uint256 rewardBalanceInContract = 123_890;
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
-    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
-    guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
-    vm.mockCall(
-      address(asset),
-      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
-      abi.encode(assetBalanceInContract)
-    );
-    vm.mockCall(
-      address(reward),
-      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
-      abi.encode(rewardBalanceInContract)
-    );
-
-    (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
-    assertEq(tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(
-      balances,
-      CommonUtils.arrayOf(
-        assetUndelyingBalance + assetBalanceInContract, rewardUnderlyingBalance + rewardBalanceInContract
-      )
-    );
-  }
-
   function test_totalBalances_needsConfirmation() public {
-    uint256 assetUndelyingBalance = 12_345_678;
+    uint256 assetUnderlyingBalance = 12_345_678;
     uint256 assetBalanceInContract = 345_789;
     uint256 rewardUnderlyingBalance = 987_655;
-    uint256 rewardBalanceInContract = 123_890;
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
-    guardian.setUnderlyingBalance(asset, assetUndelyingBalance);
+    guardian.setUnderlyingBalance(asset, assetUnderlyingBalance);
     guardian.setUnderlyingBalance(reward, rewardUnderlyingBalance);
     vm.mockCall(
       address(asset),
       abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
       abi.encode(assetBalanceInContract)
     );
-    vm.mockCall(
-      address(reward),
-      abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)),
-      abi.encode(rewardBalanceInContract)
-    );
 
     (address[] memory tokens, uint256[] memory balances) = guardian.totalBalances();
     assertEq(tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(
-      balances,
-      CommonUtils.arrayOf(
-        assetUndelyingBalance + assetBalanceInContract, rewardUnderlyingBalance + rewardBalanceInContract
-      )
-    );
+    assertEq(balances, CommonUtils.arrayOf(assetUnderlyingBalance + assetBalanceInContract, rewardUnderlyingBalance));
   }
 
   function test_totalBalances_rescued() public {
@@ -377,16 +284,6 @@ contract ExternalGuardianTest is Test {
   function test_deposit_ok() public {
     uint256 amount = 12_345;
     guardian.setStatus(ExternalGuardian.RescueStatus.OK);
-    uint256 deposited = guardian.deposit(asset, amount);
-    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
-    assertEq(deposit.token, asset);
-    assertEq(deposit.amount, amount);
-    assertEq(deposited, amount);
-  }
-
-  function test_deposit_withBalances() public {
-    uint256 amount = 12_345;
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
     uint256 deposited = guardian.deposit(asset, amount);
     ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
     assertEq(deposit.token, asset);
@@ -424,74 +321,6 @@ contract ExternalGuardianTest is Test {
     assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
     assertEq(withdrawal.amounts, CommonUtils.arrayOf(amount, 0));
     assertEq(withdrawal.recipient, recipient);
-  }
-
-  function test_withdraw_withBalances_notEnoughBalanceSoWillCallUnderlying() public {
-    uint256 positionId = 10;
-    uint256 toWithdrawAsset = 10_000;
-    uint256 toWithdrawReward = 10_000;
-    uint256 balanceReward = 5000;
-    address recipient = address(30);
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
-
-    vm.mockCall(
-      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balanceReward)
-    );
-    // Expect assets's transfer to not be called
-    vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), 0);
-    // Expect reward's transfer to be called
-    vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector, recipient, balanceReward));
-    IEarnStrategy.WithdrawalType[] memory types = guardian.withdraw(
-      positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward), recipient
-    );
-    assertEq(types.length, 2);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-
-    // Make sure underlying was called correctly
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
-    assertEq(withdrawal.positionId, positionId);
-    assertEq(withdrawal.tokens, CommonUtils.arrayOf(asset, reward));
-    assertEq(withdrawal.amounts, CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward - balanceReward));
-    assertEq(withdrawal.recipient, recipient);
-
-    // Since all balance was transferred, then status was changed to ok
-    (,, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
-    assertTrue(status == ExternalGuardian.RescueStatus.OK);
-  }
-
-  function test_withdraw_withBalances_enoughBalanceSoWontCallUnderlying() public {
-    uint256 positionId = 10;
-    uint256 toWithdrawAsset = 0;
-    uint256 toWithdrawReward = 10_000;
-    uint256 balanceReward = 15_000;
-    address recipient = address(30);
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
-
-    vm.mockCall(
-      address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balanceReward)
-    );
-    // Expect assets's transfer to not be called
-    vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector), 0);
-    // Expect reward's transfer to be called
-    vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector, recipient, toWithdrawReward));
-    IEarnStrategy.WithdrawalType[] memory types = guardian.withdraw(
-      positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(toWithdrawAsset, toWithdrawReward), recipient
-    );
-    assertEq(types.length, 2);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-
-    // Make sure underlying layer was not called
-    ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
-    assertEq(withdrawal.positionId, 0);
-    assertEq(withdrawal.tokens.length, 0);
-    assertEq(withdrawal.amounts.length, 0);
-    assertEq(withdrawal.recipient, address(0));
-
-    // Since not all balance was transferred, then status was not changed
-    (,, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
-    assertTrue(status == ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
   }
 
   function test_withdraw_needsConfirmation() public {
@@ -551,33 +380,6 @@ contract ExternalGuardianTest is Test {
     assertEq(specialWithdrawal.recipient, recipient);
   }
 
-  function test_specialWithdraw_withBalances() public {
-    uint256 positionId = 2;
-    SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(10);
-    uint256[] memory toWithdraw = CommonUtils.arrayOf(1000, 1000);
-    bytes memory withdrawData = "12345";
-    address recipient = address(15);
-    guardian.setStatus(ExternalGuardian.RescueStatus.OK_WITH_BALANCE_ON_STRATEGY);
-    (
-      uint256[] memory balanceChanges,
-      address[] memory actualWithdrawnTokens,
-      uint256[] memory actualWithdrawnAmounts,
-      bytes memory result
-    ) = guardian.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
-
-    assertEq(balanceChanges, toWithdraw);
-    assertEq(actualWithdrawnTokens.length, 0);
-    assertEq(actualWithdrawnAmounts.length, 0);
-    assertEq(result.length, 0);
-
-    ExternalGuardianInstance.SpecialWithdrawal memory specialWithdrawal = guardian.lastSpecialWithdrawal();
-    assertEq(specialWithdrawal.positionId, positionId);
-    assertTrue(specialWithdrawal.withdrawalCode == withdrawalCode);
-    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
-    assertEq(specialWithdrawal.withdrawData, withdrawData);
-    assertEq(specialWithdrawal.recipient, recipient);
-  }
-
   function test_specialWithdraw_needsConfirmation() public {
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
@@ -588,6 +390,28 @@ contract ExternalGuardianTest is Test {
     guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
     vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
     guardian.specialWithdraw(2, SpecialWithdrawalCode.wrap(10), CommonUtils.arrayOf(1000, 1000), "12345", address(15));
+  }
+
+  function test_migrateToNewStrategy_ok() public {
+    IEarnStrategy newStrategy = IEarnStrategy(address(0));
+    bytes memory migrationData = "12345";
+    bytes memory result = guardian.migrateToNewStrategy(newStrategy, migrationData);
+    assertEq(result, "return");
+    ExternalGuardianInstance.Migration memory migration = guardian.lastMigration();
+    assertEq(address(migration.newStrategy), address(newStrategy));
+    assertEq(migration.migrationData, migrationData);
+  }
+
+  function test_migrateToNewStrategy_needsConfirmation() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.migrateToNewStrategy(IEarnStrategy(address(0)), "");
+  }
+
+  function test_migrateToNewStrategy_rescued() public {
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUED);
+    vm.expectRevert(abi.encodeWithSelector(ExternalGuardian.InvalidRescueStatus.selector));
+    guardian.migrateToNewStrategy(IEarnStrategy(address(0)), "");
   }
 }
 
@@ -612,6 +436,11 @@ contract ExternalGuardianInstance is ExternalGuardian {
     address recipient;
   }
 
+  struct Migration {
+    IEarnStrategy newStrategy;
+    bytes migrationData;
+  }
+
   IEarnStrategy.WithdrawalType private _withdrawalType = IEarnStrategy.WithdrawalType.IMMEDIATE;
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
@@ -620,6 +449,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   SpecialWithdrawal private _specialWithdrawal;
   Deposit private _deposit;
   mapping(address token => uint256 balance) private _underlyingBalance;
+  Migration private _migration;
 
   constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, address[] memory tokens) {
     _registry = registry;
@@ -677,6 +507,16 @@ contract ExternalGuardianInstance is ExternalGuardian {
     return _guardian_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
+  function migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    external
+    returns (bytes memory)
+  {
+    return _guardian_migrateToNewStrategy(newStrategy, migrationData);
+  }
+
   function lastDeposit() external view returns (Deposit memory) {
     return _deposit;
   }
@@ -687,6 +527,10 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function lastSpecialWithdrawal() external view returns (SpecialWithdrawal memory) {
     return _specialWithdrawal;
+  }
+
+  function lastMigration() external view returns (Migration memory) {
+    return _migration;
   }
 
   function setStatus(RescueStatus status) external {
@@ -772,6 +616,18 @@ contract ExternalGuardianInstance is ExternalGuardian {
     actualWithdrawnTokens = new address[](0);
     actualWithdrawnAmounts = new uint256[](0);
     result = "";
+  }
+
+  function _guardian_underlying_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    _migration = Migration(newStrategy, migrationData);
+    return "return";
   }
 
   function _guardian_underlying_tokens() internal view override returns (address[] memory tokens) {

@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "@clones/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
-import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
+import {
+  CompoundV2Connector,
+  IERC20,
+  ICERC20,
+  IComptroller
+} from "../../layers/connector/compound-v2/CompoundV2Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
 import { ExternalTOSCreationValidation } from
@@ -13,10 +17,10 @@ import { ExternalTOSCreationValidation } from
 import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
-contract ERC4626Strategy is
+contract CompoundV2Strategy is
   BaseStrategy,
   Clone,
-  ERC4626Connector,
+  CompoundV2Connector,
   ExternalLiquidityMining,
   ExternalFees,
   ExternalGuardian,
@@ -67,10 +71,12 @@ contract ERC4626Strategy is
   }
 
   // Immutable params:
-  // 1. Earn Vault (20B)
-  // 2. Global Registry (20B)
-  // 3. ERC4626 vault (20B)
-  // 4. Asset (20B)
+  // 1. Earn Vault (20B)              - _getArgAddress(0)
+  // 2. Global Registry (20B)         - _getArgAddress(20)
+  // 3. Asset (20B)                   - _getArgAddress(40)
+  // 4. CompoundV2 cToken (20B)       - _getArgAddress(60)
+  // 5. CompoundV2 comptroller (20B)  - _getArgAddress(80)
+  // 6. CompoundV2 comp (20B)         - _getArgAddress(100)
 
   function _earnVault() internal pure override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
@@ -85,13 +91,20 @@ contract ERC4626Strategy is
     return IGlobalEarnRegistry(_getArgAddress(20));
   }
 
-  // slither-disable-next-line naming-convention
-  function ERC4626Vault() public pure override returns (IERC4626) {
-    return IERC4626(_getArgAddress(40));
+  function _asset() internal pure override returns (address) {
+    return _getArgAddress(40);
   }
 
-  function _asset() internal pure override returns (IERC20) {
-    return IERC20(_getArgAddress(60));
+  function cToken() public pure override returns (ICERC20) {
+    return ICERC20(_getArgAddress(60));
+  }
+
+  function comptroller() public pure override returns (IComptroller) {
+    return IComptroller(_getArgAddress(80));
+  }
+
+  function comp() public pure override returns (IERC20) {
+    return IERC20(_getArgAddress(100));
   }
 
   // slither-disable-next-line naming-convention,dead-code

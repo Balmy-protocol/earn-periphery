@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { StrategyId, IEarnVault, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { BaseStrategyFactory } from "../base/BaseStrategyFactory.sol";
@@ -10,8 +11,26 @@ import { ERC4626Strategy, IGlobalEarnRegistry, IERC4626 } from "./ERC4626Strateg
 contract ERC4626StrategyFactory is BaseStrategyFactory {
   constructor(ERC4626Strategy implementation_) BaseStrategyFactory(implementation_) { }
 
-  function cloneAndRegister(
-    IEarnStrategyRegistry strategyRegistry,
+  function cloneStrategy(
+    IEarnVault earnVault,
+    IGlobalEarnRegistry globalRegistry,
+    IERC4626 erc4626Vault,
+    bytes calldata tosData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description
+  )
+    public
+    returns (ERC4626Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
+    clone = ERC4626Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
+    clone.init(tosData, guardianData, feesData, description);
+  }
+
+  function cloneStrategyAndRegister(
     address owner,
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
@@ -24,16 +43,34 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     external
     returns (ERC4626Strategy clone, StrategyId strategyId)
   {
-    address asset = erc4626Vault.asset();
-    bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
-    (IEarnBalmyStrategy clone_, StrategyId stratId) = _cloneAndRegister(strategyRegistry, owner, immutableData);
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
-    strategyId = stratId;
+    strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
+    emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone2Strategy(
+    IEarnVault earnVault,
+    IGlobalEarnRegistry globalRegistry,
+    IERC4626 erc4626Vault,
+    bytes calldata tosData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description
+  )
+    external
+    returns (ERC4626Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    clone = ERC4626Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
     clone.init(tosData, guardianData, feesData, description);
   }
 
-  function clone2AndRegister(
-    IEarnStrategyRegistry strategyRegistry,
+  function clone2StrategyAndRegister(
     address owner,
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
@@ -46,16 +83,35 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     external
     returns (ERC4626Strategy clone, StrategyId strategyId)
   {
-    address asset = erc4626Vault.asset();
-    bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
-    (IEarnBalmyStrategy clone_, StrategyId stratId) = _clone2AndRegister(strategyRegistry, owner, immutableData);
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = ERC4626Strategy(payable(address(clone_)));
-    strategyId = stratId;
+    strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
+    emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone3Strategy(
+    IEarnVault earnVault,
+    IGlobalEarnRegistry globalRegistry,
+    IERC4626 erc4626Vault,
+    bytes32 salt,
+    bytes calldata tosData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description
+  )
+    external
+    returns (ERC4626Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
+    clone = ERC4626Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
     clone.init(tosData, guardianData, feesData, description);
   }
 
-  function clone3AndRegister(
-    IEarnStrategyRegistry strategyRegistry,
+  function clone3StrategyAndRegister(
     address owner,
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
@@ -69,12 +125,12 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     external
     returns (ERC4626Strategy clone, StrategyId strategyId)
   {
-    address asset = erc4626Vault.asset();
-    bytes memory immutableData = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
-    (IEarnBalmyStrategy clone_, StrategyId stratId) = _clone3AndRegister(strategyRegistry, owner, immutableData, salt);
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
-    strategyId = stratId;
-    clone.init(tosData, guardianData, feesData, description);
+    strategyId = clone.initAndRegister(owner, tosData, guardianData, feesData, description);
+    // slither-disable-next-line reentrancy-events
+    emit StrategyCloned(clone, strategyId);
   }
 
   function addressOfClone2(
@@ -86,8 +142,20 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     view
     returns (address clone)
   {
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
+    return _addressOfClone2(immutableData);
+  }
+
+  function _calculateImmutableData(
+    IEarnVault earnVault,
+    IGlobalEarnRegistry globalRegistry,
+    IERC4626 erc4626Vault
+  )
+    internal
+    view
+    returns (bytes memory)
+  {
     address asset = erc4626Vault.asset();
-    bytes memory data = abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
-    return _addressOfClone2(data);
+    return abi.encodePacked(earnVault, globalRegistry, erc4626Vault, asset);
   }
 }

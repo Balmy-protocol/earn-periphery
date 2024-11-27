@@ -15,7 +15,6 @@ import {
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
-import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { PermissionUtils } from "@balmy/nft-permissions-test/PermissionUtils.sol";
 import { LidoSTETHStrategyMock } from "test/mocks/strategies/LidoSTETHStrategyMock.sol";
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
@@ -34,7 +33,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
   LidoSTETHDelayedWithdrawalAdapter private lidoSTETHDelayedWithdrawalAdapter;
   IEarnVault private vault;
   address[] private tokens = new address[](1);
-  IEarnBalmyStrategy private strategy;
+  LidoSTETHStrategyMock private strategy;
   StrategyId private strategyId;
   IDelayedWithdrawalManager private delayedWithdrawalManager;
   GlobalEarnRegistry private globalRegistry;
@@ -64,7 +63,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     lidoSTETHDelayedWithdrawalAdapter = new LidoSTETHDelayedWithdrawalAdapter(globalRegistry, queue);
 
     strategy = new LidoSTETHStrategyMock(vault, "LidoSTETHStrategy", lidoSTETHDelayedWithdrawalAdapter);
-    strategyId = strategyRegistry.registerStrategy(owner, strategy);
+    strategyId = strategy.registerStrategy(owner);
 
     (position,) = vault.createPosition{ value: amountToDeposit1 }(
       strategyId, tokens[0], amountToDeposit1, owner, PermissionUtils.buildEmptyPermissionSet(), "", ""
