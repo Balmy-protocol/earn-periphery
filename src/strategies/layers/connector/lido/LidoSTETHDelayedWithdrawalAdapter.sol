@@ -70,7 +70,18 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     return interfaceId == type(IDelayedWithdrawalAdapter).interfaceId;
   }
 
-  function estimatedPendingFunds(uint256 positionId, address) external view override returns (uint256 pendingAmount) {
+  function estimatedPendingFunds(
+    uint256 positionId,
+    address token
+  )
+    external
+    view
+    override
+    returns (uint256 pendingAmount)
+  {
+    if (token != _ETH) {
+      return 0;
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     // slither-disable-next-line incorrect-equality
     if (requestIds.length == 0) {
@@ -84,7 +95,18 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
   }
 
-  function withdrawableFunds(uint256 positionId, address) external view override returns (uint256 withdrawableAmount) {
+  function withdrawableFunds(
+    uint256 positionId,
+    address token
+  )
+    external
+    view
+    override
+    returns (uint256 withdrawableAmount)
+  {
+    if (token != _ETH) {
+      return 0;
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     // slither-disable-next-line incorrect-equality
     if (requestIds.length == 0) {

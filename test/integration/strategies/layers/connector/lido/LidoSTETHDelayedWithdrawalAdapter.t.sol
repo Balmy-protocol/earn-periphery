@@ -80,12 +80,12 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
   }
 
   function testFork_estimatedPendingFunds_AreZeroWithoutInitiatedWithdraw() public {
-    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
+    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, Token.NATIVE_TOKEN);
     assertEq(pendingAmount, 0);
   }
 
   function testFork_withdrawableFunds_AreZeroWithoutInitiatedWithdraw() public {
-    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
+    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, Token.NATIVE_TOKEN);
     assertEq(pendingAmount, 0);
   }
 
@@ -96,8 +96,10 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     vm.startPrank(address(strategy));
 
     lidoSTETHDelayedWithdrawalAdapter.initiateDelayedWithdrawal(position, owner, amount);
-    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
+    // Make sure that the adapter doesn't have any funds for other tokens
+    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, Token.NATIVE_TOKEN);
     assertAlmostEq(pendingAmount, amount, 2);
+    assertEq(lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, address(1)), 0);
 
     vm.stopPrank();
   }
@@ -115,16 +117,18 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     // Force the delayed to be finalized
     queue.setTimeToWithdraw(true);
 
-    uint256 withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, owner);
+    uint256 withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, Token.NATIVE_TOKEN);
     assertNotEq(withdrawableFunds, 0);
+    // Make sure that the adapter doesn't have any funds for other tokens
+    assertEq(lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, address(1)), 0);
     vm.startPrank(address(lidoSTETHDelayedWithdrawalAdapter.manager()));
     lidoSTETHDelayedWithdrawalAdapter.withdraw(position, Token.NATIVE_TOKEN, address(strategy));
-    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
+    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, Token.NATIVE_TOKEN);
 
     assertAlmostEq(withdrawableFunds, address(strategy).balance, 1);
     assertEq(pendingAmount, 0);
 
-    withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, owner);
+    withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, Token.NATIVE_TOKEN);
     assertEq(withdrawableFunds, 0);
 
     vm.stopPrank();
@@ -145,11 +149,11 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     // Force the delayed to be finalized
     queue.setTimeToWithdraw(true);
 
-    uint256 withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, owner);
+    uint256 withdrawableFunds = lidoSTETHDelayedWithdrawalAdapter.withdrawableFunds(position, Token.NATIVE_TOKEN);
     assertNotEq(withdrawableFunds, 0);
     vm.startPrank(address(lidoSTETHDelayedWithdrawalAdapter.manager()));
     lidoSTETHDelayedWithdrawalAdapter.withdraw(position, Token.NATIVE_TOKEN, address(strategy));
-    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, owner);
+    uint256 pendingAmount = lidoSTETHDelayedWithdrawalAdapter.estimatedPendingFunds(position, Token.NATIVE_TOKEN);
 
     assertAlmostEq(withdrawableFunds, address(strategy).balance, 1);
     assertEq(pendingAmount, 0);
