@@ -2,6 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { Clone } from "@clones/Clone.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
@@ -13,6 +14,7 @@ import { BaseDelayedStrategy } from "../base/BaseDelayedStrategy.sol";
 
 contract LidoSTETHStrategy is
   BaseDelayedStrategy,
+  Clone,
   LidoSTETHConnector,
   ExternalLiquidityMining,
   ExternalFees,
@@ -21,34 +23,41 @@ contract LidoSTETHStrategy is
   /// @inheritdoc IEarnStrategy
   string public description;
 
-  // slither-disable-next-line naming-convention
-  IDelayedWithdrawalAdapter internal immutable __delayedWithdrawalAdapter;
-  IGlobalEarnRegistry internal immutable _globalRegistry;
-  IEarnVault internal immutable _vault;
-
-  constructor(
-    // General
-    IGlobalEarnRegistry globalRegistry_,
-    IEarnVault vault_,
-    string memory description_,
-    IDelayedWithdrawalAdapter delayedWithdrawalAdapter_,
-    // Strategy registry
-    address owner
-  ) {
-    _globalRegistry = globalRegistry_;
-    _vault = vault_;
-    description = description_;
-    __delayedWithdrawalAdapter = delayedWithdrawalAdapter_;
-
-    // TODO: add tests for this scenario
-    if (owner != address(0)) {
-      // slither-disable-next-line unused-return
-      registry().registerStrategy(owner);
-    }
+  // slither-disable-next-line reentrancy-benign
+  function initAndRegister(
+    address owner,
+    bytes calldata creationValidationData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    external
+    returns (StrategyId strategyId_)
+  {
+    strategyId_ = _baseStrategy_registerStrategy(owner);
+    init(creationValidationData, feesData, description_);
   }
 
-  function _delayedWithdrawalAdapter() internal view override returns (IDelayedWithdrawalAdapter) {
-    return __delayedWithdrawalAdapter;
+  // slither-disable-next-line reentrancy-benign
+  function init(
+    bytes calldata creationValidationData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    public
+    initializer
+  {
+    _creationValidation_init(creationValidationData);
+    _fees_init(feesData);
+    description = description_;
+  }
+
+  // Immutable params:
+  // 1. Earn Vault (20B)                 - _getArgAddress(0)
+  // 2. Global Registry (20B)            - _getArgAddress(20)
+  // 3. Delayed Withdrawal Adapter (20B) - _getArgAddress(40)
+
+  function _delayedWithdrawalAdapter() internal pure override returns (IDelayedWithdrawalAdapter) {
+    return IDelayedWithdrawalAdapter(_getArgAddress(40));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -58,11 +67,11 @@ contract LidoSTETHStrategy is
 
   function globalRegistry()
     public
-    view
+    pure
     override(ExternalFees, ExternalLiquidityMining, ExternalTOSCreationValidation)
     returns (IGlobalEarnRegistry)
   {
-    return _globalRegistry;
+    return IGlobalEarnRegistry(_getArgAddress(20));
   }
 
   function strategyId()
@@ -74,7 +83,7 @@ contract LidoSTETHStrategy is
     return BaseDelayedStrategy.strategyId();
   }
 
-  function _earnVault() internal view override returns (IEarnVault) {
-    return _vault;
+  function _earnVault() internal pure override returns (IEarnVault) {
+    return IEarnVault(_getArgAddress(0));
   }
 }
