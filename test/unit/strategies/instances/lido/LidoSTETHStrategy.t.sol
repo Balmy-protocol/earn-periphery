@@ -2,7 +2,6 @@
 pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import {
@@ -19,7 +18,6 @@ import {
 } from "src/strategies/instances/lido/LidoSTETHStrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
 import { ITOSManagerCore } from "src/interfaces/ITOSManager.sol";
-import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 contract LidoSTETHStrategyTest is Test {
