@@ -38,6 +38,8 @@ struct WithdrawalRequestStatus {
 }
 
 contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
+  error TokenNotETH();
+
   using Math for uint256;
   using SafeERC20 for IERC20;
 
@@ -120,7 +122,10 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
   }
 
-  function initiateDelayedWithdrawal(uint256 positionId, address, uint256) external override {
+  function initiateDelayedWithdrawal(uint256 positionId, address token, uint256) external override {
+    if (token != _ETH) {
+      revert TokenNotETH();
+    }
     IDelayedWithdrawalManager delayedWithdrawalManager = manager();
     IEarnVault vault_ = delayedWithdrawalManager.VAULT();
     // slither-disable-next-line unused-return
@@ -146,7 +151,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
   // slither-disable-start assembly
   function withdraw(
     uint256 positionId,
-    address,
+    address token,
     address recipient
   )
     external
@@ -154,6 +159,9 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     onlyManager
     returns (uint256 withdrawn, uint256 stillPending)
   {
+    if (token != _ETH) {
+      revert TokenNotETH();
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     if (requestIds.length == 0) {
       return (0, 0);
