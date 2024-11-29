@@ -3,14 +3,13 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import {
   CompoundV2StrategyFactory,
   CompoundV2Strategy,
   StrategyId,
   IEarnVault,
   IGlobalEarnRegistry,
-  IEarnStrategyRegistry,
   StrategyIdConstants,
   BaseStrategyFactory,
   IEarnBalmyStrategy,
