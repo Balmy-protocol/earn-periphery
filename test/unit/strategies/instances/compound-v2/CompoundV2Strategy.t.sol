@@ -22,6 +22,7 @@ import { ITOSManagerCore } from "src/interfaces/ITOSManager.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
+// solhint-disable-next-line max-states-count
 contract CompoundV2StrategyTest is Test {
   IEarnStrategyRegistry private strategyRegistry;
   address private owner = address(2);
