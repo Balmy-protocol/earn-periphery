@@ -26,6 +26,7 @@ interface ILidoSTETHQueue {
     external
     view
     returns (uint256[] memory hintIds);
+  function getLastCheckpointIndex() external view returns (uint256);
 }
 
 struct WithdrawalRequestStatus {
@@ -200,7 +201,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
     _pendingWithdrawals[positionId] = requestIds;
 
-    uint256[] memory hints = _queue.findCheckpointHints(requestsToClaim, 1, requestsToClaim.length + 1);
+    uint256[] memory hints = _queue.findCheckpointHints(requestsToClaim, 1, _queue.getLastCheckpointIndex());
     // slither-disable-next-line reentrancy-no-eth
     _queue.claimWithdrawalsTo(requestsToClaim, hints, recipient);
   }

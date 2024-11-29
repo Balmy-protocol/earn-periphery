@@ -59,4 +59,8 @@ contract LidoSTETHQueueMock is ILidoSTETHQueue {
     returns (uint256[] memory hintIds)
   // solhint-disable-next-line no-empty-blocks
   { }
+
+  function getLastCheckpointIndex() external pure override returns (uint256) {
+    return 1;
+  }
 }
