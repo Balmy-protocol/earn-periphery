@@ -44,6 +44,20 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     emit StrategyCloned(clone, strategyId);
   }
 
+  function cloneStrategyWithId(
+    StrategyId strategyId,
+    LidoSTETHStrategyData calldata strategyData
+  )
+    external
+    returns (LidoSTETHStrategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
+    clone = LidoSTETHStrategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(strategyId, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+  }
+
   function clone2Strategy(LidoSTETHStrategyData calldata strategyData) external returns (LidoSTETHStrategy clone) {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
@@ -66,6 +80,20 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
       clone.initAndRegister(owner, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone2StrategyWithId(
+    StrategyId strategyId,
+    LidoSTETHStrategyData calldata strategyData
+  )
+    external
+    returns (LidoSTETHStrategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    clone = LidoSTETHStrategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(strategyId, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
   }
 
   function clone3Strategy(
@@ -99,6 +127,21 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     emit StrategyCloned(clone, strategyId);
   }
 
+  function clone3StrategyWithId(
+    StrategyId strategyId,
+    LidoSTETHStrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (LidoSTETHStrategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
+    clone = LidoSTETHStrategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(strategyId, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+  }
+
   function addressOfClone2(
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
@@ -112,14 +155,8 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     return _addressOfClone2(immutableData);
   }
 
-  function _calculateImmutableData(LidoSTETHStrategyData calldata strategyImmutableData)
-    internal
-    pure
-    returns (bytes memory)
-  {
-    return _calculateImmutableData(
-      strategyImmutableData.earnVault, strategyImmutableData.globalRegistry, strategyImmutableData.adapter
-    );
+  function _calculateImmutableData(LidoSTETHStrategyData calldata strategyData) internal pure returns (bytes memory) {
+    return _calculateImmutableData(strategyData.earnVault, strategyData.globalRegistry, strategyData.adapter);
   }
 
   function _calculateImmutableData(

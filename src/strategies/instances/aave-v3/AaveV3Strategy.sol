@@ -29,7 +29,7 @@ contract AaveV3Strategy is
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
-    bytes calldata tosData,
+    bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
     string calldata description_
@@ -38,12 +38,26 @@ contract AaveV3Strategy is
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init(tosData, guardianData, feesData, description_);
+    init(creationValidationData, guardianData, feesData, description_);
+  }
+
+  // slither-disable-next-line reentrancy-benign
+  function initWithId(
+    StrategyId strategyId_,
+    bytes calldata creationValidationData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    external
+  {
+    _strategyId = strategyId_;
+    init(creationValidationData, guardianData, feesData, description_);
   }
 
   // slither-disable-next-line reentrancy-benign
   function init(
-    bytes calldata tosData,
+    bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
     string calldata description_
@@ -51,7 +65,7 @@ contract AaveV3Strategy is
     public
     initializer
   {
-    _creationValidation_init(tosData);
+    _creationValidation_init(creationValidationData);
     _guardian_init(guardianData);
     _fees_init(feesData);
     _connector_init();
