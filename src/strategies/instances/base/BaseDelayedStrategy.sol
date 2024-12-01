@@ -318,7 +318,7 @@ abstract contract BaseDelayedStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _connector_deposit(depositToken, depositAmount);
+    return _connector_deposited(depositToken, depositAmount);
   }
 
   function _fees_underlying_withdraw(

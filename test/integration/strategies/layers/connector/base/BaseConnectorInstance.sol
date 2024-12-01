@@ -55,7 +55,7 @@ abstract contract BaseConnectorInstance is BaseConnector {
   }
 
   function deposit(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
-    return _connector_deposit(depositToken, depositAmount);
+    return _connector_deposited(depositToken, depositAmount);
   }
 
   function withdraw(
