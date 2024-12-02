@@ -154,13 +154,18 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       ? campaignMem.emissionPerSecond * (campaignMem.deadline - block.timestamp)
       : 0;
     if (currentBalance < balanceNeeded) {
-      // Transfer the missing tokens
+      uint256 missing = balanceNeeded - currentBalance;
       if (reward == Token.NATIVE_TOKEN) {
-        if (msg.value != balanceNeeded - currentBalance) {
+        if (msg.value < missing) {
           revert InsufficientBalance();
         }
+        // Return the excess tokens
+        if (msg.value > missing) {
+          Token.NATIVE_TOKEN.transfer(msg.sender, msg.value - missing);
+        }
       } else {
-        IERC20(reward).safeTransferFrom(msg.sender, address(this), balanceNeeded - currentBalance);
+        // Transfer the missing tokens
+        IERC20(reward).safeTransferFrom(msg.sender, address(this), missing);
       }
     } else if (currentBalance > balanceNeeded) {
       // Return the excess tokens

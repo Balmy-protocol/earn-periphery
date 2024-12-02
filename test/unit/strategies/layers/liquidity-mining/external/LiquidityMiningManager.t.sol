@@ -139,6 +139,24 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     assertEq(address(manager).balance, balanceForCampaign);
   }
 
+  function test_setCampaign_NativeExcessFundsAreReturned() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    uint256 previousBalance = address(adminManageCampaigns).balance;
+    vm.expectEmit();
+    emit CampaignSet(strategyId, Token.NATIVE_TOKEN, 3, block.timestamp + 10);
+    // Make sure it can be called without reverting
+    manager.setCampaign{ value: balanceForCampaign + 10 }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      emissionPerSecond: 3,
+      duration: 10
+    });
+    vm.stopPrank();
+    assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign);
+    assertEq(address(manager).balance, balanceForCampaign);
+  }
+
   function test_setCampaign_modifyCampaign_addBalance_Native() public {
     vm.startPrank(adminManageCampaigns);
     uint256 balanceForCampaign = 3 * 10;
