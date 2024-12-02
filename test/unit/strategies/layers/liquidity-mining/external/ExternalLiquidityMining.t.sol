@@ -167,6 +167,39 @@ contract ExternalLiquidityMiningTest is Test {
     assertEq(specialWithdrawal.recipient, recipient);
   }
 
+  function test_specialWithdraw_noAsset() public {
+    uint256 positionId = 1;
+    SpecialWithdrawalCode withdrawalCode = SpecialWithdrawalCode.wrap(1);
+    uint256[] memory toWithdraw = CommonUtils.arrayOf(0, 123);
+    bytes memory withdrawData = "1234567";
+    address recipient = address(1);
+    vm.expectCall(address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector), 0);
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = liquidityMining.specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+
+    for (uint256 i; i < balanceChanges.length; ++i) {
+      if (i < toWithdraw.length) {
+        assertEq(balanceChanges[i], toWithdraw[i]);
+      } else {
+        assertEq(balanceChanges[i], 0);
+      }
+    }
+    assertEq(actualWithdrawnTokens.length, 0);
+    assertEq(actualWithdrawnAmounts.length, 0);
+    assertEq(result.length, 0);
+
+    ExternalLiquidityMiningInstance.SpecialWithdrawal memory specialWithdrawal = liquidityMining.lastSpecialWithdrawal();
+    assertEq(specialWithdrawal.positionId, positionId);
+    assertTrue(specialWithdrawal.withdrawalCode == withdrawalCode);
+    assertEq(specialWithdrawal.toWithdraw, toWithdraw);
+    assertEq(specialWithdrawal.withdrawData, withdrawData);
+    assertEq(specialWithdrawal.recipient, recipient);
+  }
+
   function test_withdraw_onlyAsset() public {
     uint256 positionId = 10;
     uint256 amount = 12_345;
@@ -220,6 +253,7 @@ contract ExternalLiquidityMiningTest is Test {
       address(manager),
       abi.encodeWithSelector(ILiquidityMiningManagerCore.claim.selector, strategyId, lmReward, amount, recipient)
     );
+    vm.expectCall(address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector), 0);
 
     IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
       positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, 0, amount), recipient
