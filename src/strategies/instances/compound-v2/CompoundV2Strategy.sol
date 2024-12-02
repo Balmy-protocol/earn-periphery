@@ -12,8 +12,7 @@ import {
 } from "../../layers/connector/compound-v2/CompoundV2Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
-import { ExternalTOSCreationValidation } from
-  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalCreationValidation } from "../../layers/creation-validation/external/ExternalCreationValidation.sol";
 import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
@@ -24,7 +23,7 @@ contract CompoundV2Strategy is
   ExternalLiquidityMining,
   ExternalFees,
   ExternalGuardian,
-  ExternalTOSCreationValidation
+  ExternalCreationValidation
 {
   /// @inheritdoc IEarnStrategy
   string public description;
@@ -78,7 +77,7 @@ contract CompoundV2Strategy is
   function strategyId()
     public
     view
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation, BaseStrategy)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation, BaseStrategy)
     returns (StrategyId)
   {
     return BaseStrategy.strategyId();
@@ -99,7 +98,7 @@ contract CompoundV2Strategy is
   function globalRegistry()
     public
     pure
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));

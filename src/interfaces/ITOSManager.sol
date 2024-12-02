@@ -2,23 +2,13 @@
 pragma solidity >=0.8.8;
 
 import { StrategyId, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-
-/// @notice Interface for the TOS Manager that the strategies call
-interface ITOSManagerCore {
-  /// @notice Validates a position creation for the given strategy
-  function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view;
-
-  /**
-   * @notice Allows the strategy to call the manager, for self-configuration
-   */
-  function strategySelfConfigure(bytes calldata data) external;
-}
+import { ICreationValidationManagerCore } from "./ICreationValidationManager.sol";
 
 /**
  * @title TOS Manager Interface
  * @notice This manager handles TOS for the strategies that call it
  */
-interface ITOSManager is ITOSManagerCore {
+interface ITOSManager is ICreationValidationManagerCore {
   /// @notice Emitted when the TOS is updated for a group
   event TOSUpdated(bytes32 group, bytes tos);
 

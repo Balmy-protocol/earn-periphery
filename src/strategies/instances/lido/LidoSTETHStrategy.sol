@@ -7,8 +7,7 @@ import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/Delaye
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
-import { ExternalTOSCreationValidation } from
-  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalCreationValidation } from "../../layers/creation-validation/external/ExternalCreationValidation.sol";
 import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseDelayedStrategy } from "../base/BaseDelayedStrategy.sol";
 
@@ -18,7 +17,7 @@ contract LidoSTETHStrategy is
   LidoSTETHConnector,
   ExternalLiquidityMining,
   ExternalFees,
-  ExternalTOSCreationValidation
+  ExternalCreationValidation
 {
   /// @inheritdoc IEarnStrategy
   string public description;
@@ -81,7 +80,7 @@ contract LidoSTETHStrategy is
   function globalRegistry()
     public
     pure
-    override(ExternalFees, ExternalLiquidityMining, ExternalTOSCreationValidation)
+    override(ExternalFees, ExternalLiquidityMining, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));
@@ -90,7 +89,7 @@ contract LidoSTETHStrategy is
   function strategyId()
     public
     view
-    override(BaseDelayedStrategy, ExternalFees, ExternalLiquidityMining, ExternalTOSCreationValidation)
+    override(BaseDelayedStrategy, ExternalFees, ExternalLiquidityMining, ExternalCreationValidation)
     returns (StrategyId)
   {
     return BaseDelayedStrategy.strategyId();

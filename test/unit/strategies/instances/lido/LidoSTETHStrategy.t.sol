@@ -17,7 +17,7 @@ import {
   IDelayedWithdrawalAdapter
 } from "src/strategies/instances/lido/LidoSTETHStrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
-import { ITOSManagerCore } from "src/interfaces/ITOSManager.sol";
+import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 contract LidoSTETHStrategyTest is Test {
@@ -27,7 +27,7 @@ contract LidoSTETHStrategyTest is Test {
   IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
   IDelayedWithdrawalAdapter private adapter = IDelayedWithdrawalAdapter(address(5));
   IFeeManagerCore private feeManager = IFeeManagerCore(address(6));
-  ITOSManagerCore private tosManager = ITOSManagerCore(address(7));
+  ICreationValidationManagerCore private validationManager = ICreationValidationManagerCore(address(7));
   bytes private creationValidationData = abi.encodePacked("creationValidationData");
   bytes private feesData = abi.encodePacked("feesData");
   string private description = "description";
@@ -54,17 +54,21 @@ contract LidoSTETHStrategyTest is Test {
     vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
     vm.mockCall(
       address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("TOS_MANAGER")),
-      abi.encode(tosManager)
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("CREATION_VALIDATION_MANAGER")),
+      abi.encode(validationManager)
     );
-    vm.mockCall(address(tosManager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector), "");
+    vm.mockCall(
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector),
+      ""
+    );
   }
 
   function test_cloneStrategy() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
@@ -78,8 +82,8 @@ contract LidoSTETHStrategyTest is Test {
   function test_cloneStrategyAndRegister() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
@@ -93,8 +97,8 @@ contract LidoSTETHStrategyTest is Test {
   function test_cloneStrategyWithId() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
@@ -108,8 +112,8 @@ contract LidoSTETHStrategyTest is Test {
   function test_clone2Strategy() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
 
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
@@ -125,8 +129,8 @@ contract LidoSTETHStrategyTest is Test {
   function test_clone2StrategyAndRegister() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
     vm.expectEmit();
@@ -142,8 +146,8 @@ contract LidoSTETHStrategyTest is Test {
   function test_clone2StrategyWithId() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
     vm.expectEmit();
@@ -160,8 +164,8 @@ contract LidoSTETHStrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     address cloneAddress = factory.addressOfClone3(salt);
     vm.expectEmit();
@@ -178,8 +182,8 @@ contract LidoSTETHStrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     address cloneAddress = factory.addressOfClone3(salt);
     vm.expectEmit();
@@ -195,8 +199,8 @@ contract LidoSTETHStrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(tosManager),
-      abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, creationValidationData)
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
     address cloneAddress = factory.addressOfClone3(salt);
     vm.expectEmit();
