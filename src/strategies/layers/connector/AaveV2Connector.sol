@@ -132,7 +132,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposit(
+  function _connector_deposited(
     address depositToken,
     uint256 depositAmount
   )
