@@ -97,7 +97,15 @@ contract AaveV3StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     AaveV3Strategy clone = factory.cloneStrategy(
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
 
@@ -119,7 +127,15 @@ contract AaveV3StrategyTest is Test {
     (AaveV3Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
 
@@ -141,7 +157,15 @@ contract AaveV3StrategyTest is Test {
     AaveV3Strategy clone = factory.cloneStrategyWithId(
       strategyId,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -162,7 +186,15 @@ contract AaveV3StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     AaveV3Strategy clone = factory.clone2Strategy(
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
     assertEq(cloneAddress, address(clone));
@@ -185,7 +217,15 @@ contract AaveV3StrategyTest is Test {
     (AaveV3Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
 
@@ -209,7 +249,15 @@ contract AaveV3StrategyTest is Test {
     AaveV3Strategy clone = factory.clone2StrategyWithId(
       strategyId,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       )
     );
 
@@ -233,7 +281,15 @@ contract AaveV3StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     AaveV3Strategy clone = factory.clone3Strategy(
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       ),
       salt
     );
@@ -259,7 +315,15 @@ contract AaveV3StrategyTest is Test {
     (AaveV3Strategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
       owner,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       ),
       salt
     );
@@ -284,7 +348,15 @@ contract AaveV3StrategyTest is Test {
     AaveV3Strategy clone = factory.clone3StrategyWithId(
       strategyId,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV3Pool,
+        aaveV3Rewards,
+        creationValidationData,
+        guardianData,
+        feesData,
+        description
       ),
       salt
     );
