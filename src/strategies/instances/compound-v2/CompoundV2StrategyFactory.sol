@@ -15,7 +15,7 @@ struct CompoundV2StrategyData {
   ICERC20 cToken;
   IComptroller comptroller;
   IERC20 comp;
-  bytes tosData;
+  bytes creationValidationData;
   bytes guardianData;
   bytes feesData;
   string description;
@@ -29,7 +29,9 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = CompoundV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function cloneStrategyAndRegister(
@@ -43,10 +45,34 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = CompoundV2Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function cloneStrategyWithId(
+    StrategyId strategyId,
+    CompoundV2StrategyData calldata strategyData
+  )
+    external
+    returns (CompoundV2Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
+    clone = CompoundV2Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function clone2Strategy(CompoundV2StrategyData calldata strategyData) external returns (CompoundV2Strategy clone) {
@@ -54,7 +80,9 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = CompoundV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function clone2StrategyAndRegister(
@@ -68,10 +96,34 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = CompoundV2Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone2StrategyWithId(
+    StrategyId strategyId,
+    CompoundV2StrategyData calldata strategyData
+  )
+    external
+    returns (CompoundV2Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    clone = CompoundV2Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function clone3Strategy(
@@ -85,7 +137,9 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = CompoundV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function clone3StrategyAndRegister(
@@ -100,10 +154,35 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = CompoundV2Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone3StrategyWithId(
+    StrategyId strategyId,
+    CompoundV2StrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (CompoundV2Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
+    clone = CompoundV2Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function addressOfClone2(

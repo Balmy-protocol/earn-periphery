@@ -38,6 +38,19 @@ contract LidoSTETHStrategy is
   }
 
   // slither-disable-next-line reentrancy-benign
+  function initWithId(
+    StrategyId strategyId_,
+    bytes calldata creationValidationData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    external
+  {
+    _strategyId = strategyId_;
+    init(creationValidationData, feesData, description_);
+  }
+
+  // slither-disable-next-line reentrancy-benign
   function init(
     bytes calldata creationValidationData,
     bytes calldata feesData,
