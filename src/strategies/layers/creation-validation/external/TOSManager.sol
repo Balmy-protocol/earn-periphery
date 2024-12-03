@@ -7,7 +7,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
-import { ITOSManager, ITOSManagerCore, IEarnStrategyRegistry } from "src/interfaces/ITOSManager.sol";
+import { ITOSManager, ICreationValidationManagerCore, IEarnStrategyRegistry } from "src/interfaces/ITOSManager.sol";
 
 contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   using MessageHashUtils for bytes;
@@ -44,7 +44,7 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
     return getGroupTOSHash[group];
   }
 
-  /// @inheritdoc ITOSManagerCore
+  /// @inheritdoc ICreationValidationManagerCore
   function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view {
     bytes32 tosHash = getStrategyTOSHash(strategyId);
     if (tosHash != bytes32(0) && !SignatureChecker.isValidSignatureNow(sender, tosHash, signature)) {
@@ -64,7 +64,7 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
     _assignGroup(strategyId, group);
   }
 
-  /// @inheritdoc ITOSManagerCore
+  /// @inheritdoc ICreationValidationManagerCore
   function strategySelfConfigure(bytes calldata data) external {
     if (data.length == 0) {
       return;
