@@ -115,7 +115,7 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
 
   /// @inheritdoc IEarnStrategy
   function deposited(address depositToken, uint256 depositAmount) external payable returns (uint256 assetsDeposited) {
-    return _connector_deposit(depositToken, depositAmount);
+    return _connector_deposited(depositToken, depositAmount);
   }
 
   /// @inheritdoc IEarnStrategy

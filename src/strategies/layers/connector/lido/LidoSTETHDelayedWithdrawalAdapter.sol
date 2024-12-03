@@ -26,6 +26,7 @@ interface ILidoSTETHQueue {
     external
     view
     returns (uint256[] memory hintIds);
+  function getLastCheckpointIndex() external view returns (uint256);
 }
 
 struct WithdrawalRequestStatus {
@@ -38,6 +39,8 @@ struct WithdrawalRequestStatus {
 }
 
 contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
+  error TokenNotETH();
+
   using Math for uint256;
   using SafeERC20 for IERC20;
 
@@ -70,7 +73,18 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     return interfaceId == type(IDelayedWithdrawalAdapter).interfaceId;
   }
 
-  function estimatedPendingFunds(uint256 positionId, address) external view override returns (uint256 pendingAmount) {
+  function estimatedPendingFunds(
+    uint256 positionId,
+    address token
+  )
+    external
+    view
+    override
+    returns (uint256 pendingAmount)
+  {
+    if (token != _ETH) {
+      return 0;
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     // slither-disable-next-line incorrect-equality
     if (requestIds.length == 0) {
@@ -84,7 +98,18 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
   }
 
-  function withdrawableFunds(uint256 positionId, address) external view override returns (uint256 withdrawableAmount) {
+  function withdrawableFunds(
+    uint256 positionId,
+    address token
+  )
+    external
+    view
+    override
+    returns (uint256 withdrawableAmount)
+  {
+    if (token != _ETH) {
+      return 0;
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     // slither-disable-next-line incorrect-equality
     if (requestIds.length == 0) {
@@ -98,7 +123,10 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
   }
 
-  function initiateDelayedWithdrawal(uint256 positionId, address, uint256) external override {
+  function initiateDelayedWithdrawal(uint256 positionId, address token, uint256) external override {
+    if (token != _ETH) {
+      revert TokenNotETH();
+    }
     IDelayedWithdrawalManager delayedWithdrawalManager = manager();
     IEarnVault vault_ = delayedWithdrawalManager.VAULT();
     // slither-disable-next-line unused-return
@@ -124,7 +152,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
   // slither-disable-start assembly
   function withdraw(
     uint256 positionId,
-    address,
+    address token,
     address recipient
   )
     external
@@ -132,6 +160,9 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     onlyManager
     returns (uint256 withdrawn, uint256 stillPending)
   {
+    if (token != _ETH) {
+      revert TokenNotETH();
+    }
     uint256[] memory requestIds = _pendingWithdrawals[positionId];
     if (requestIds.length == 0) {
       return (0, 0);
@@ -170,7 +201,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
     _pendingWithdrawals[positionId] = requestIds;
 
-    uint256[] memory hints = _queue.findCheckpointHints(requestsToClaim, 1, requestsToClaim.length + 1);
+    uint256[] memory hints = _queue.findCheckpointHints(requestsToClaim, 1, _queue.getLastCheckpointIndex());
     // slither-disable-next-line reentrancy-no-eth
     _queue.claimWithdrawalsTo(requestsToClaim, hints, recipient);
   }

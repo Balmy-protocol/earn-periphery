@@ -8,8 +8,7 @@ import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol
 import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
-import { ExternalTOSCreationValidation } from
-  "../../layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+import { ExternalCreationValidation } from "../../layers/creation-validation/external/ExternalCreationValidation.sol";
 import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
@@ -20,7 +19,7 @@ contract ERC4626Strategy is
   ExternalLiquidityMining,
   ExternalFees,
   ExternalGuardian,
-  ExternalTOSCreationValidation
+  ExternalCreationValidation
 {
   /// @inheritdoc IEarnStrategy
   string public description;
@@ -28,7 +27,7 @@ contract ERC4626Strategy is
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
-    bytes calldata tosData,
+    bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
     string calldata description_
@@ -37,12 +36,26 @@ contract ERC4626Strategy is
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init(tosData, guardianData, feesData, description_);
+    init(creationValidationData, guardianData, feesData, description_);
+  }
+
+  // slither-disable-next-line reentrancy-benign
+  function initWithId(
+    StrategyId strategyId_,
+    bytes calldata creationValidationData,
+    bytes calldata guardianData,
+    bytes calldata feesData,
+    string calldata description_
+  )
+    external
+  {
+    _strategyId = strategyId_;
+    init(creationValidationData, guardianData, feesData, description_);
   }
 
   // slither-disable-next-line reentrancy-benign
   function init(
-    bytes calldata tosData,
+    bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
     string calldata description_
@@ -50,7 +63,7 @@ contract ERC4626Strategy is
     public
     initializer
   {
-    _creationValidation_init(tosData);
+    _creationValidation_init(creationValidationData);
     _guardian_init(guardianData);
     _fees_init(feesData);
     _connector_init();
@@ -60,7 +73,7 @@ contract ERC4626Strategy is
   function strategyId()
     public
     view
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation, BaseStrategy)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation, BaseStrategy)
     returns (StrategyId)
   {
     return BaseStrategy.strategyId();
@@ -79,7 +92,7 @@ contract ERC4626Strategy is
   function globalRegistry()
     public
     pure
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalTOSCreationValidation)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));

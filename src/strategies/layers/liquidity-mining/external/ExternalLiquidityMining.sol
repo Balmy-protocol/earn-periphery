@@ -131,12 +131,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   )
     private
   {
+    toWithdrawUnderlying[0] = toWithdrawAsset;
+    _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
     if (toWithdrawAsset > 0) {
       // Only call withdrew if we are withdrawing the asset
       manager.withdrew(strategyId_, toWithdrawAsset);
     }
-    toWithdrawUnderlying[0] = toWithdrawAsset;
-    _liquidity_mining_underlying_withdraw(positionId, underlyingTokens, toWithdrawUnderlying, recipient);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -160,7 +160,9 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     (underlyingBalanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
       _liquidity_mining_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
-    manager.withdrew(strategyId(), underlyingBalanceChanges[0]);
+    if (underlyingBalanceChanges[0] > 0) {
+      manager.withdrew(strategyId(), underlyingBalanceChanges[0]);
+    }
     address[] memory tokens = _liquidity_mining_allTokens();
     if (tokens.length == underlyingBalanceChanges.length) {
       balanceChanges = underlyingBalanceChanges;

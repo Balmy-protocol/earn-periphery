@@ -14,7 +14,7 @@ struct AaveV3StrategyData {
   IAToken aToken;
   IAaveV3Pool aaveV3Pool;
   IAaveV3Rewards aaveV3Rewards;
-  bytes tosData;
+  bytes creationValidationData;
   bytes guardianData;
   bytes feesData;
   string description;
@@ -28,7 +28,9 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function cloneStrategyAndRegister(
@@ -42,10 +44,34 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function cloneStrategyWithId(
+    StrategyId strategyId,
+    AaveV3StrategyData calldata strategyData
+  )
+    external
+    returns (AaveV3Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone(immutableData);
+    clone = AaveV3Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function clone2Strategy(AaveV3StrategyData calldata strategyData) external returns (AaveV3Strategy clone) {
@@ -53,7 +79,9 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function clone2StrategyAndRegister(
@@ -67,10 +95,34 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData);
     clone = AaveV3Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone2StrategyWithId(
+    StrategyId strategyId,
+    AaveV3StrategyData calldata strategyData
+  )
+    external
+    returns (AaveV3Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    clone = AaveV3Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function clone3Strategy(
@@ -84,7 +136,9 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = AaveV3Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description);
+    clone.init(
+      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
+    );
   }
 
   function clone3StrategyAndRegister(
@@ -99,10 +153,35 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
     clone = AaveV3Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
-      owner, strategyData.tosData, strategyData.guardianData, strategyData.feesData, strategyData.description
+      owner,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
     );
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
+  }
+
+  function clone3StrategyWithId(
+    StrategyId strategyId,
+    AaveV3StrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (AaveV3Strategy clone)
+  {
+    bytes memory immutableData = _calculateImmutableData(strategyData);
+    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
+    clone = AaveV3Strategy(payable(address(clone_)));
+    emit StrategyCloned(clone, strategyId);
+    clone.initWithId(
+      strategyId,
+      strategyData.creationValidationData,
+      strategyData.guardianData,
+      strategyData.feesData,
+      strategyData.description
+    );
   }
 
   function addressOfClone2(
@@ -120,17 +199,13 @@ contract AaveV3StrategyFactory is BaseStrategyFactory {
     return _addressOfClone2(immutableData);
   }
 
-  function _calculateImmutableData(AaveV3StrategyData calldata strategyImmutableData)
-    internal
-    view
-    returns (bytes memory)
-  {
+  function _calculateImmutableData(AaveV3StrategyData calldata strategyData) internal view returns (bytes memory) {
     return _calculateImmutableData(
-      strategyImmutableData.earnVault,
-      strategyImmutableData.globalRegistry,
-      strategyImmutableData.aToken,
-      strategyImmutableData.aaveV3Pool,
-      strategyImmutableData.aaveV3Rewards
+      strategyData.earnVault,
+      strategyData.globalRegistry,
+      strategyData.aToken,
+      strategyData.aaveV3Pool,
+      strategyData.aaveV3Rewards
     );
   }
 

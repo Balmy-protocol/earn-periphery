@@ -142,7 +142,7 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   { }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposit(
+  function _connector_deposited(
     address depositToken,
     uint256 depositAmount
   )
@@ -214,7 +214,7 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
       actualWithdrawnAmounts[0] = shares;
     } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
       uint256 assets = toWithdraw[0];
-      uint256 shares = vault.previewWithdraw(assets);
+      uint256 shares = vault.convertToShares(assets);
       vault.safeTransfer(recipient, shares);
       balanceChanges[0] = assets;
       actualWithdrawnTokens[0] = address(vault);

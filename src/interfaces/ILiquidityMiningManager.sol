@@ -91,6 +91,14 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
   function MANAGE_CAMPAIGNS_ROLE() external view returns (bytes32);
   // slither-disable-end naming-convention
 
+  /**
+   * @notice Sets a campaign for a given strategy
+   * @param strategyId The id of the strategy
+   * @param reward The reward token for the campaign
+   * @param emissionPerSecond The emission per second for the campaign
+   * @param duration The duration of the campaign
+   * @dev In the case of a native reward token, any excess funds will be returned to the caller
+   */
   function setCampaign(
     StrategyId strategyId,
     address reward,

@@ -3,34 +3,37 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import {
-  ITOSManagerCore,
-  ExternalTOSCreationValidation,
+  ICreationValidationManagerCore,
+  ExternalCreationValidation,
   StrategyId,
   IGlobalEarnRegistry
-} from "src/strategies/layers/creation-validation/external/ExternalTOSCreationValidation.sol";
+} from "src/strategies/layers/creation-validation/external/ExternalCreationValidation.sol";
 
-contract ExternalTOSCreationValidationTest is Test {
+contract ExternalCreationValidationTest is Test {
   bytes32 private constant GROUP_1 = keccak256("group1");
-  ExternalTOSCreationValidationInstance private tosValidation;
+  ExternalCreationValidationInstance private validation;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
-  ITOSManagerCore private manager = ITOSManagerCore(address(2));
+  ICreationValidationManagerCore private manager = ICreationValidationManagerCore(address(2));
   StrategyId private strategyId = StrategyId.wrap(1);
 
   function setUp() public virtual {
-    tosValidation = new ExternalTOSCreationValidationInstance(registry, strategyId);
+    validation = new ExternalCreationValidationInstance(registry, strategyId);
     vm.mockCall(
       address(registry), abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector), abi.encode(manager)
     );
     vm.mockCall(
-      address(manager), abi.encodeWithSelector(ITOSManagerCore.validatePositionCreation.selector), abi.encode()
+      address(manager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.validatePositionCreation.selector),
+      abi.encode()
     );
   }
 
   function test_init() public {
     vm.expectCall(
-      address(manager), abi.encodeWithSelector(ITOSManagerCore.strategySelfConfigure.selector, abi.encode(GROUP_1))
+      address(manager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, abi.encode(GROUP_1))
     );
-    tosValidation.init(abi.encode(GROUP_1));
+    validation.init(abi.encode(GROUP_1));
   }
 
   function test_validate() public {
@@ -38,13 +41,15 @@ contract ExternalTOSCreationValidationTest is Test {
     bytes memory signature = "my signature";
     vm.expectCall(
       address(manager),
-      abi.encodeWithSelector(ITOSManagerCore.validatePositionCreation.selector, strategyId, sender, signature)
+      abi.encodeWithSelector(
+        ICreationValidationManagerCore.validatePositionCreation.selector, strategyId, sender, signature
+      )
     );
-    tosValidation.validate(sender, signature);
+    validation.validate(sender, signature);
   }
 }
 
-contract ExternalTOSCreationValidationInstance is ExternalTOSCreationValidation {
+contract ExternalCreationValidationInstance is ExternalCreationValidation {
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
 

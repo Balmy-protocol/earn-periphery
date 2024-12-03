@@ -192,7 +192,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposit(
+  function _connector_deposited(
     address depositToken,
     uint256 depositAmount
   )
@@ -200,10 +200,13 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     override
     returns (uint256 assetsDeposited)
   {
+    IAToken aToken_ = aToken();
     if (depositToken == _connector_asset()) {
+      uint256 balanceBefore = aToken_.balanceOf(address(this));
       pool().supply(depositToken, depositAmount, address(this), 0);
-      return depositAmount;
-    } else if (depositToken == address(aToken())) {
+      uint256 balanceAfter = aToken_.balanceOf(address(this));
+      return balanceAfter - balanceBefore;
+    } else if (depositToken == address(aToken_)) {
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
