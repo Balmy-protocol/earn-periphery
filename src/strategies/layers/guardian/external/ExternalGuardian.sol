@@ -192,9 +192,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     return _guardian_underlying_deposited(depositToken, depositAmount);
   }
 
-  // Note: we disable the reentrancy check because the strategy should make sure this function
-  //       is called only by the vault, which already has a re-entrancy check
-  // slither-disable-start naming-convention,dead-code,reentrancy-no-eth
+  // slither-disable-start naming-convention,dead-code
   // solhint-disable-next-line code-complexity
   function _guardian_withdraw(
     uint256 positionId,
@@ -222,7 +220,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     // Since this implementation doesn't support delayed withdrawals, we will always return immediate withdrawals
     return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
-  // slither-disable-end naming-convention,dead-code,reentrancy-no-eth
+  // slither-disable-end naming-convention,dead-code
 
   // slither-disable-next-line naming-convention,dead-code
   function _guardian_specialWithdraw(
