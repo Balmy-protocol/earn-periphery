@@ -262,6 +262,39 @@ contract ExternalFeesTest is Test {
     assertEq(balances[1], 50_000 - 2500); // 5% fee
   }
 
+  function test_totalBalances_loss() public {
+    _setFee(500); // 5%
+    uint256 positionId = 1;
+    address recipient = address(0);
+    address[] memory allTokens = CommonUtils.arrayOf(asset, token);
+    fees.init(""); // Initialize so that performance data is set
+
+    // Deposit 50k
+    fees.deposited(asset, 50_000);
+
+    // Set balance to 100k for asset (yield was 50k, fee is 2.5k)
+    fees.setBalance(asset, 100_000);
+
+    // Withdraw 50k
+    fees.withdraw(positionId, allTokens, CommonUtils.arrayOf(50_000, 0), recipient);
+
+    // Set balance to 1k (there was a big loss)
+    fees.setBalance(asset, 1000);
+
+    (address[] memory tokens, uint256[] memory balances) = fees.totalBalances();
+    (, uint256[] memory collected) = fees.collectedFees();
+
+    assertEq(tokens.length, 2);
+    assertEq(tokens[0], asset);
+    assertEq(tokens[1], token);
+    assertEq(balances.length, 2);
+    assertEq(balances[0], 0); // Balance is 0 as the 1k will be considered fee
+    assertEq(balances[1], 0);
+    assertEq(collected.length, 2);
+    assertEq(collected[0], 1000);
+    assertEq(collected[1], 0);
+  }
+
   function test_deposited() public {
     _setFee(500); // 5%
 

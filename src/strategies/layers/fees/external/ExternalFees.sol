@@ -3,6 +3,7 @@ pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
@@ -279,9 +280,9 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     if (perfData.isSet && currentBalance > perfData.lastBalance) {
       uint256 yield = currentBalance - perfData.lastBalance;
       uint256 fee = (yield * performanceFee) / 10_000;
-      return fee + perfData.performanceFees;
+      return Math.min(fee + perfData.performanceFees, currentBalance);
     }
-    return perfData.performanceFees;
+    return Math.min(perfData.performanceFees, currentBalance);
   }
 
   // slither-disable-next-line dead-code
