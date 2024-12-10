@@ -16,6 +16,16 @@ import { ERC4626StrategyFactory } from "../../src/strategies/instances/erc4626/E
 
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
+// struct ERC4626StrategyData {
+//   IEarnVault earnVault;
+//   IGlobalEarnRegistry globalRegistry;
+//   IERC4626 erc4626Vault;
+//   bytes creationValidationData;
+//   bytes guardianData;
+//   bytes feesData;
+//   string description;
+// }
+
 
 library StrategyUtils {
   function deployStateStrategy( // @audit deploy stragety 
@@ -35,9 +45,6 @@ library StrategyUtils {
   }
 
   function deployERC4626Strategy( // @audit deploy stragety 
-    IEarnVault earnVault,
-    IGlobalEarnRegistry globalRegistry,
-    IERC4626 erc4626Vault,
     IEarnStrategyRegistry registry,
     address[] memory tokens,
     address owner
@@ -46,6 +53,38 @@ library StrategyUtils {
     returns (EarnStrategyStateBalanceMock strategy, StrategyId strategyId)
   {
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
+
+
+    strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
+
+    strategyId = registry.registerStrategy(owner, strategy);
+  }
+
+  function deployLIDOStrategy( // @audit deploy stragety 
+    IEarnStrategyRegistry registry,
+    address[] memory tokens,
+    address owner
+  )
+    internal
+    returns (EarnStrategyStateBalanceMock strategy, StrategyId strategyId)
+  {
+    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
+
+
+    strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
+
+    strategyId = registry.registerStrategy(owner, strategy);
+  }
+
+  function deployCompoundV2Strategy(IEarnStrategyRegistry registry,
+    address[] memory tokens,
+    address owner
+  )
+    internal
+    returns (EarnStrategyStateBalanceMock strategy, StrategyId strategyId)
+  {
+    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
+
 
     strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
 
