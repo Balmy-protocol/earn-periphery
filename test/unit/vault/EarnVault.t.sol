@@ -12,9 +12,7 @@ import { stdMath } from "forge-std/StdMath.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {
-  IEarnVault,
   EarnVault,
-  IEarnStrategyRegistry,
   Pausable,
   IEarnStrategy,
   StrategyId,
@@ -23,7 +21,6 @@ import {
 import { Token } from "../../../src/libraries/Token.sol";
 import { EarnNFTDescriptor } from "../../../src/nft-descriptor/EarnNFTDescriptor.sol";
 import { YieldMath } from "../../../src/vault/libraries/YieldMath.sol";
-import { EarnStrategyStateBalanceMock } from "../../mocks/strategies/EarnStrategyStateBalanceMock.sol";
 import { EarnStrategyRegistryMock } from "../../mocks/strategies/EarnStrategyRegistryMock.sol";
 import { EarnStrategyStateBalanceBadPositionValidationMock } from
   "../../mocks/strategies/EarnStrategyStateBalanceBadPositionValidationMock.sol";
@@ -36,7 +33,40 @@ import { StrategyUtils } from "../../utils/StrategyUtils.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawalCode } from "../../../src/types/SpecialWithdrawals.sol";
 
+import { ExternalLiquidityMining } from "src/strategies/layers/liquidity-mining/external/ExternalLiquidityMining.sol";
+
+import {
+  LiquidityMiningManager,
+  ILiquidityMiningManager,
+  IEarnStrategyRegistry
+} from "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
+
 import {console} from "forge-std/console.sol";
+
+import {
+  ERC4626StrategyFactory,
+  ERC4626Strategy,
+  IERC4626,
+  IGlobalEarnRegistry,
+  StrategyIdConstants,
+  BaseStrategyFactory,
+  IEarnBalmyStrategy,
+  ERC4626StrategyData
+} from "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
+
+import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
+import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
+import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
+import { Fees } from "src/types/Fees.sol";
+
+import { ERC4626, ERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+
+import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+
+contract ShareVault is ERC4626 {
+  constructor(IERC20 _token) ERC4626(_token) ERC20("name", "symbol") {}
+
+}
 
 contract EarnVaultTest is PRBTest, StdUtils {
   using Math for uint256;
@@ -82,6 +112,24 @@ contract EarnVaultTest is PRBTest, StdUtils {
   IEarnNFTDescriptor private nftDescriptor;
   bytes private creationData;
 
+  ERC4626StrategyFactory private factory;
+
+  ShareVault erc4626Vault;
+
+  bytes private validationData = abi.encodePacked("validationData");
+  bytes private guardianData = abi.encodePacked("guardianData");
+  bytes private feesData = abi.encodePacked("feesData");
+  string private description = "description";
+  bytes32 public constant LIQUIDITY_MINING_MANAGER = keccak256("LIQUIDITY_MINING_MANAGER");
+
+  IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
+  ICreationValidationManagerCore private validationManager = ICreationValidationManagerCore(address(8));
+  IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(9));
+  IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
+
+  LiquidityMiningManager private miningManager;
+
+
   function setUp() public virtual {
   
     strategyRegistry = new EarnStrategyRegistryMock();
@@ -95,6 +143,90 @@ contract EarnVaultTest is PRBTest, StdUtils {
     vm.label(address(strategyRegistry), "Strategy Registry");
     vm.label(address(erc20), "ERC20");
     vm.label(address(vault), "Vault");
+
+    ERC4626Strategy implementation = new ERC4626Strategy();
+    factory = new ERC4626StrategyFactory(implementation);
+
+    erc4626Vault = new ShareVault(erc20);
+
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("FEE_MANAGER")),
+      abi.encode(feeManager)
+    );
+
+    vm.mockCall(
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 0, 0))
+    );
+    vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
+
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("GUARDIAN_MANAGER")),
+      abi.encode(guardianManager)
+    );
+
+
+  
+    vm.mockCall(
+      address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
+    );
+
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("CREATION_VALIDATION_MANAGER")),
+      abi.encode(validationManager)
+    );
+
+    vm.mockCall(
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector),
+      ""
+    );
+
+    address[] memory initialAdmins = new address[](1);
+    initialAdmins[0] = address(100);
+
+    miningManager = new LiquidityMiningManager(IEarnStrategyRegistry(address(strategyRegistry)), address(100), initialAdmins);
+
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, LIQUIDITY_MINING_MANAGER),
+      abi.encode(miningManager)
+    );
+    
+  }
+
+  function cloneStrategy() public returns (ERC4626Strategy) {
+  
+    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
+    vm.expectCall(
+      address(validationManager),
+      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+    );
+    vm.expectCall(
+      address(guardianManager),
+      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
+    );
+    vm.expectEmit(false, true, false, false);
+    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
+
+    address vaultAddress = address(vault);
+
+    IEarnVault tempVault = IEarnVault(vaultAddress);
+
+    console.log(address(erc4626Vault));
+    console.log(address(globalRegistry));
+
+    ERC4626Strategy clone = factory.cloneStrategy(
+      ERC4626StrategyData(tempVault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+    );
+
+    console.log(address(clone));
+
+    return clone;
+
+    // _assertStrategyWasDeployedCorrectly(clone);
   }
 
   function test_constants() public {
@@ -221,7 +353,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(Token.NATIVE_TOKEN));
 
     vm.expectCall(
@@ -266,7 +398,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(address(erc20)));
 
     vm.expectCall(
@@ -311,7 +443,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(address(erc20)));
 
     vm.expectCall(
@@ -352,7 +484,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     amountToDeposit2 = uint104(bound(amountToDeposit2, 1, type(uint104).max));
     vm.deal(address(this), uint256(amountToDeposit1) + amountToDeposit2);
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(Token.NATIVE_TOKEN));
 
     (uint256 positionId1, uint256 assetsDeposited1) = vault.createPosition{ value: amountToDeposit1 }(
@@ -391,66 +523,6 @@ contract EarnVaultTest is PRBTest, StdUtils {
     // Funds
     assertEq(address(this).balance, 0);
     assertEq(address(strategy).balance, uint256(amountToDeposit1) + amountToDeposit2);
-  }
-
-  function test_donation_issue_poc() public {
-
-    uint256 amountToDeposit1 = 1 ether;
-    uint256 amountToDeposit2 = 120_000;
-    uint256 amountToDeposit3 = 240_000;
-    uint256 amountToDeposit4 = 240_000;
-    uint256 amountToReward = 120_000;
-    erc20.mint(address(this), 100000 ether);
-    uint256[] memory rewards = new uint256[](4);
-    uint256[] memory shares = new uint256[](4);
-    uint256 totalShares;
-    uint256 positionsCreated;
-    INFTPermissions.PermissionSet[] memory permissions =
-      PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
-    bytes memory misc = "1234";
-
-    address[] memory strategyTokens = new address[](2);
-    strategyTokens[0] = address(erc20);
-    strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
-
-    uint256 previousBalance;
-
-    erc20.mint(address(strategy), 200 ether);
-
-    (uint256 positionId1,) =
-      vault.createPosition(strategyId, address(erc20), amountToDeposit1, positionOwner, permissions, creationData, misc);
-    positionsCreated++;
-    anotherErc20.mint(address(strategy), amountToReward);
-
-    (address[] memory tokens, uint256[] memory balances,,) = vault.position(positionId1);
-
-    uint256 amountToWithdraw = balances[0];
-    uint256[] memory amounts = new uint256[](2);
-    amounts[0] = balances[0];
-    amounts[1] = balances[1];
-
-    // loop over and log balances
-
-    for (uint256 i; i < balances.length; i++) {
-      console.log(balances[i]);
-    }
-
-    uint256 balanceBefore = IERC20(tokens[0]).balanceOf(address(this));
-
-    vm.prank(operator);
-    vault.withdraw(positionId1, tokens, amounts, address(this));
-
-    console.log(1 ether);
-    (tokens, balances,,) = vault.position(positionId1);
-
-    for (uint256 i; i < balances.length; i++) {
-      console.log(balances[i]);
-    }
-
-    assertEq(IERC20(tokens[0]).balanceOf(address(this)), balanceBefore + amountToWithdraw);
-
   }
 
 
@@ -510,7 +582,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     vault.unpause();
   }
 
-  function test_createPosition_CheckRewardsWithLoss() public {
+  function test_createPosition_CheckRewardsWithLoss_poc() public {
+    // @audit working poc
     uint256 amountToDeposit1 = 100_000;
     uint256 amountToDeposit2 = 200_000;
     uint256 amountToDeposit3 = 50_000;
@@ -527,8 +600,117 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+
+    ERC4626Strategy clone = cloneStrategy();
+
+    // (StrategyId strategyId, IEarnStrategy strategy) =
+    // strategyRegistry.deployStateStrategy(strategyTokens);
+
+    (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(clone))); 
+
+    uint256 previousBalance;
+
+    (uint256 positionId1,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit1, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.mint(address(strategy), amountToReward);
+
+    // Shares: 100
+    //Total shares: 100
+    shares[0] = 100;
+    totalShares += shares[0];
+
+    (, uint256[] memory balances1,,) = vault.position(positionId1);
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+
+    (uint256 positionId2,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit2, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.mint(address(strategy), amountToReward * 3);
+
+    //Shares: 200
+    //Total shares: 300
+    shares[1] = 200;
+    totalShares += shares[1];
+
+    // Earn
+    (, balances1,,) = vault.position(positionId1);
+    assertEq(balances1.length, 2);
+    assertEq(balances1[0], amountToDeposit1);
+
+    (, uint256[] memory balances2,,) = vault.position(positionId2);
+    assertEq(balances2.length, 2);
+    assertEq(balances2[0], amountToDeposit2);
+
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+    assertApproxEqAbs(rewards[1], balances2[1], 1);
+
+    (uint256 positionId3,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit3, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.burn(address(strategy), 350_000);
+    //Shares: 50
+    // Total shares: 350
+    shares[2] = 50;
+    totalShares += shares[2];
+
+    (, balances1,,) = vault.position(positionId1);
+    (, balances2,,) = vault.position(positionId2);
+    (, uint256[] memory balances3,,) = vault.position(positionId3);
+
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+    assertApproxEqAbs(rewards[1], balances2[1], 1);
+    assertApproxEqAbs(rewards[2], balances3[1], 1);
+
+    // FINAL SNAPSHOT
+
+    (uint256 positionId4,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit3, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    shares[3] = 50;
+    totalShares += shares[3];
+    anotherErc20.mint(address(strategy), 350_000);
+
+    (, balances1,,) = vault.position(positionId1);
+    (, balances2,,) = vault.position(positionId2);
+    (, balances3,,) = vault.position(positionId3);
+    (, uint256[] memory balances4,,) = vault.position(positionId4);
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+    assertApproxEqAbs(rewards[1], balances2[1], 1);
+    assertApproxEqAbs(rewards[2], balances3[1], 1);
+    assertApproxEqAbs(rewards[3], balances4[1], 1);
+  }
+
+  function test_createPosition_CheckRewardsWithLoss() public {
+    // @audit working poc
+    uint256 amountToDeposit1 = 100_000;
+    uint256 amountToDeposit2 = 200_000;
+    uint256 amountToDeposit3 = 50_000;
+    uint256 amountToReward = 100_000;
+    erc20.mint(address(this), amountToDeposit1 + amountToDeposit2 + amountToDeposit3 * 2);
+    uint256[] memory rewards = new uint256[](4);
+    uint256[] memory shares = new uint256[](4);
+    uint256 totalShares;
+    uint256 positionsCreated;
+    INFTPermissions.PermissionSet[] memory permissions =
+      PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
+    bytes memory misc = "1234";
+
+    address[] memory strategyTokens = new address[](2);
+    strategyTokens[0] = address(erc20);
+    strategyTokens[1] = address(anotherErc20);
+
+    ERC4626Strategy clone = cloneStrategy();
+
+    (StrategyId strategyId, IEarnStrategy strategy) =
+    strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
 
@@ -626,7 +808,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
@@ -745,7 +927,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
@@ -828,7 +1010,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     (uint256 positionId1,) =
@@ -862,7 +1044,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(address(erc20)));
 
     (uint256 positionId,) =
@@ -905,7 +1087,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(Token.NATIVE_TOKEN));
 
     (uint256 positionId,) = vault.createPosition{ value: amountToDeposit }(
@@ -1041,7 +1223,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
@@ -1155,7 +1337,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       address(vault), amountToIncrease != type(uint256).max ? amountToDeposit + amountToIncrease : type(uint256).max
     );
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(address(erc20)));
 
     erc20.mint(address(this), amountToDeposit);
@@ -1206,7 +1388,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.INCREASE_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(Token.NATIVE_TOKEN));
 
     vm.deal(address(this), amountToDeposit);
@@ -1367,7 +1549,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
@@ -1448,7 +1630,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(address(erc20)));
 
     (uint256 positionId,) =
@@ -1491,7 +1673,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
       PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
     bytes memory misc = "1234";
 
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(CommonUtils.arrayOf(Token.NATIVE_TOKEN));
 
     (uint256 positionId,) = vault.createPosition{ value: amountToDeposit }(
@@ -1567,7 +1749,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, EarnStrategyStateBalanceMock strategy) =
+    (StrategyId strategyId, IEarnStrategy strategy) =
       strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;

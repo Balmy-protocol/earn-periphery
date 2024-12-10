@@ -16,10 +16,14 @@ import { ERC4626StrategyFactory } from "../../src/strategies/instances/erc4626/E
 
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
+import { IGlobalEarnRegistry } from "../../src/interfaces/IGlobalEarnRegistry.sol";
+
+import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
+
 // struct ERC4626StrategyData {
-//   IEarnVault earnVault;
+//   IEarnVault earnVault; ✅
 //   IGlobalEarnRegistry globalRegistry;
-//   IERC4626 erc4626Vault;
+//   IERC4626 erc4626Vault; ✅
 //   bytes creationValidationData;
 //   bytes guardianData;
 //   bytes feesData;
@@ -38,7 +42,6 @@ library StrategyUtils {
   {
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
 
-
     strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
 
     strategyId = registry.registerStrategy(owner, strategy);
@@ -47,17 +50,17 @@ library StrategyUtils {
   function deployERC4626Strategy( // @audit deploy stragety 
     IEarnStrategyRegistry registry,
     address[] memory tokens,
-    address owner
+    address owner,
+    IEarnStrategy strategy
   )
     internal
-    returns (EarnStrategyStateBalanceMock strategy, StrategyId strategyId)
+    returns (IEarnStrategy, StrategyId strategyId)
   {
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
 
-
-    strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
-
     strategyId = registry.registerStrategy(owner, strategy);
+
+    return (strategy, strategyId);
   }
 
   function deployLIDOStrategy( // @audit deploy stragety 
