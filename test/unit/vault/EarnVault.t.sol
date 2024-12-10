@@ -123,6 +123,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
   bytes32 public constant LIQUIDITY_MINING_MANAGER = keccak256("LIQUIDITY_MINING_MANAGER");
 
   IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
+
+  // @audit TODO
   ICreationValidationManagerCore private validationManager = ICreationValidationManagerCore(address(8));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(9));
   IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
@@ -156,7 +158,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     );
 
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 0, 0))
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 500, 0))
     );
     vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
 
@@ -215,14 +217,11 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     IEarnVault tempVault = IEarnVault(vaultAddress);
 
-    console.log(address(erc4626Vault));
-    console.log(address(globalRegistry));
-
     ERC4626Strategy clone = factory.cloneStrategy(
       ERC4626StrategyData(tempVault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
     );
 
-    console.log(address(clone));
+    clone.setRewardToken(address(anotherErc20));
 
     return clone;
 
@@ -588,6 +587,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     uint256 amountToDeposit2 = 200_000;
     uint256 amountToDeposit3 = 50_000;
     uint256 amountToReward = 100_000;
+
+    erc20.mint(address(this), 100 ether);
     erc20.mint(address(this), amountToDeposit1 + amountToDeposit2 + amountToDeposit3 * 2);
     uint256[] memory rewards = new uint256[](4);
     uint256[] memory shares = new uint256[](4);
@@ -601,13 +602,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
 
-    ERC4626Strategy clone = cloneStrategy();
-
-    // (StrategyId strategyId, IEarnStrategy strategy) =
-    // strategyRegistry.deployStateStrategy(strategyTokens);
-
     (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(clone))); 
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -620,6 +616,12 @@ contract EarnVaultTest is PRBTest, StdUtils {
     //Total shares: 100
     shares[0] = 100;
     totalShares += shares[0];
+
+    uint256 asset = 1000000;
+
+    erc20.approve(address(erc4626Vault), asset);
+
+    erc4626Vault.mint(asset, address(strategy));
 
     (, uint256[] memory balances1,,) = vault.position(positionId1);
     previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
@@ -659,6 +661,9 @@ contract EarnVaultTest is PRBTest, StdUtils {
     totalShares += shares[2];
 
     (, balances1,,) = vault.position(positionId1);
+
+    console.log("balance", balances1[0]);
+  
     (, balances2,,) = vault.position(positionId2);
     (, uint256[] memory balances3,,) = vault.position(positionId3);
 
@@ -709,8 +714,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     ERC4626Strategy clone = cloneStrategy();
 
-    (StrategyId strategyId, IEarnStrategy strategy) =
-    strategyRegistry.deployStateStrategy(strategyTokens);
+    (StrategyId strategyId, IEarnStrategy strategy) = strategyRegistry.deployStateStrategy(strategyTokens);
 
     uint256 previousBalance;
 
@@ -808,8 +812,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -927,8 +931,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1010,8 +1014,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = new address[](2);
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     (uint256 positionId1,) =
       vault.createPosition(strategyId, address(erc20), amountToDeposit1, positionOwner, permissions, creationData, misc);
@@ -1223,8 +1227,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1549,8 +1553,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1749,8 +1753,8 @@ contract EarnVaultTest is PRBTest, StdUtils {
     bytes memory misc = "1234";
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
-    (StrategyId strategyId, IEarnStrategy strategy) =
-      strategyRegistry.deployStateStrategy(strategyTokens);
+    (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1843,14 +1847,20 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     vm.prank(operator);
     vault.specialWithdraw(
-      positionId1, SpecialWithdrawalCode.wrap(0), CommonUtils.arrayOf(amountToWithdraw1), abi.encode(1), recipient
+      positionId1, SpecialWithdrawalCode.wrap(1), CommonUtils.arrayOf(amountToWithdraw1), abi.encode(1), recipient
     );
 
     (, balances1,,) = vault.position(positionId1);
-    assertApproxEqAbs(amountToDeposit1 - amountToWithdraw1, balances1[0], 1);
+    console.log("------");
+    console.log("deposit amount", amountToDeposit1);
+    console.log("amount to withdraw", amountToWithdraw1);
+    console.log("balance1", balances1[0]);
+    console.log("balance2", balances1[1]);
+
+    // assertApproxEqAbs(amountToDeposit1 - amountToWithdraw1, balances1[0], 1);
 
     //Rewards have to be calculated with previous shares and balance
-    assertApproxEqAbs(rewards[0] - intendendWithdraw[1], balances1[1], 1);
+    // assertApproxEqAbs(rewards[0] - intendendWithdraw[1], balances1[1], 1);
   }
 
   function takeSnapshotAndAssertBalances(

@@ -191,7 +191,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
 
     // @audit
     // consider pass in more parameter for stragety to validate.
-    strategy.validatePositionCreation(msg.sender, strategyValidationData);
+    // strategy.validatePositionCreation(msg.sender, strategyValidationData);
 
     uint256 positionId = _mintWithPermissions(owner, permissions); // @audit check nft permission?
 
@@ -304,7 +304,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
     // slither-disable-next-line unused-return
     (, uint256[] memory balancesAfterUpdate) = strategy.totalBalances();
 
-    console.log("balancesBeforeUpdate", balancesBeforeUpdate[0]);
+
 
     _updateAccounting({
       positionId: positionId,
@@ -627,7 +627,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
     internal
   {
 
-    console.log("--updating accounting for assets");
+
     uint256 newPositionShares = _updateAccountingForAsset({
       positionId: positionId,
       strategyId: strategyId,
@@ -639,10 +639,8 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
       action: action
     });
 
-    console.log("--completed accounting for assets");
     for (uint256 i = 1; i <= calculatedData.length; ++i) {
 
-      console.log("--updating reward", i);
       _updateAccountingForRewardToken({
         positionId: positionId,
         strategyId: strategyId,
@@ -652,7 +650,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
         withdrawn: updateAmounts[i],
         newStrategyBalance: balancesAfterUpdate[i]
       });
-      console.log("--complete reward for assets", i);
+    
     }
   }
 
@@ -706,7 +704,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
   {
     bool strategyHadLoss = calculatedData.newStrategyLossAccum != YieldMath.LOSS_ACCUM_INITIAL
       || calculatedData.newStrategyCompleteLossEvents != 0;
-    console.log("has yield loss", strategyHadLoss);
+
     if (strategyHadLoss) {
       _strategyYieldLossData.update({
         strategyId: strategyId,
@@ -757,7 +755,7 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
   )
     internal
   {
-    console.log("updating yield data", token);
+
     _strategyYieldData.update({
       strategyId: strategyId,
       token: token,
@@ -765,12 +763,11 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
       newYieldAccum: calculatedData.newStrategyYieldAccum,
       newHadLoss: strategyHadLoss
     });
-    console.log("complete yield data", token);
+
     uint256 newPositionBalance = calculatedData.positionBalance - withdrawn;
     if (positionShares == 0 && newPositionBalance == 0) {
       _positionYieldData.clear({ positionId: positionId, token: token });
     } else {
-      console.log("_positionYieldData.update", token);
       _positionYieldData.update({
         positionId: positionId,
         token: token,

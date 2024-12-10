@@ -16,6 +16,8 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC4626;
   using Math for uint256;
 
+  address public rewardToken;
+
   /// @notice Returns the address of the ERC4626 vault
   // slither-disable-next-line naming-convention
   function ERC4626Vault() public view virtual returns (IERC4626);
@@ -36,10 +38,22 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     return address(_asset());
   }
 
+  function setRewardToken(address token) public {
+    rewardToken = token;
+  }
+
   // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
-    tokens = new address[](1);
-    tokens[0] = _connector_asset();
+
+    if(rewardToken == address(0)) {
+      tokens = new address[](1);
+      tokens[0] = _connector_asset();
+    } else {
+      tokens = new address[](2);
+      tokens[0] = _connector_asset();
+      tokens[1] = rewardToken;
+    }
+
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -86,10 +100,21 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory balances)
   {
     IERC4626 vault = ERC4626Vault();
-    tokens = new address[](1);
-    tokens[0] = _connector_asset();
-    balances = new uint256[](1);
-    balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
+
+    if (rewardToken != address(0)) {
+      tokens = new address[](2);
+      tokens[0] = _connector_asset();
+      tokens[1] = rewardToken;
+      balances = new uint256[](2);
+      balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
+      balances[1] = IERC20(rewardToken).balanceOf(address(this));
+    } else {
+      tokens = new address[](1);
+      tokens[0] = _connector_asset();
+      balances = new uint256[](1);
+      balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
+    }
+
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -125,10 +150,19 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     override
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
-    tokens = new address[](1);
-    tokens[0] = _connector_asset();
-    withdrawable = new uint256[](1);
-    withdrawable[0] = ERC4626Vault().maxWithdraw(address(this));
+    if(rewardToken != address(0)) {
+      tokens = new address[](2);
+      tokens[0] = _connector_asset();
+      tokens[1] = rewardToken;
+      withdrawable = new uint256[](2);
+      withdrawable[0] = ERC4626Vault().maxWithdraw(address(this));
+      withdrawable[1] = IERC20(rewardToken).balanceOf(address(this));
+    } else {
+      tokens = new address[](1);
+      tokens[0] = _connector_asset();
+      withdrawable = new uint256[](1);
+      withdrawable[0] = ERC4626Vault().maxWithdraw(address(this));
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -179,6 +213,9 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     // Note: we assume params are consistent and valid because they were validated by the EarnVault
     // slither-disable-next-line unused-return
     ERC4626Vault().withdraw(toWithdraw[0], recipient, address(this));
+    if(rewardToken != address(0)) {
+      IERC20(rewardToken).safeTransfer(recipient, toWithdraw[1]);
+    }
     return _connector_supportedWithdrawals();
   }
 
@@ -205,6 +242,12 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     actualWithdrawnAmounts = new uint256[](1);
     result = "";
 
+    if(rewardToken != address(0)) {
+      balanceChanges = new uint256[](2);
+      actualWithdrawnTokens = new address[](2);
+      actualWithdrawnAmounts = new uint256[](2);
+    }
+
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = toWithdraw[0];
       uint256 assets = vault.previewRedeem(shares);
@@ -221,6 +264,22 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
       actualWithdrawnAmounts[0] = shares;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);
+    }
+
+    if(rewardToken != address(0) && toWithdraw.length > 1) {
+      if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
+        uint256 amount = toWithdraw[1];
+        IERC20(rewardToken).safeTransfer(recipient, amount);
+        balanceChanges[1] = amount;
+        actualWithdrawnTokens[1] = rewardToken;
+        actualWithdrawnAmounts[1] = amount;
+      } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
+        uint256 amount = toWithdraw[1];
+        IERC20(rewardToken).safeTransfer(recipient, amount);
+        balanceChanges[1] = amount;
+        actualWithdrawnTokens[1] = rewardToken;
+        actualWithdrawnAmounts[1] = amount;
+      }
     }
   }
 

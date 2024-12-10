@@ -146,7 +146,7 @@ library YieldDataForTokenLibrary {
   )
     internal
   {
-    console.log("updating with strategyId", token);
+
     _update({
       yieldData: yieldData,
       key: _keyFrom(strategyId, token),
@@ -279,7 +279,7 @@ library YieldDataForTokenLibrary {
     private
   {
     uint256 MAX_UINT_151 = 0x7fffffffffffffffffffffffffffffffffffff;
-    console.log("overflow", newYieldAccum > MAX_UINT_151);
+ 
     yieldData[key] = _encode({ yieldAccumulator: newYieldAccum, balance: newBalance, hadLoss: newHadLoss ? 1 : 0 });
   }
 
