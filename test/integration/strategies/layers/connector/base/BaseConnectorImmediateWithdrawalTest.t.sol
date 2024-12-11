@@ -58,7 +58,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
       assertEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i]);
       // Note: We use a delta of 2 because of rounding errors
       if (toWithdraw[i] > 0) {
-        assertGte(balancesAfter[i] + 2, balancesBefore[i] - toWithdraw[i]);
+        assertGte(balancesAfter[i] + 1, balancesBefore[i] - toWithdraw[i]);
       }
     }
   }

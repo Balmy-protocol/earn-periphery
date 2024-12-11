@@ -14,7 +14,6 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { ICERC20 } from "./ICERC20.sol";
-import { CometHelpers } from "./CometHelpers.sol";
 
 interface ICometRewards {
   struct RewardConfig {
@@ -33,22 +32,7 @@ interface ICometRewards {
   function claimTo(address comet, address src, address to, bool shouldAccrue) external;
 }
 
-interface CometExt {
-  function totalsBasic() external view returns (TotalsBasic memory);
-}
-
-struct TotalsBasic {
-  uint64 baseSupplyIndex;
-  uint64 baseBorrowIndex;
-  uint64 trackingSupplyIndex;
-  uint64 trackingBorrowIndex;
-  uint104 totalSupplyBase;
-  uint104 totalBorrowBase;
-  uint40 lastAccrualTime;
-  uint8 pauseFlags;
-}
-
-abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelpers {
+abstract contract CompoundV3Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
   using Token for address;
@@ -78,9 +62,12 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view virtual override returns (address[] memory tokens) {
-    tokens = new address[](2);
+    address rewardToken = address(cometRewards().rewardConfig(address(cToken())).token);
+    tokens = new address[](rewardToken == address(0) ? 1 : 2);
     tokens[0] = _connector_asset();
-    tokens[1] = address(cometRewards().rewardConfig(address(cToken())).token);
+    if (rewardToken != address(0)) {
+      tokens[1] = rewardToken;
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -111,7 +98,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return new IEarnStrategy.WithdrawalType[](2); // IMMEDIATE
+    return new IEarnStrategy.WithdrawalType[](_connector_allTokens().length);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -158,11 +145,14 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    ICometRewards.RewardConfig memory config = cometRewards().rewardConfig(address(cToken()));
+    IERC20 cToken_ = cToken();
+    ICometRewards.RewardConfig memory config = cometRewards().rewardConfig(address(cToken_));
     tokens = _connector_allTokens();
-    balances = new uint256[](2);
-    balances[0] = underlyingBalance();
-    balances[1] = IERC20(config.token).balanceOf(address(this)); // TODO: calculate unclaimed rewards
+    balances = new uint256[](tokens.length);
+    balances[0] = cToken_.balanceOf(address(this));
+    if (config.token != address(0)) {
+      balances[1] = IERC20(config.token).balanceOf(address(this)); // TODO: calculate unclaimed rewards
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -186,15 +176,14 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     override
     returns (uint256 assetsDeposited)
   {
+    ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
-      uint256 balanceBefore = underlyingBalance();
-
-      cToken().supply(depositToken, convertToShares(depositAmount));
-
-      uint256 balanceAfter = underlyingBalance();
+      uint256 balanceBefore = cToken_.balanceOf(address(this));
+      cToken_.supply(depositToken, (depositAmount));
+      uint256 balanceAfter = cToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
-    } else if (depositToken == address(cToken())) {
-      return convertToAssets(depositAmount);
+    } else if (depositToken == address(cToken_)) {
+      return (depositAmount);
     } else {
       revert InvalidDepositToken(depositToken);
     }
@@ -212,25 +201,29 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    uint256 shares = convertToShares(toWithdraw[0]);
-    if (shares > 0) {
+    ICERC20 cToken_ = cToken();
+    uint256 assets = (toWithdraw[0]);
+    if (assets > 0) {
       address asset = _asset();
-      cToken().withdraw(asset, shares);
-      asset.transfer({ recipient: recipient, amount: toWithdraw[0] });
+      cToken_.withdraw(asset, assets);
+      asset.transfer({ recipient: recipient, amount: assets });
     }
-    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken())).token);
-    uint256 rewardAmount = toWithdraw[1];
-    if (rewardAmount > 0) {
-      uint256 rewardBalance = rewardToken.balanceOf(address(this));
-      if (rewardBalance < rewardAmount) {
-        // Claim all rewards
-        address[] memory holders = new address[](1);
-        holders[0] = address(this);
-        ICERC20[] memory cTokens = new ICERC20[](1);
-        cTokens[0] = cToken();
-        cometRewards().claimTo(address(cToken()), address(this), address(this), true);
+
+    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken_)).token);
+    if (address(rewardToken) != address(0)) {
+      uint256 rewardAmount = toWithdraw[1];
+      if (rewardAmount > 0) {
+        uint256 rewardBalance = rewardToken.balanceOf(address(this));
+        if (rewardBalance < rewardAmount) {
+          // Claim all rewards
+          address[] memory holders = new address[](1);
+          holders[0] = address(this);
+          ICERC20[] memory cTokens = new ICERC20[](1);
+          cTokens[0] = cToken_;
+          cometRewards().claimTo(address(cToken_), address(this), address(this), true);
+        }
+        rewardToken.safeTransfer(recipient, rewardAmount);
       }
-      rewardToken.safeTransfer(recipient, rewardAmount);
     }
 
     return _connector_supportedWithdrawals();
@@ -254,30 +247,20 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
       bytes memory result
     )
   {
-    ICERC20 cToken_ = cToken();
-    balanceChanges = new uint256[](2);
-
-    actualWithdrawnTokens = new address[](1);
-    actualWithdrawnAmounts = new uint256[](1);
-    result = "";
-    if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
-      uint256 shares = toWithdraw[0];
-      uint256 balanceBefore = underlyingBalance();
-      IERC20(cToken_).safeTransfer(recipient, shares);
-      uint256 balanceAfter = underlyingBalance();
-      balanceChanges[0] = balanceBefore - balanceAfter;
+    if (
+      withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
+        || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
+    ) {
+      IERC20 cToken_ = cToken();
+      balanceChanges = new uint256[](_connector_allTokens().length);
+      actualWithdrawnTokens = new address[](1);
+      actualWithdrawnAmounts = new uint256[](1);
+      result = "";
+      uint256 assets = toWithdraw[0];
+      cToken_.safeTransfer(recipient, assets);
+      balanceChanges[0] = assets;
       actualWithdrawnTokens[0] = address(cToken_);
-      actualWithdrawnAmounts[0] = shares;
-    } else if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT) {
-      // Note: we round down because if we were to round up, we might end up withdrawing more than the position's
-      // balance, which would end up reverting on the vault
-      uint256 shares = convertToShares(toWithdraw[0]);
-      uint256 balanceBefore = underlyingBalance();
-      IERC20(cToken_).safeTransfer(recipient, shares);
-      uint256 balanceAfter = underlyingBalance();
-      balanceChanges[0] = balanceBefore - balanceAfter;
-      actualWithdrawnTokens[0] = address(cToken_);
-      actualWithdrawnAmounts[0] = shares;
+      actualWithdrawnAmounts[0] = assets;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);
     }
@@ -298,7 +281,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     uint256 cTokenBalance = cToken_.balanceOf(address(this));
     IERC20(cToken_).safeTransfer(address(newStrategy), cTokenBalance);
 
-    // Claim and transfer comp
+    // Claim and transfer rewards
     IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken_)).token);
     cometRewards().claimTo(address(cToken_), address(this), address(this), true);
     uint256 rewardBalance = rewardToken.balanceOf(address(this));
@@ -318,83 +301,4 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     virtual
     override
   { }
-
-  /**
-   * @notice Returns the amount of assets that the Vault would exchange for the amount of shares provided, in an ideal
-   * scenario where all the conditions are met.
-   * @dev Treats shares as principal and computes for assets by taking into account interest accrual. Relies on latest
-   * `baseSupplyIndex` from Comet which is the global index used for interest accrual the from supply rate.
-   * @param shares The amount of shares to be converted to assets
-   * @return The total amount of assets computed from the given shares
-   */
-  function convertToAssets(uint256 shares) public view returns (uint256) {
-    uint64 baseSupplyIndex_ = accruedSupplyIndex();
-    return shares > 0 ? presentValueSupply(baseSupplyIndex_, shares, Rounding.DOWN) : 0;
-  }
-
-  /**
-   * @notice Returns the amount of shares that the Vault would exchange for the amount of assets provided, in an ideal
-   * scenario where all the conditions are met.
-   * @dev Assets are converted to shares by computing for the principal using the latest `baseSupplyIndex` from Comet.
-   * @param assets The amount of assets to be converted to shares
-   * @return The total amount of shares computed from the given assets
-   */
-  function convertToShares(uint256 assets) public view returns (uint256) {
-    uint64 baseSupplyIndex_ = accruedSupplyIndex();
-    return assets > 0 ? principalValueSupply(baseSupplyIndex_, assets, Rounding.DOWN) : 0;
-  }
-
-  /**
-   * @notice Total assets of an account that are managed by this vault
-   * @dev The asset balance is computed from an account's shares balance which mirrors how Comet
-   * computes token balances. This is done this way since balances are ever-increasing due to
-   * interest accrual.
-   * @return The total amount of assets held by an account
-   */
-  function underlyingBalance() public view returns (uint256) {
-    uint64 baseSupplyIndex_ = accruedSupplyIndex();
-    uint256 principal = cToken().balanceOf(address(this));
-    return principal > 0 ? presentValueSupply(baseSupplyIndex_, principal, Rounding.DOWN) : 0;
-  }
-
-  /**
-   * @dev This returns latest baseSupplyIndex regardless of whether comet.accrueAccount has been called for the
-   * current block. This works like `Comet.accruedInterestedIndices` at but not including computation of
-   * `baseBorrowIndex` since we do not need that index in CometWrapper:
-   * https://github.com/compound-finance/comet/blob/63e98e5d231ef50c755a9489eb346a561fc7663c/contracts/Comet.sol#L383-L394
-   */
-  function accruedSupplyIndex() internal view returns (uint64) {
-    (uint64 baseSupplyIndex_,, uint40 lastAccrualTime) = getSupplyIndices();
-    uint256 timeElapsed = uint256(getNowInternal() - lastAccrualTime);
-    if (timeElapsed > 0) {
-      uint256 utilization = cToken().getUtilization();
-      uint256 supplyRate = cToken().getSupplyRate(utilization);
-      baseSupplyIndex_ += safe64(mulFactor(baseSupplyIndex_, supplyRate * timeElapsed));
-    }
-    return baseSupplyIndex_;
-  }
-
-  /**
-   * @dev To maintain accuracy, we fetch `baseSupplyIndex` and `trackingSupplyIndex` directly from Comet.
-   * baseSupplyIndex is used on the principal to get the user's latest balance including interest accruals.
-   * trackingSupplyIndex is used to compute for rewards accruals.
-   */
-  function getSupplyIndices()
-    internal
-    view
-    returns (uint64 baseSupplyIndex_, uint64 trackingSupplyIndex_, uint40 lastAccrualTime_)
-  {
-    TotalsBasic memory totals = CometExt(address(cToken())).totalsBasic();
-    baseSupplyIndex_ = totals.baseSupplyIndex;
-    trackingSupplyIndex_ = totals.trackingSupplyIndex;
-    lastAccrualTime_ = totals.lastAccrualTime;
-  }
-
-  /**
-   * @dev The current timestamp
-   * From https://github.com/compound-finance/comet/blob/main/contracts/Comet.sol#L375-L378
-   */
-  function getNowInternal() internal view returns (uint40) {
-    return uint40(block.timestamp);
-  }
 }

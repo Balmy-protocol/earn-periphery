@@ -47,7 +47,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     // Check assets
     uint256 assetsWithdrawn = balanceChanges[0];
     assertEq(balanceChanges.length, balancesBefore.length);
-    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 3);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 2);
 
     // Check actual tokens and amounts
     assertEq(actualWithdrawnTokens.length, 1);
@@ -59,8 +59,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertTrue(result.length == 0);
 
     // Check transfer
-    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 3);
-    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 3);
+    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 2);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 2);
   }
 
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAssetAmount() public {
@@ -88,7 +88,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     // Check assets
     uint256 assetsWithdrawn = balanceChanges[0];
     assertEq(balanceChanges.length, balancesBefore.length);
-    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 3);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 2);
     assertAlmostEq(assetsToWithdraw, assetsWithdrawn, _withdrawFarmTokenByAssetMaxDelta());
 
     // Check actual tokens and amounts
@@ -112,7 +112,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
   }
 
   function _withdrawFarmTokenByAssetMaxDelta() internal pure virtual returns (uint256) {
-    return 3;
+    return 1;
   }
 
   function _amountToWithdrawAsset() internal pure virtual returns (uint256) {
