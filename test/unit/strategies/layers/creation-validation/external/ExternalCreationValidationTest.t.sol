@@ -62,7 +62,7 @@ contract ExternalCreationValidationInstance is ExternalCreationValidation {
     _creationValidation_init(data);
   }
 
-  function validate(address sender, bytes calldata signature) external view {
+  function validate(address sender, bytes calldata signature) external {
     _creationValidation_validate(sender, signature);
   }
 

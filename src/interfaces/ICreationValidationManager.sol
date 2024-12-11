@@ -12,8 +12,7 @@ interface ICreationValidationManagerCore {
     address validationRequestedBy,
     bytes calldata data
   )
-    external
-    view;
+    external;
 
   /**
    * @notice Allows the strategy to call the manager, for self-configuration

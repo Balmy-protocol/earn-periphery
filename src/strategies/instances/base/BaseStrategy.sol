@@ -127,7 +127,7 @@ abstract contract BaseStrategy is
   }
 
   /// @inheritdoc IEarnStrategy
-  function validatePositionCreation(address sender, bytes calldata creationData) external view {
+  function validatePositionCreation(address sender, bytes calldata creationData) external {
     _creationValidation_validate(sender, creationData);
   }
 
