@@ -21,12 +21,7 @@ interface ICometRewards {
     uint64 rescaleFactor;
     bool shouldUpscale;
   }
-
-  struct RewardOwed {
-    address token;
-    uint256 owed;
-  }
-
+  
   function rewardConfig(address) external view returns (RewardConfig memory);
   function claim(address comet, address src, bool shouldAccrue) external;
   function claimTo(address comet, address src, address to, bool shouldAccrue) external;
