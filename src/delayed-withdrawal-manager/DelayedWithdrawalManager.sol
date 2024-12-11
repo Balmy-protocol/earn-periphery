@@ -36,8 +36,8 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
       _registeredAdapters.get(positionId, token);
     uint256 i = 0;
 
-    bool shouldContinue = true;
-    while (shouldContinue) {
+    bool shouldContinue;
+    do {
       RegisteredAdapter memory adapter = registeredAdapters[i];
       if (address(adapter.adapter) != address(0)) {
         // slither-disable-next-line calls-loop
@@ -47,7 +47,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
         }
       }
       shouldContinue = adapter.isNextFilled;
-    }
+    } while (shouldContinue);
   }
 
   /// @inheritdoc IDelayedWithdrawalManager
@@ -55,8 +55,8 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
     mapping(uint256 index => RegisteredAdapter registeredAdapter) storage registeredAdapters =
       _registeredAdapters.get(positionId, token);
     uint256 i = 0;
-    bool shouldContinue = true;
-    while (shouldContinue) {
+    bool shouldContinue;
+    do {
       RegisteredAdapter memory adapter = registeredAdapters[i];
       if (address(adapter.adapter) != address(0)) {
         // slither-disable-next-line calls-loop
@@ -66,7 +66,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
         }
       }
       shouldContinue = adapter.isNextFilled;
-    }
+    } while (shouldContinue);
   }
 
   /// @inheritdoc IDelayedWithdrawalManager
@@ -86,8 +86,8 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
       mapping(uint256 index => RegisteredAdapter registeredAdapter) storage registeredAdapters =
         _registeredAdapters.get(positionId, token);
       uint256 j = 0;
-      bool shouldContinue = true;
-      while (shouldContinue) {
+      bool shouldContinue;
+      do {
         RegisteredAdapter memory adapter = registeredAdapters[j];
         if (address(adapter.adapter) != address(0)) {
           withdrawable[i] += adapter.adapter.withdrawableFunds(positionId, token);
@@ -97,7 +97,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
           }
         }
         shouldContinue = adapter.isNextFilled;
-      }
+      } while (shouldContinue);
       // slither-disable-end calls-loop
     }
   }
@@ -134,8 +134,8 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
 
     uint256 j = 0;
     uint256 i = 0;
-    bool shouldContinue = true;
-    while (shouldContinue) {
+    bool shouldContinue;
+    do {
       RegisteredAdapter memory adapter = registeredAdapters[i];
       if (address(adapter.adapter) != address(0)) {
         // slither-disable-next-line calls-loop
@@ -155,7 +155,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
         }
       }
       shouldContinue = adapter.isNextFilled;
-    }
+    } while (shouldContinue);
     registeredAdapters.pop({ start: j, end: i });
     // slither-disable-next-line reentrancy-events
     emit WithdrawnFunds(positionId, token, recipient, withdrawn);

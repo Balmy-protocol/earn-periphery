@@ -2,6 +2,8 @@
 pragma solidity >=0.8.22;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
@@ -9,7 +11,7 @@ import { IFeeManagerCore, StrategyId, Fees } from "src/interfaces/IFeeManager.so
 import { BaseFees } from "../base/BaseFees.sol";
 
 /// @dev This fees layer implementation only supports performance fees
-abstract contract ExternalFees is BaseFees, Initializable {
+abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   error CantWithdrawFees();
   error NotEnoughFees();
   error WithdrawMustBeImmediate();
@@ -70,6 +72,7 @@ abstract contract ExternalFees is BaseFees, Initializable {
     address recipient
   )
     external
+    nonReentrant
     returns (
       uint256[] memory balanceChanges,
       address[] memory actualWithdrawnTokens,
@@ -277,9 +280,9 @@ abstract contract ExternalFees is BaseFees, Initializable {
     if (perfData.isSet && currentBalance > perfData.lastBalance) {
       uint256 yield = currentBalance - perfData.lastBalance;
       uint256 fee = (yield * performanceFee) / 10_000;
-      return fee + perfData.performanceFees;
+      return Math.min(fee + perfData.performanceFees, currentBalance);
     }
-    return perfData.performanceFees;
+    return Math.min(perfData.performanceFees, currentBalance);
   }
 
   // slither-disable-next-line dead-code
