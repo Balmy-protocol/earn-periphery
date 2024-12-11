@@ -73,8 +73,6 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
       }
       value = depositAmount;
     }
-    // We will pass the companion's address as the validation data so that we can verify it in `isValidSignature`
-    bytes memory newValidationData = abi.encode(address(this));
     // slither-disable-next-line arbitrary-send-eth,unused-return (not sure why this is necessary)
     return vault.createPosition{ value: value }({
       strategyId: strategyId,
@@ -82,7 +80,7 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
       depositAmount: depositAmount,
       owner: owner_,
       permissions: permissions,
-      strategyValidationData: newValidationData,
+      strategyValidationData: strategyValidationData,
       misc: misc
     });
   }
@@ -187,9 +185,8 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     _;
   }
 
-  function isValidSignature(bytes32, bytes memory signature) external view override returns (bytes4) {
-    // We will only consider a signature valid if it is this contract's address
-    address companion = abi.decode(signature, (address));
-    return companion == address(this) ? IERC1271.isValidSignature.selector : bytes4(0);
+  function isValidSignature(bytes32, bytes calldata) external pure override returns (bytes4) {
+    // We'll always consider a signature valid, since we don't have a way to understand exactly what was signed
+    return IERC1271.isValidSignature.selector;
   }
 }
