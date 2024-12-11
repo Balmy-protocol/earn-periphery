@@ -36,11 +36,6 @@ abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTes
     return address(_cToken());
   }
 
-  // solhint-disable-next-line no-empty-blocks
-  function _generateYield() internal virtual override {
-    // TODO: generate yield
-  }
-
   function _setBalance(address asset, address account, uint256 amount) internal override {
     if (asset == address(_cToken())) {
       // We need to set the balance of the account to 0
@@ -118,10 +113,5 @@ contract CompoundV3ConnectorTestUSDC is CompoundV3ConnectorTest {
 
   function _cTokenHolder() internal view override returns (address) {
     return cTokenHolder;
-  }
-
-  function _withdrawFarmTokenByAssetMaxDelta() internal pure override returns (uint256) {
-    // Note: In the case of cDAI, 1 cDAI is equivalent to almost 15e9 DAI
-    return 15e9;
   }
 }

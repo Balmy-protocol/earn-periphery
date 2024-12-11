@@ -276,10 +276,13 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
 
     // Claim and transfer rewards
     ICometRewards cometRewards_ = cometRewards();
-    IERC20 rewardToken = IERC20(cometRewards_.rewardConfig(address(cToken_)).token);
-    cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
-    uint256 rewardBalance = rewardToken.balanceOf(address(this));
-    rewardToken.safeTransfer(address(newStrategy), rewardBalance);
+    uint256 rewardBalance;
+    address rewardToken = cometRewards_.rewardConfig(address(cToken_)).token;
+    if (rewardToken != address(0)) {
+      cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
+      rewardBalance = IERC20(rewardToken).balanceOf(address(this));
+      IERC20(rewardToken).safeTransfer(address(newStrategy), rewardBalance);
+    }
 
     return abi.encode(cTokenBalance, rewardBalance);
   }
