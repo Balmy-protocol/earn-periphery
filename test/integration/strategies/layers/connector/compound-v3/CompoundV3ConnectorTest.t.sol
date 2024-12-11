@@ -10,7 +10,6 @@ import {
 import { BaseConnectorInstance } from "../base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "../base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "../base/BaseConnectorFarmTokenTest.t.sol";
-import { Token } from "@balmy/earn-core/libraries/Token.sol";
 
 abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
   // solhint-disable-next-line no-empty-blocks
@@ -37,9 +36,9 @@ abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTes
     return address(_cToken());
   }
 
+  // solhint-disable-next-line no-empty-blocks
   function _generateYield() internal virtual override {
-    //_setBalance(address(_comp()), address(cometRewardsMock), 1e13);
-    //cometRewardsMock._generateYield(1e3);
+    // TODO: generate yield
   }
 
   function _setBalance(address asset, address account, uint256 amount) internal override {

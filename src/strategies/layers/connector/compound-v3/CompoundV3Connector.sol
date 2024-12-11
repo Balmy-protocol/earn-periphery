@@ -37,11 +37,6 @@ interface CometExt {
   function totalsBasic() external view returns (TotalsBasic memory);
 }
 
-struct UserBasic {
-  uint64 baseTrackingAccrued;
-  uint64 baseTrackingIndex;
-}
-
 struct TotalsBasic {
   uint64 baseSupplyIndex;
   uint64 baseBorrowIndex;
@@ -57,21 +52,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
   using SafeERC20 for IERC20;
   using Math for uint256;
   using Token for address;
-
-  error InvalidMint(uint256 errorCode);
-  error InvalidRedeem(uint256 errorCode);
-
-  /// @notice Mapping of users to basic data
-  mapping(address => UserBasic) public userBasic;
-
-  /// @notice Mapping of users to their rewards claimed
-  mapping(address => uint256) public rewardsClaimed;
-
-  /// @notice The scale for reward tracking
-  uint256 public immutable trackingIndexScale;
-
-  /// @notice Factor to divide by when accruing rewards in order to preserve 6 decimals (i.e. baseScale / 1e6)
-  uint256 internal immutable accrualDescaleFactor;
 
   /// @notice Returns the cToken's address
   function cToken() public view virtual returns (ICERC20);
