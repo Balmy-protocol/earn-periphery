@@ -95,7 +95,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     supported[1] = address(cToken());
   }
 
-  // revisar
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
     if (!_connector_isDepositTokenSupported(depositToken)) {
@@ -140,7 +139,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     codes[1] = SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
-  // revisar
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxWithdraw()
     internal
@@ -286,7 +284,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     }
   }
 
-  // revisar
   // slither-disable-next-line naming-convention,dead-code
   function _connector_migrateToNewStrategy(
     IEarnStrategy newStrategy,
@@ -303,8 +300,8 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     IERC20(cToken_).safeTransfer(address(newStrategy), cTokenBalance);
 
     // Claim and transfer comp
-    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken())).token);
-    cometRewards().claimTo(address(cToken()), address(this), address(this), true);
+    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken_)).token);
+    cometRewards().claimTo(address(cToken_), address(this), address(this), true);
     uint256 rewardBalance = rewardToken.balanceOf(address(this));
     rewardToken.safeTransfer(address(newStrategy), rewardBalance);
 
