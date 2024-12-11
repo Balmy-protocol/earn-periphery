@@ -21,7 +21,7 @@ interface ICometRewards {
     uint64 rescaleFactor;
     bool shouldUpscale;
   }
-  
+
   function rewardConfig(address) external view returns (RewardConfig memory);
   function claim(address comet, address src, bool shouldAccrue) external;
   function claimTo(address comet, address src, address to, bool shouldAccrue) external;
@@ -140,13 +140,11 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    IERC20 cToken_ = cToken();
-    ICometRewards.RewardConfig memory config = cometRewards().rewardConfig(address(cToken_));
     tokens = _connector_allTokens();
     balances = new uint256[](tokens.length);
-    balances[0] = cToken_.balanceOf(address(this));
-    if (config.token != address(0)) {
-      balances[1] = IERC20(config.token).balanceOf(address(this)); // TODO: calculate unclaimed rewards
+    balances[0] = cToken().balanceOf(address(this));
+    if (tokens.length > 1) {
+      balances[1] = IERC20(tokens[1]).balanceOf(address(this)); // TODO: calculate unclaimed rewards
     }
   }
 
@@ -174,11 +172,11 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
       uint256 balanceBefore = cToken_.balanceOf(address(this));
-      cToken_.supply(depositToken, (depositAmount));
+      cToken_.supply(depositToken, depositAmount);
       uint256 balanceAfter = cToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
     } else if (depositToken == address(cToken_)) {
-      return (depositAmount);
+      return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
     }
@@ -187,7 +185,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
-    address[] memory,
+    address[] memory tokens,
     uint256[] memory toWithdraw,
     address recipient
   )
@@ -197,15 +195,15 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     ICERC20 cToken_ = cToken();
-    uint256 assets = (toWithdraw[0]);
+    uint256 assets = toWithdraw[0];
     if (assets > 0) {
-      address asset = _asset();
+      address asset = tokens[0];
       cToken_.withdraw(asset, assets);
       asset.transfer({ recipient: recipient, amount: assets });
     }
 
-    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken_)).token);
-    if (address(rewardToken) != address(0)) {
+    if (tokens.length > 1) {
+      IERC20 rewardToken = IERC20(tokens[1]);
       uint256 rewardAmount = toWithdraw[1];
       if (rewardAmount > 0) {
         uint256 rewardBalance = rewardToken.balanceOf(address(this));
@@ -221,7 +219,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
       }
     }
 
-    return _connector_supportedWithdrawals();
+    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -277,8 +275,9 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     IERC20(cToken_).safeTransfer(address(newStrategy), cTokenBalance);
 
     // Claim and transfer rewards
-    IERC20 rewardToken = IERC20(cometRewards().rewardConfig(address(cToken_)).token);
-    cometRewards().claimTo(address(cToken_), address(this), address(this), true);
+    ICometRewards cometRewards_ = cometRewards();
+    IERC20 rewardToken = IERC20(cometRewards_.rewardConfig(address(cToken_)).token);
+    cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
     uint256 rewardBalance = rewardToken.balanceOf(address(this));
     rewardToken.safeTransfer(address(newStrategy), rewardBalance);
 
