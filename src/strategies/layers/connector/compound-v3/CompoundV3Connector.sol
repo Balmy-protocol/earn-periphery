@@ -158,12 +158,11 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable, CometHelp
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    //ICometRewards.RewardConfig memory config = cometRewards().rewardConfig(address(cToken())); // TODO: calculate
-    // rewards
+    ICometRewards.RewardConfig memory config = cometRewards().rewardConfig(address(cToken()));
     tokens = _connector_allTokens();
     balances = new uint256[](2);
     balances[0] = underlyingBalance();
-    balances[1] = 0; // TODO: calculate rewards
+    balances[1] = IERC20(config.token).balanceOf(address(this)); // TODO: calculate unclaimed rewards
   }
 
   // slither-disable-next-line naming-convention,dead-code
