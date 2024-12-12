@@ -204,7 +204,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
       // If there is nothing being withdrawn, we can skip fee update, since balance didn't change
-      if (toWithdraw[0] == 0) continue;
+      if (toWithdraw[i] == 0) continue;
 
       uint256 performanceFees = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
       _performanceData[tokens[i]] = PerformanceData({
