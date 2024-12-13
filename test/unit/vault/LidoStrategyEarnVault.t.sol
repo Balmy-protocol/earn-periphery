@@ -866,7 +866,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     strategyTokens[1] = address(anotherErc20);
 
     (IEarnStrategy strategy, StrategyId strategyId) =
-    strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+    strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -981,7 +981,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     strategyTokens[1] = address(anotherErc20);
 
         (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1100,7 +1100,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
         (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1183,7 +1183,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     strategyTokens[0] = address(erc20);
     strategyTokens[1] = address(anotherErc20);
         (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     (uint256 positionId1,) =
       vault.createPosition(strategyId, address(asset), amountToDeposit1, positionOwner, permissions, creationData, misc);
@@ -1400,7 +1400,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     address[] memory strategyTokens = CommonUtils.arrayOf(address(nativeETH));
 
         (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1770,7 +1770,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
         (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 
@@ -1971,7 +1971,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     address[] memory strategyTokens = CommonUtils.arrayOf(address(asset));
     (IEarnStrategy strategy, StrategyId strategyId) =
-      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
 
     uint256 previousBalance;
 

@@ -88,10 +88,9 @@ library StrategyUtils {
   {
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
 
-
-    strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
-
     strategyId = registry.registerStrategy(owner, strategy);
+
+    return (strategy, strategyId);
   }
 
   function deployBadMigrationStrategy(

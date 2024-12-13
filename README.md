@@ -156,3 +156,21 @@ $ forge test
 ## License
 
 This project is licensed under MIT.
+
+### integration testing for stragety and earn vault
+
+the most import test are 
+
+- `test_createPosition_CheckRewardsWithLoss`
+- `test_withdraw_CheckRewards`
+- `test_specialWithdraw_CheckRewards`
+
+For ERC4626 Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+
+To deploy a ERC4626 Stragety, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L89) as well.
+
+For Compound Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+
+For LIDO Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+
+AAVE Stragety is made out of scope for this audit.
