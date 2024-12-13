@@ -201,7 +201,7 @@ we need to pick [a asset and a cToken](https://github.com/Balmy-protocol/earn-pe
 
 the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a strategy.deployCompoundV2Strategy.
 
-We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO strategy.deployCompoundV2Strategy.
+We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO strategy
 
 we have to use mainnet fork testing as well.
 
