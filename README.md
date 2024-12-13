@@ -159,7 +159,7 @@ This project is licensed under MIT.
 
 ## Integration testing for Strategy and earn vault
 
-the most import test are 
+the most important test are 
 
 - `test_createPosition_CheckRewardsWithLoss`
 - `test_withdraw_CheckRewards`
