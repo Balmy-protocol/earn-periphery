@@ -205,6 +205,8 @@ We need to set up the delayed withdrawal manager and mock withdrawal queue for L
 
 we have to use mainnet fork testing as well.
 
+[Relevent code section](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L1494) to test the withdraw ETH and then delay withdrawal (burning stETH for ETH).
+
 Example test command
 
 ```solidity
