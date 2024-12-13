@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { IERC20 } from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
 import { StdCheats } from "forge-std/StdCheats.sol";
@@ -14,6 +15,8 @@ import {
 import { BaseConnectorInstance } from "./BaseConnectorInstance.sol";
 
 abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
+  using SafeERC20 for IERC20;
+
   BaseConnectorInstance internal connector;
 
   function setUp() public {
@@ -61,8 +64,14 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   }
 
   function testFork_maxWithdraw() public {
-    _give(connector.asset(), address(connector), 10e18);
-    connector.deposit(connector.asset(), 10e18);
+    _give(connector.asset(), address(this), 10e18);
+    uint256 value = 0;
+    if (connector.asset() == Token.NATIVE_TOKEN) {
+      value = 10e18;
+    } else {
+      IERC20(connector.asset()).forceApprove(address(connector), 10e18);
+    }
+    connector.deposit{ value: value }(connector.asset(), 10e18);
 
     (address[] memory tokens, uint256[] memory withdrawable) = connector.maxWithdraw();
     (address[] memory balanceTokens, uint256[] memory balances) = connector.totalBalances();
@@ -105,8 +114,14 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     for (uint256 i; i < supported.length; ++i) {
       (, uint256[] memory balancesBefore) = connector.totalBalances();
       address depositToken = supported[i];
-      _give(depositToken, address(connector), 10e10);
-      uint256 assetsDeposited = connector.deposit(depositToken, 10e10);
+      _give(depositToken, address(this), 10e10);
+      uint256 value = 0;
+      if (depositToken == Token.NATIVE_TOKEN) {
+        value = 10e10;
+      } else {
+        IERC20(depositToken).forceApprove(address(connector), 10e10);
+      }
+      uint256 assetsDeposited = connector.deposit{ value: value }(depositToken, 10e10);
       (, uint256[] memory balancesAfter) = connector.totalBalances();
       assertAlmostEq(assetsDeposited, balancesAfter[0] - balancesBefore[0], 1);
     }

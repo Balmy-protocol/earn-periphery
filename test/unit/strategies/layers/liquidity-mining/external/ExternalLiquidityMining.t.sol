@@ -96,12 +96,12 @@ contract ExternalLiquidityMiningTest is Test {
     assertTrue(supported[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
   }
 
-  function test_deposited() public {
+  function test_deposit() public {
     uint256 amount = 1000; // 1:1 asset to deposited
     vm.expectCall(
       address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.deposited.selector, strategyId, amount)
     );
-    uint256 deposited = liquidityMining.deposited(asset, amount);
+    uint256 deposited = liquidityMining.deposit(asset, amount);
     assertEq(deposited, amount);
   }
 
@@ -414,8 +414,8 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     return _liquidity_mining_supportedWithdrawals();
   }
 
-  function deposited(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
-    return _liquidity_mining_deposited(depositToken, depositAmount);
+  function deposit(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
+    return _liquidity_mining_deposit(depositToken, depositAmount);
   }
 
   function maxWithdraw() external view returns (address[] memory tokens, uint256[] memory withdrawable) {
@@ -512,7 +512,7 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     return _strategyId;
   }
 
-  function _liquidity_mining_underlying_deposited(
+  function _liquidity_mining_underlying_deposit(
     address,
     uint256 depositAmount
   )

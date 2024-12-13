@@ -60,7 +60,7 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposited(
+  function _connector_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -75,6 +75,7 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
       uint256 balanceAfter = IERC20(_stETH).balanceOf(address(this));
       return balanceAfter - balanceBefore;
     } else if (depositToken == address(_stETH)) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);

@@ -30,9 +30,9 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
-"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#f4f00efc875e05b97536167c29c7299514f3646d":
+"@balmy/earn-core@git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#7a58a70f2dfef9bdfed2c703f84a5454ac6eff55":
   version "0.0.0"
-  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#f4f00efc875e05b97536167c29c7299514f3646d"
+  resolved "git+https://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:x-oauth-basic@github.com/balmy-protocol/earn-core.git#7a58a70f2dfef9bdfed2c703f84a5454ac6eff55"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
