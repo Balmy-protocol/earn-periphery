@@ -77,6 +77,9 @@ import {
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
 import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
+import {
+  ExternalGuardian
+} from "src/strategies/layers/guardian/external/ExternalGuardian.sol";
 import { Fees } from "src/types/Fees.sol";
 
 import { ERC4626, ERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
@@ -178,7 +181,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     );
 
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 500, 0))
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 500, 5000))
     );
     vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
 
@@ -1362,6 +1365,148 @@ contract EarnVaultTest is PRBTest, StdUtils {
 
     //Rewards have to be calculated with previous shares and balance
     assertApproxEqAbs(rewards[0] - intendendWithdraw[1], balances1[1], 1);
+  }
+
+  function test_withdraw_CheckRewards_after_rescue() public {
+    uint256 amountToDeposit1 = 120_000;
+    uint256 amountToDeposit2 = 120_000;
+    uint256 amountToDeposit3 = 240_000;
+    uint256 amountToReward = 120_000;
+    erc20.mint(address(this), amountToDeposit1 + amountToDeposit2 + amountToDeposit3);
+    uint256[] memory rewards = new uint256[](3);
+    uint256[] memory shares = new uint256[](3);
+    uint256 totalShares;
+    uint256 positionsCreated;
+    INFTPermissions.PermissionSet[] memory permissions =
+      PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
+    bytes memory misc = "1234";
+
+    address[] memory strategyTokens = CommonUtils.arrayOf(address(erc20), address(anotherErc20));
+        (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployERC4626Strategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+
+    uint256 previousBalance;
+
+    (uint256 positionId1,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit1, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.mint(address(strategy), amountToReward);
+
+    // Shares: 10
+    //Total shares: 10
+    shares[0] = 10;
+    totalShares = 10;
+
+    (, uint256[] memory balances1,,) = vault.position(positionId1);
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+
+    (uint256 positionId2,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit2, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.mint(address(strategy), amountToReward);
+
+    //Shares: 10
+    //Total shares: 20
+    shares[1] = 10;
+    totalShares += shares[1];
+
+    // Earn
+    (, balances1,,) = vault.position(positionId1);
+    assertEq(balances1.length, 2);
+    assertEq(balances1[0], amountToDeposit1);
+
+    (, uint256[] memory balances2,,) = vault.position(positionId2);
+    assertEq(balances2.length, 2);
+    assertEq(balances2[0], amountToDeposit2);
+
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+    assertApproxEqAbs(rewards[1], balances2[1], 1);
+
+    (uint256 positionId3,) =
+      vault.createPosition(strategyId, address(erc20), amountToDeposit3, positionOwner, permissions, creationData, misc);
+    positionsCreated++;
+    anotherErc20.mint(address(strategy), amountToReward);
+    //Shares: 20
+    // Total shares: 40
+    shares[2] = 20;
+    totalShares += shares[2];
+
+    (, balances1,,) = vault.position(positionId1);
+    (, balances2,,) = vault.position(positionId2);
+    (, uint256[] memory balances3,,) = vault.position(positionId3);
+
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+    assertApproxEqAbs(rewards[1], balances2[1], 1);
+    assertApproxEqAbs(rewards[2], balances3[1], 1);
+
+    // WITHDRAW ONLY ASSET
+
+    uint256 amountToWithdraw1 = 21_000;
+    address recipient = address(18);
+    uint256[] memory intendendWithdraw = CommonUtils.arrayOf(amountToWithdraw1, 0);
+
+    vm.prank(operator);
+    vault.withdraw(positionId1, strategyTokens, intendendWithdraw, recipient);
+
+    // UPDATE SHARES
+    //Shares: 5
+    // Total shares: 35
+    shares[0] -= 5;
+    totalShares -= 5;
+
+    (, balances1,,) = vault.position(positionId1);
+    (, balances2,,) = vault.position(positionId2);
+    (, balances3,,) = vault.position(positionId3);
+    previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+
+    assertApproxEqAbs(amountToDeposit1 - amountToWithdraw1, balances1[0], 1);
+    assertApproxEqAbs(rewards[0], balances1[1], 1);
+
+    // WITHDRAW ONLY REWARDS
+
+    intendendWithdraw[0] = 0;
+    intendendWithdraw[1] = amountToWithdraw1;
+
+    vm.prank(operator);
+    vault.withdraw(positionId1, strategyTokens, intendendWithdraw, recipient);
+
+    (, balances1,,) = vault.position(positionId1);
+    assertApproxEqAbs(amountToDeposit1 - amountToWithdraw1, balances1[0], 1);
+
+    console.log("after withdraw first", balances1[0]);
+
+    vm.mockCall(
+      address(guardianManager),
+      abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+
+    address feeRecipient = address(100);
+    (address[] memory tokens, uint256[] memory withdrawn) = ExternalGuardian(address(strategy)).rescue(feeRecipient);
+
+    ExternalGuardian(address(strategy)).confirmRescue();
+
+    (,,ExternalGuardian.RescueStatus status) = ExternalGuardian(address(strategy)).rescueConfig();
+
+    if(status != ExternalGuardian.RescueStatus.RESCUED) {
+      revert("incorrect status");
+    }
+    // assertEq(ExternalGuardian(address(strategy)).rescueConfig().status(), ExternalGuardian.RescueStatus.RESCUED, "incorrect status");
+
+    intendendWithdraw[0] = amountToWithdraw1;
+    intendendWithdraw[1] = 0;
+
+    vm.prank(operator);
+    vault.withdraw(positionId1, strategyTokens, intendendWithdraw, recipient);
+
+    (, balances1,,) = vault.position(positionId1);
+
+    console.log("balance after rescue withdraw", balances1[0]);
   }
 
   function testFuzz_increasePosition_WithERC20(uint104 amountToDeposit, uint256 amountToIncrease) public {

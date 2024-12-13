@@ -66,17 +66,17 @@ library StrategyUtils {
   function deployLIDOStrategy( // @audit deploy stragety 
     IEarnStrategyRegistry registry,
     address[] memory tokens,
-    address owner
+    address owner,
+    IEarnStrategy strategy
   )
     internal
-    returns (EarnStrategyStateBalanceMock strategy, StrategyId strategyId)
+    returns (IEarnStrategy, StrategyId strategyId)
   {
     IEarnStrategy.WithdrawalType[] memory withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
 
-
-    strategy = new EarnStrategyStateBalanceMock(tokens, withdrawalTypes);
-
     strategyId = registry.registerStrategy(owner, strategy);
+
+    return (strategy, strategyId);
   }
 
   function deployCompoundV2Strategy(IEarnStrategyRegistry registry,

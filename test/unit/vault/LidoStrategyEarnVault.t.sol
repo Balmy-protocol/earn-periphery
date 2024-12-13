@@ -253,7 +253,7 @@ contract EarnVaultTest is PRBTest, StdUtils {
     );
 
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 0, 0))
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector), abi.encode(Fees(0, 0, 500, 0))
     );
     vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
 
@@ -386,6 +386,106 @@ contract EarnVaultTest is PRBTest, StdUtils {
     assertGt(address(this).balance, 1 ether, "insufficient balance");
     (bool sent, ) = address(clone).call{value: 1 ether}("");
     assertEq(sent, true, "Lido Strateg failed to receive ETH");
+
+  }
+
+  function test_deposit_share_charged_performance_fee() public {
+
+      uint256 amountToDeposit1 = 100_000;
+      uint256 amountToDeposit2 = 200_000;
+      uint256 amountToDeposit3 = 50_000;
+      uint256 amountToReward = 100_000;
+  
+      erc20.mint(address(this), amountToDeposit1 + amountToDeposit2 + amountToDeposit3 * 2);
+  
+      uint256[] memory rewards = new uint256[](4);
+      uint256[] memory shares = new uint256[](4);
+      uint256 totalShares;
+      uint256 positionsCreated;
+      INFTPermissions.PermissionSet[] memory permissions =
+        PermissionUtils.buildPermissionSet(operator, PermissionUtils.permissions(vault.WITHDRAW_PERMISSION()));
+      bytes memory misc = "1234";
+  
+      address[] memory strategyTokens = new address[](2);
+      strategyTokens[0] = address(erc20);
+      strategyTokens[1] = address(anotherErc20);
+  
+      (IEarnStrategy strategy, StrategyId strategyId) =
+      strategyRegistry.deployLIDOStrategy(strategyTokens, address(this), IEarnStrategy(address(cloneStrategy()))); 
+  
+      uint256 previousBalance;
+  
+      (uint256 positionId1,) =
+        vault.createPosition(
+          strategyId,
+          address(asset),
+          amountToDeposit1,
+          positionOwner,
+          permissions,
+          creationData,
+          misc
+        );
+      
+      anotherErc20.mint(address(strategy), amountToReward);
+  
+      // Shares: 100
+      //Total shares: 100
+      shares[0] = 100;
+      totalShares += shares[0];
+  
+      (, uint256[] memory balances1,,) = vault.position(positionId1);
+  
+      previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+      // // assertApproxEqAbs(rewards[0], balances1[1], 1, "reward assertion fails");
+  
+      (uint256 positionId2,) =
+        vault.createPosition(strategyId, address(asset), amountToDeposit2, positionOwner, permissions, creationData, misc);
+      positionsCreated++;
+      anotherErc20.mint(address(strategy), amountToReward * 3);
+  
+      //Shares: 200
+      //Total shares: 300
+      shares[1] = 200;
+      totalShares += shares[1];
+  
+      // Earn
+      (, balances1,,) = vault.position(positionId1);
+      (, uint256[] memory balances2,,) = vault.position(positionId2);
+      previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+  
+  
+      (uint256 positionId3,) =
+        vault.createPosition(strategyId, address(asset), amountToDeposit3, positionOwner, permissions, creationData, misc);
+      positionsCreated++;
+      anotherErc20.burn(address(strategy), 350_000);
+      //Shares: 50
+      // Total shares: 350
+      shares[2] = 50;
+      totalShares += shares[2];
+  
+      (, balances1,,) = vault.position(positionId1);
+      (, balances2,,) = vault.position(positionId2);
+      (, uint256[] memory balances3,,) = vault.position(positionId3);
+  
+      previousBalance = takeSnapshot(strategy, previousBalance, totalShares, rewards, shares, positionsCreated);
+  
+      (uint256 positionId4,) =
+        vault.createPosition(strategyId, address(asset), amountToDeposit3, positionOwner, permissions, creationData, misc);
+      positionsCreated++;
+      shares[3] = 50;
+      totalShares += shares[3];
+      anotherErc20.mint(address(strategy), 350_000);
+  
+      (, balances1,,) = vault.position(positionId1);
+      (, balances2,,) = vault.position(positionId2);
+      (, balances3,,) = vault.position(positionId3);
+      (, uint256[] memory balances4,,) = vault.position(positionId4);
+  
+      console.log("position user 1", balances1[0]);
+      console.log("position user 2", balances2[0]);
+      console.log("position user 3", balances3[0]);
+      console.log("position user 4", balances4[0]);
+  
 
   }
 
