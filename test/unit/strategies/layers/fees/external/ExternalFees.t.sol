@@ -75,7 +75,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
     vm.expectRevert(abi.encodeWithSelector(ExternalFees.InvalidTokens.selector));
@@ -90,7 +90,7 @@ contract ExternalFeesTest is Test {
       abi.encode(true)
     );
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
     vm.expectRevert(abi.encodeWithSelector(ExternalFees.InvalidTokens.selector));
@@ -106,7 +106,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
@@ -126,7 +126,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
 
@@ -145,7 +145,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
@@ -194,7 +194,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
@@ -216,7 +216,7 @@ contract ExternalFeesTest is Test {
     );
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k, and fees would be 2.5k)
     fees.setBalance(asset, 150_000);
@@ -246,7 +246,7 @@ contract ExternalFeesTest is Test {
     fees.init(""); // Initialize so that performance data is set
 
     // Deposit 50k
-    fees.deposited(asset, 50_000);
+    fees.deposit(asset, 50_000);
 
     // Set balance to 100k for asset and 50k for reward
     fees.setBalance(asset, 100_000);
@@ -270,7 +270,7 @@ contract ExternalFeesTest is Test {
     fees.init(""); // Initialize so that performance data is set
 
     // Deposit 50k
-    fees.deposited(asset, 50_000);
+    fees.deposit(asset, 50_000);
 
     // Set balance to 100k for asset (yield was 50k, fee is 2.5k)
     fees.setBalance(asset, 100_000);
@@ -295,11 +295,11 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
   }
 
-  function test_deposited() public {
+  function test_deposit() public {
     _setFee(500); // 5%
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k)
     fees.setBalance(asset, 150_000);
@@ -313,7 +313,7 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
 
     // Deposit another 100k (balance is now 250k)
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 300k (so yield was 100k)
     fees.setBalance(asset, 300_000);
@@ -327,11 +327,11 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
   }
 
-  function test_deposited_loss() public {
+  function test_deposit_loss() public {
     _setFee(500); // 5%
 
     // Deposit 100k
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 150k (so yield was 50k)
     fees.setBalance(asset, 150_000);
@@ -345,7 +345,7 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 0);
 
     // Deposit another 100k (balance is now 250k)
-    fees.deposited(asset, 100_000);
+    fees.deposit(asset, 100_000);
 
     // Set balance to 200k, there was a loss
     fees.setBalance(asset, 200_000);
@@ -490,8 +490,8 @@ contract ExternalFeesInstance is ExternalFees {
     return _fees_totalBalances();
   }
 
-  function deposited(address token, uint256 amount) external returns (uint256) {
-    return _fees_deposited(token, amount);
+  function deposit(address token, uint256 amount) external returns (uint256) {
+    return _fees_deposit(token, amount);
   }
 
   function lastWithdrawal() external view returns (Withdrawal memory) {
@@ -565,14 +565,14 @@ contract ExternalFeesInstance is ExternalFees {
     }
   }
 
-  function _fees_underlying_deposited(
+  function _fees_underlying_deposit(
     address,
     uint256 depositAmount
   )
     internal
     pure
     override
-    returns (uint256 assetsDeposited)
+    returns (uint256 assetsDeposit)
   {
     return depositAmount;
   }

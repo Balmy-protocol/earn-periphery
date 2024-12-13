@@ -151,7 +151,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _fees_deposited(
+  function _fees_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -165,14 +165,14 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
       // we won't be able to understand difference between balance changes and yield
       address asset = _fees_underlying_asset();
       _clearBalanceIfSet(asset);
-      return _fees_underlying_deposited(depositToken, depositAmount);
+      return _fees_underlying_deposit(depositToken, depositAmount);
     }
 
     // Note: we are only updating fees for the asset, since it's the only token whose balance will change
     (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     uint256 performanceFees = _calculateFees(tokens[0], currentBalances[0], fees.performanceFee);
 
-    assetsDeposited = _fees_underlying_deposited(depositToken, depositAmount);
+    assetsDeposited = _fees_underlying_deposit(depositToken, depositAmount);
 
     _performanceData[tokens[0]] = PerformanceData({
       // Note: there might be a small wei difference here, but we can ignore it since it should be negligible
@@ -204,7 +204,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
       // If there is nothing being withdrawn, we can skip fee update, since balance didn't change
-      if (toWithdraw[0] == 0) continue;
+      if (toWithdraw[i] == 0) continue;
 
       uint256 performanceFees = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
       _performanceData[tokens[i]] = PerformanceData({

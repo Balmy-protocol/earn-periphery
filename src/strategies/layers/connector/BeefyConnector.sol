@@ -131,7 +131,7 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposited(
+  function _connector_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -141,11 +141,13 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   {
     IBeefyVault vault = beefyVault();
     if (depositToken == _connector_asset()) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 balance = vault.balanceOf(address(this));
       vault.deposit(depositAmount);
       uint256 sharesDeposited = vault.balanceOf(address(this)) - balance;
       return _convertSharesToAssets(vault, sharesDeposited);
     } else if (depositToken == address(vault)) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return _convertSharesToAssets(vault, depositAmount);
     } else {
       revert InvalidDepositToken(depositToken);

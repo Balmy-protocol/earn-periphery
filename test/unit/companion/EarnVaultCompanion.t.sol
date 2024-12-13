@@ -88,7 +88,7 @@ contract EarnVaultCompanionTest is Test {
         depositAmount,
         owner,
         permissions,
-        abi.encode(address(companion)),
+        validationData,
         misc
       )
     );
@@ -142,7 +142,7 @@ contract EarnVaultCompanionTest is Test {
         depositAmount,
         owner,
         permissions,
-        abi.encode(address(companion)),
+        validationData,
         misc
       )
     );
@@ -195,7 +195,7 @@ contract EarnVaultCompanionTest is Test {
         depositAmount,
         owner,
         permissions,
-        abi.encode(address(companion)),
+        validationData,
         misc
       )
     );
@@ -448,18 +448,11 @@ contract EarnVaultCompanionTest is Test {
     assertEq(result, expectedResult);
   }
 
-  function test_isValidSignature_valid() public {
+  function test_isValidSignature() public {
     bytes32 hash;
     bytes memory signature = abi.encode(address(companion));
     bytes4 result = companion.isValidSignature(hash, signature);
     assertEq(result, IERC1271.isValidSignature.selector);
-  }
-
-  function test_isValidSignature_invalid() public {
-    bytes32 hash;
-    bytes memory signature = abi.encode(10);
-    bytes4 result = companion.isValidSignature(hash, signature);
-    assertNotEq(result, IERC1271.isValidSignature.selector);
   }
 }
 

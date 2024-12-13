@@ -162,7 +162,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposited(
+  function _connector_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -172,24 +172,25 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (uint256 assetsDeposited)
   {
     ICERC20 cToken_ = cToken();
+    uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
     if (depositToken == _connector_asset()) {
-      uint256 balanceBefore = cToken_.viewUnderlyingBalanceOf(address(this));
       if (depositToken == Token.NATIVE_TOKEN) {
         // transfer native is the same as minting
         depositToken.transfer(address(cToken_), depositAmount);
       } else {
+        IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
         uint256 errorCode = cToken_.mint(depositAmount);
         if (errorCode != 0) {
           revert InvalidMint(errorCode);
         }
       }
-      uint256 balanceAfter = cToken_.viewUnderlyingBalanceOf(address(this));
-      return balanceAfter - balanceBefore;
     } else if (depositToken == address(cToken_)) {
-      return _convertSharesToAssets(depositAmount, Math.Rounding.Floor);
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
     } else {
       revert InvalidDepositToken(depositToken);
     }
+    uint256 balanceAfter = cToken_.viewUnderlyingBalanceOf(address(this));
+    return balanceAfter - balanceBefore;
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -317,11 +318,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     virtual
     override
   { }
-
-  // slither-disable-next-line dead-code
-  function _convertSharesToAssets(uint256 shares, Math.Rounding rounding) private view returns (uint256) {
-    return shares.mulDiv(cToken().viewExchangeRate(), 1e18, rounding);
-  }
 
   // slither-disable-next-line dead-code
   function _convertAssetsToShares(uint256 assets, Math.Rounding rounding) private view returns (uint256) {

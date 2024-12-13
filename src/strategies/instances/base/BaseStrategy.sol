@@ -132,7 +132,7 @@ abstract contract BaseStrategy is
   }
 
   /// @inheritdoc IEarnStrategy
-  function deposited(
+  function deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -141,7 +141,7 @@ abstract contract BaseStrategy is
     onlyVault
     returns (uint256 assetsDeposited)
   {
-    return _liquidity_mining_deposited(depositToken, depositAmount);
+    return _liquidity_mining_deposit(depositToken, depositAmount);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -254,7 +254,7 @@ abstract contract BaseStrategy is
     return _connector_supportedWithdrawals();
   }
 
-  function _liquidity_mining_underlying_deposited(
+  function _liquidity_mining_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -262,7 +262,7 @@ abstract contract BaseStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _fees_deposited(depositToken, depositAmount);
+    return _fees_deposit(depositToken, depositAmount);
   }
 
   function _liquidity_mining_underlying_withdraw(
@@ -313,7 +313,7 @@ abstract contract BaseStrategy is
     return _guardian_totalBalances();
   }
 
-  function _fees_underlying_deposited(
+  function _fees_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -321,7 +321,7 @@ abstract contract BaseStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _guardian_deposited(depositToken, depositAmount);
+    return _guardian_deposit(depositToken, depositAmount);
   }
 
   function _fees_underlying_withdraw(
@@ -381,7 +381,7 @@ abstract contract BaseStrategy is
     return _connector_totalBalances();
   }
 
-  function _guardian_underlying_deposited(
+  function _guardian_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -389,7 +389,7 @@ abstract contract BaseStrategy is
     override
     returns (uint256 assetsDeposited)
   {
-    return _connector_deposited(depositToken, depositAmount);
+    return _connector_deposit(depositToken, depositAmount);
   }
 
   function _guardian_underlying_withdraw(

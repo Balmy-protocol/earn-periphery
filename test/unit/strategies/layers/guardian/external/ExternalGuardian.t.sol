@@ -474,7 +474,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   }
 
   function deposit(address token, uint256 amount) external returns (uint256 assetsDeposited) {
-    return _guardian_deposited(token, amount);
+    return _guardian_deposit(token, amount);
   }
 
   function withdraw(
@@ -566,7 +566,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
     }
   }
 
-  function _guardian_underlying_deposited(
+  function _guardian_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
