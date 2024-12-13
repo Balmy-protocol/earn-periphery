@@ -165,12 +165,33 @@ the most import test are
 - `test_withdraw_CheckRewards`
 - `test_specialWithdraw_CheckRewards`
 
-For ERC4626 Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+#### ERC4626 Stragety
 
-To deploy a ERC4626 Stragety, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L89) as well.
+the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
 
-For Compound Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+To deploy a ERC4626 Stragety, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L89) as well.
 
-For LIDO Stragety, the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/b7aff4daa60474d78635bc48031f39193ea32ff2/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+#### Compound V2 Stragety
 
-AAVE Stragety is made out of scope for this audit.
+the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L256) is the set up code to deploy a stragety.
+
+To test Compound Stragety, we have to use mainnet fork testing,
+
+we need to pick [a asset and a cToken](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L160)
+
+#### LIDO Stragety
+
+the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a stragety.
+
+We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO Stragety.
+
+we have to use mainnet fork testing as well.
+
+Example test command
+
+```solidity
+forge test -vv --match-path test/unit/vault/LidoStrategyEarnVault.t.sol --match-test "test_deposit_share_charged_performance_fee" --fork-url [rpc-url]
+```
+
+#### AAVE Stragety
+made out of scope for this audit.
