@@ -157,7 +157,7 @@ $ forge test
 
 This project is licensed under MIT.
 
-## Integration testing for stragety and earn vault
+## Integration testing for Strategy and earn vault
 
 the most import test are 
 
@@ -165,25 +165,43 @@ the most import test are
 - `test_withdraw_CheckRewards`
 - `test_specialWithdraw_CheckRewards`
 
-#### ERC4626 Stragety
+Note, the original integration test of the earn vault use a mock Strategy,
 
-the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a stragety.
+the [mock Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/ef040e594b415d073b8006a424b653aaaa675f3c/test/mocks/strategies/EarnStrategyStateBalanceMock.sol#L53) has one underlying asset and one reward token.
 
-To deploy a ERC4626 Stragety, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L89) as well.
+The original integration make strong assumption that the strategy has one underlying asset and one reward token and use a lot of assertion.
 
-#### Compound V2 Stragety
+But 
 
-the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L256) is the set up code to deploy a stragety.
+- RC4626 Strategy has no reward token.
+- Compound V2 Strategy has one COMP reward token (but withdraw reward logic is different from mock code)
+- LIDO strategy has no reward token,
 
-To test Compound Stragety, we have to use mainnet fork testing,
+thus most assertion from original EarnVault.t.sol test revert when we trying to plug in the new Strategy.
+
+the final goal is we should build a integration testing frame so if other user wants to develop a strategy, 
+
+they should plug the strategy in the test and if all testing are passing, strategy should works
+
+#### ERC4626 Strategy
+
+the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a strategy.deployCompoundV2Strategy.
+
+To deploy a ERC4626 strategy.deployCompoundV2Strategy, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L89) as well.
+
+#### Compound V2 strategy.deployCompoundV2Strategy
+
+the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L256) is the set up code to deploy a strategy.deployCompoundV2Strategy.
+
+To test Compound strategy.deployCompoundV2Strategy, we have to use mainnet fork testing,
 
 we need to pick [a asset and a cToken](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L160)
 
-#### LIDO Stragety
+#### LIDO strategy.deployCompoundV2Strategy
 
-the [set up code and the function clone stragety](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a stragety.
+the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a strategy.deployCompoundV2Strategy.
 
-We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO Stragety.
+We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO strategy.deployCompoundV2Strategy.
 
 we have to use mainnet fork testing as well.
 
@@ -193,5 +211,5 @@ Example test command
 forge test -vv --match-path test/unit/vault/LidoStrategyEarnVault.t.sol --match-test "test_deposit_share_charged_performance_fee" --fork-url [rpc-url]
 ```
 
-#### AAVE Stragety
+#### AAVE strategy.deployCompoundV2Strategy
 made out of scope for this audit.
