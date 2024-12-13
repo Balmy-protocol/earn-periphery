@@ -42,7 +42,7 @@ contract ExternalCreationValidationTest is Test {
     vm.expectCall(
       address(manager),
       abi.encodeWithSelector(
-        ICreationValidationManagerCore.validatePositionCreation.selector, strategyId, sender, signature
+        ICreationValidationManagerCore.validatePositionCreation.selector, strategyId, sender, address(this), signature
       )
     );
     validation.validate(sender, signature);
@@ -62,7 +62,7 @@ contract ExternalCreationValidationInstance is ExternalCreationValidation {
     _creationValidation_init(data);
   }
 
-  function validate(address sender, bytes calldata signature) external view {
+  function validate(address sender, bytes calldata signature) external {
     _creationValidation_validate(sender, signature);
   }
 

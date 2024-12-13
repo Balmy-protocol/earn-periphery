@@ -22,8 +22,8 @@ abstract contract ExternalCreationValidation is BaseCreationValidation, Initiali
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _creationValidation_validate(address sender, bytes calldata data) internal view override {
-    _getCreationValidationManager().validatePositionCreation(strategyId(), sender, data);
+  function _creationValidation_validate(address toValidate, bytes calldata data) internal override {
+    _getCreationValidationManager().validatePositionCreation(strategyId(), toValidate, msg.sender, data);
   }
 
   // slither-disable-next-line dead-code

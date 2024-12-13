@@ -69,7 +69,7 @@ contract TosManagerTest is Test {
 
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(alice, tosManager.getStrategyTOSHash(strategyId));
     bytes memory signature = abi.encodePacked(r, s, v);
-    tosManager.validatePositionCreation(strategyId, alice.addr, signature);
+    tosManager.validatePositionCreation(strategyId, alice.addr, address(0), signature);
   }
 
   function test_validate_tosIsSet_ERC1271() public {
@@ -81,13 +81,13 @@ contract TosManagerTest is Test {
 
     bytes memory signature = "my signature";
     MyContract caller = new MyContract(tosManager.getStrategyTOSHash(strategyId), signature);
-    tosManager.validatePositionCreation(strategyId, address(caller), signature);
+    tosManager.validatePositionCreation(strategyId, address(caller), address(0), signature);
   }
 
   function test_validate_tosIsNotSet() public view {
     // Since TOS is empty, signature can be anything
     StrategyId strategyId = StrategyId.wrap(1);
-    tosManager.validatePositionCreation(strategyId, address(0), "");
+    tosManager.validatePositionCreation(strategyId, address(0), address(0), "");
   }
 
   function test_validate_revertWhen_signatureIsInvalid() public {
@@ -98,7 +98,7 @@ contract TosManagerTest is Test {
     vm.stopPrank();
 
     vm.expectRevert(abi.encodeWithSelector(ITOSManager.InvalidTOSSignature.selector));
-    tosManager.validatePositionCreation(strategyId, alice.addr, "");
+    tosManager.validatePositionCreation(strategyId, alice.addr, address(0), "");
   }
 
   function test_updateTOS() public {
