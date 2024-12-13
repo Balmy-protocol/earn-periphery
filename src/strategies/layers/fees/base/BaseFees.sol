@@ -13,7 +13,7 @@ abstract contract BaseFees {
     view
     virtual
     returns (address[] memory tokens, uint256[] memory balances);
-  function _fees_underlying_deposited(
+  function _fees_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -49,7 +49,7 @@ abstract contract BaseFees {
   function _fees_fees() internal view virtual returns (IEarnStrategy.FeeType[] memory types, uint16[] memory bps);
   function _fees_totalBalances() internal view virtual returns (address[] memory tokens, uint256[] memory balances);
 
-  function _fees_deposited(
+  function _fees_deposit(
     address depositToken,
     uint256 depositAmount
   )

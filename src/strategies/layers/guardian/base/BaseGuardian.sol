@@ -22,7 +22,7 @@ abstract contract BaseGuardian {
     view
     virtual
     returns (address[] memory tokens, uint256[] memory balances);
-  function _guardian_underlying_deposited(
+  function _guardian_underlying_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -63,7 +63,7 @@ abstract contract BaseGuardian {
 
   // Guardian
   function _guardian_totalBalances() internal view virtual returns (address[] memory tokens, uint256[] memory balances);
-  function _guardian_deposited(
+  function _guardian_deposit(
     address depositToken,
     uint256 depositAmount
   )

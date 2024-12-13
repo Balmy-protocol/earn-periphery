@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { BaseConnectorTest, IEarnStrategy } from "./BaseConnectorTest.t.sol";
+import { BaseConnectorTest, IEarnStrategy, SafeERC20, IERC20, Token } from "./BaseConnectorTest.t.sol";
 
 /// @notice A test for connectors that have immediate withdrawals
 abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
+  using SafeERC20 for IERC20;
+
   function testFork_delayedWithdrawalAdapter_immediateWithdrawal() public {
     address[] memory tokens = connector.allTokens();
     for (uint256 i; i < tokens.length; ++i) {
@@ -24,8 +26,14 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     address recipient = address(0xea4);
 
     // Deposit tokens
-    _give(connector.asset(), address(connector), 10e12);
-    connector.deposit(connector.asset(), 10e12);
+    _give(connector.asset(), address(this), 10e12);
+    uint256 value = 0;
+    if (connector.asset() == Token.NATIVE_TOKEN) {
+      value = 10e12;
+    } else {
+      IERC20(connector.asset()).forceApprove(address(connector), 10e12);
+    }
+    connector.deposit{ value: value }(connector.asset(), 10e12);
 
     // Generate yield if connector handles it
     _generateYield();

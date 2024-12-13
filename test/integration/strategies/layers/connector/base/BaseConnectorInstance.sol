@@ -54,8 +54,8 @@ abstract contract BaseConnectorInstance is BaseConnector {
     return _connector_delayedWithdrawalAdapter(token);
   }
 
-  function deposit(address depositToken, uint256 depositAmount) external returns (uint256 assetsDeposited) {
-    return _connector_deposited(depositToken, depositAmount);
+  function deposit(address depositToken, uint256 depositAmount) external payable returns (uint256 assetsDeposited) {
+    return _connector_deposit(depositToken, depositAmount);
   }
 
   function withdraw(
