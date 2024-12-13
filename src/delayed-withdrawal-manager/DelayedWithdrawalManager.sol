@@ -2,6 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { IDelayedWithdrawalManager, IEarnVault } from "../interfaces/IDelayedWithdrawalManager.sol";
 import { IDelayedWithdrawalAdapter } from "../interfaces/IDelayedWithdrawalAdapter.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
@@ -10,7 +11,7 @@ import { IEarnBalmyStrategy, IEarnStrategy } from "../interfaces/IEarnBalmyStrat
 import { RegisteredAdapter, RegisteredAdaptersLibrary, PositionIdTokenKey } from "./types/RegisteredAdapters.sol";
 import { PayableMulticall } from "src/base/PayableMulticall.sol";
 
-contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall {
+contract DelayedWithdrawalManager is IDelayedWithdrawalManager, ReentrancyGuard, PayableMulticall {
   using RegisteredAdaptersLibrary for mapping(uint256 => mapping(address => mapping(uint256 => RegisteredAdapter)));
   using RegisteredAdaptersLibrary for mapping(uint256 => RegisteredAdapter);
 
@@ -103,7 +104,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
   }
 
   /// @inheritdoc IDelayedWithdrawalManager
-  function registerDelayedWithdraw(uint256 positionId, address token) external {
+  function registerDelayedWithdraw(uint256 positionId, address token) external nonReentrant {
     _revertIfNotCurrentStrategyAdapter(positionId, token);
 
     mapping(uint256 index => RegisteredAdapter registeredAdapter) storage registeredAdapters =
@@ -125,6 +126,7 @@ contract DelayedWithdrawalManager is IDelayedWithdrawalManager, PayableMulticall
     address recipient
   )
     external
+    nonReentrant
     returns (uint256 withdrawn, uint256 stillPending)
   {
     if (!VAULT.hasPermission(positionId, msg.sender, WITHDRAW_PERMISSION)) revert UnauthorizedWithdrawal();
