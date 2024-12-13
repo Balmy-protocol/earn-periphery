@@ -8,6 +8,8 @@ import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { IFeeManagerCore, StrategyId, Fees } from "src/interfaces/IFeeManager.sol";
 import { BaseFees } from "../base/BaseFees.sol";
 
+import {console} from "forge-std/console.sol";
+
 /// @dev This fees layer implementation only supports performance fees
 abstract contract ExternalFees is BaseFees, Initializable {
   error CantWithdrawFees();
@@ -46,7 +48,8 @@ abstract contract ExternalFees is BaseFees, Initializable {
   }
 
   function withdrawFees(address[] calldata tokens, uint256[] calldata toWithdraw, address recipient) external {
-    Fees memory fees = _getFeesOrFailIfSenderCantWithdraw();
+    // Fees memory fees = _getFeesOrFailIfSenderCantWithdraw();
+    Fees memory fees = _getFees();
     (address[] memory allTokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     _updateFeesForWithdraw({ tokens: tokens, withdrawAmounts: toWithdraw, currentBalances: currentBalances, fees: fees });
     IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_withdraw(0, tokens, toWithdraw, recipient);
@@ -167,9 +170,14 @@ abstract contract ExternalFees is BaseFees, Initializable {
 
     // Note: we are only updating fees for the asset, since it's the only token whose balance will change
     (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+
+    console.log("Current balances: %s", currentBalances[0]);
+
     uint256 performanceFees = _calculateFees(tokens[0], currentBalances[0], fees.performanceFee);
 
     assetsDeposited = _fees_underlying_deposited(depositToken, depositAmount);
+
+    console.log("Performance fees: %s", performanceFees);
 
     _performanceData[tokens[0]] = PerformanceData({
       // Note: there might be a small wei difference here, but we can ignore it since it should be negligible

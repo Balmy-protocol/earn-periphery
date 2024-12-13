@@ -286,6 +286,19 @@ contract EarnVault is AccessControl, NFTPermissions, Pausable, ReentrancyGuard, 
       uint256[] memory balancesBeforeUpdate
     ) = _loadCurrentState(positionId);
 
+    console.log("tokensToWithdraw[i]", tokensToWithdraw[0]);
+    console.log("tokens[i]", tokens[0]);
+
+    console.log("tokensToWithdraw.length", tokensToWithdraw.length);
+
+    console.log("token.length", tokens.length);
+
+    console.log("intendedWithdraw.length", intendedWithdraw.length);
+
+    console.log(tokensToWithdraw.length != tokens.length);
+
+    console.log(intendedWithdraw.length != tokensToWithdraw.length);
+
     if (tokensToWithdraw.length != tokens.length || intendedWithdraw.length != tokensToWithdraw.length) {
       revert InvalidWithdrawInput();
     }

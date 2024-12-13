@@ -8,6 +8,8 @@ import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol
 import { BaseStrategyFactory } from "../base/BaseStrategyFactory.sol";
 import { CompoundV2Strategy, IGlobalEarnRegistry, ICERC20, IComptroller, IERC20 } from "./CompoundV2Strategy.sol";
 
+// @audit 
+// here
 struct CompoundV2StrategyData {
   IEarnVault earnVault;
   IGlobalEarnRegistry globalRegistry;

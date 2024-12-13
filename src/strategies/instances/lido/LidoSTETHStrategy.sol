@@ -22,6 +22,8 @@ contract LidoSTETHStrategy is
   /// @inheritdoc IEarnStrategy
   string public description;
 
+  receive() external payable { }
+
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,

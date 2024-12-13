@@ -41,7 +41,7 @@ abstract contract BaseDelayedStrategy is
   StrategyId internal _strategyId;
 
   /// @dev Some strategies have the native token as the asset
-  receive() external payable { }
+  // receive() external payable { }
 
   function strategyId() public view virtual returns (StrategyId) {
     return _strategyId;
