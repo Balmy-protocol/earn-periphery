@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Test } from "forge-std/Test.sol";
-import { Clone, Clones } from "src/strategies/instances/base/Clone.sol";
+import { Clone } from "src/strategies/instances/base/Clone.sol";
 
 contract CloneTest is Test {
   uint256 private uint256Arg = 12_345_677_990;

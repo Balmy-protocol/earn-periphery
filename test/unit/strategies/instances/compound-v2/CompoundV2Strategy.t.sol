@@ -218,7 +218,6 @@ contract CompoundV2StrategyTest is Test {
       ),
       salt
     );
-
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }
@@ -236,6 +235,7 @@ contract CompoundV2StrategyTest is Test {
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
     assertEq(clone.description(), description);
+    _assertCanReceiveNative(clone);
   }
 
   function _assertCanReceiveNative(CompoundV2Strategy clone) private {

@@ -25,6 +25,6 @@ abstract contract BaseStrategyFactory {
   }
 
   function _addressOfClone2(bytes memory data, bytes32 salt) internal view returns (address clone) {
-    return Clones.predictDeterministicAddressWithImmutableArgs(address(implementation), data, salt, address(this));
+    return Clones.predictDeterministicAddressWithImmutableArgs(address(implementation), data, salt);
   }
 }

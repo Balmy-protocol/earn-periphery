@@ -202,7 +202,6 @@ contract ERC4626StrategyTest is Test {
       ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
       salt
     );
-
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }

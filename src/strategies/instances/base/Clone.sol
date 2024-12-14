@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-
 abstract contract Clone {
   /// @notice Reads an immutable arg with type address
   /// @param argOffset The offset of the arg in the packed data
@@ -14,6 +12,7 @@ abstract contract Clone {
   /// @notice Reads an immutable arg with type uint256
   /// @param argOffset The offset of the arg in the packed data
   /// @return arg The arg value
+  // slither-disable-next-line dead-code
   function _getArgUint256(uint256 argOffset) internal view returns (uint256 arg) {
     return uint256(bytes32(_getArg(argOffset, 32)));
   }
@@ -24,8 +23,11 @@ abstract contract Clone {
   /// @return arg The arg value as bytes
   function _getArg(uint256 argOffset, uint256 argLength) private view returns (bytes memory arg) {
     arg = new bytes(argLength);
+    // slither-disable-start assembly
+    // solhint-disable-next-line no-inline-assembly
     assembly {
       extcodecopy(address(), add(arg, 32), add(45, argOffset), argLength)
     }
+    // slither-disable-end assembly
   }
 }
