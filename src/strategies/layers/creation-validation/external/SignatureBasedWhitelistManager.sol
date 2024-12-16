@@ -32,6 +32,7 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
   mapping(StrategyId strategyId => bytes32 group) public getStrategyGroup;
   /// @inheritdoc ISignatureBasedWhitelistManager
   mapping(bytes32 group => address signer) public getGroupSigner;
+  mapping(bytes32 key => uint256 nonce) internal _nonces;
 
   constructor(
     IEarnStrategyRegistry registry,
@@ -50,7 +51,15 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
   }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
-  function getNonce(StrategyId strategyId, address account) public view returns (uint256) { }
+  // slither-disable-next-line naming-convention
+  function DOMAIN_SEPARATOR() public view returns (bytes32) {
+    return _domainSeparatorV4();
+  }
+
+  /// @inheritdoc ISignatureBasedWhitelistManager
+  function getNonce(StrategyId strategyId, address account) public view returns (uint256) {
+    return _nonces[_key(strategyId, account)];
+  }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
   function getStrategySigner(StrategyId strategyId) public view returns (address) {
@@ -78,7 +87,39 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
     bytes calldata data
   )
     external
-  { }
+  {
+    address signer = getStrategySigner(strategyId);
+    if (signer == address(0) || hasRole(NO_VALIDATION_ROLE, toValidate)) {
+      // If there is no signer set for this strategy or the address to validate is allowlisted, then we can skip the
+      // validation
+      return;
+    }
+
+    // Decode data
+    (bytes memory signature, uint256 deadline) = abi.decode(data, (bytes, uint256));
+    if (block.timestamp > deadline) {
+      // Revert if deadline was missed
+      revert MissedDeadline(deadline, block.timestamp);
+    }
+
+    // Validate signature
+    bytes32 key = _key(strategyId, toValidate);
+    uint256 nonce = _nonces[key];
+    bytes32 hashToVerify =
+      _hashTypedDataV4(keccak256(abi.encode(VALIDATION_TYPEHASH, strategyId, toValidate, deadline, nonce)));
+    if (!SignatureChecker.isValidSignatureNow(signer, hashToVerify, signature)) {
+      revert InvalidSignature(signature);
+    }
+
+    // If this function was called by the strategy, and the validation was requested by someone with that can spend
+    // nonces, then we'll do so
+    if (
+      STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender)) == strategyId
+        && hasRole(NONCE_SPENDER_ROLE, validationRequestedBy)
+    ) {
+      _nonces[key] = nonce + 1;
+    }
+  }
 
   /// @inheritdoc ICreationValidationManagerCore
   function strategySelfConfigure(bytes calldata data) external {
@@ -106,5 +147,9 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
   function _assignGroup(StrategyId strategyId, bytes32 group) internal {
     getStrategyGroup[strategyId] = group;
     emit StrategyAssignedToGroup(strategyId, group);
+  }
+
+  function _key(StrategyId strategyId, address account) private pure returns (bytes32) {
+    return keccak256(abi.encode(strategyId, account));
   }
 }
