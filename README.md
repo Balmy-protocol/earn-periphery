@@ -185,13 +185,13 @@ they should plug the strategy in the test and if all testing are passing, strate
 
 #### ERC4626 Strategy
 
-the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a strategy.deployCompoundV2Strategy.
+the [set up code and the function clone strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L215) is the set up code to deploy a strategy.deployCompoundV2Strategy.
 
 To deploy a ERC4626 strategy.deployCompoundV2Strategy, we have to deploy a [local ERC4626 vault](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/EarnVault.t.sol#L89) as well.
 
 #### Compound V2 strategy.deployCompoundV2Strategy
 
-the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L256) is the set up code to deploy a strategy.deployCompoundV2Strategy.
+the [set up code and the function clone strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/CompoundstrategyEarnVault.t.sol#L256) is the set up code to deploy a strategy.deployCompoundV2Strategy.
 
 To test Compound strategy.deployCompoundV2Strategy, we have to use mainnet fork testing,
 
@@ -199,7 +199,7 @@ we need to pick [a asset and a cToken](https://github.com/Balmy-protocol/earn-pe
 
 #### LIDO strategy.deployCompoundV2Strategy
 
-the [set up code and the function clone strategy.deployCompoundV2Strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a strategy.deployCompoundV2Strategy.
+the [set up code and the function clone strategy](https://github.com/Balmy-protocol/earn-periphery/blob/8e76eb340759a81848f0909ab29d7b563f456267/test/unit/vault/LidoStrategyEarnVault.t.sol#L322) is the set up code to deploy a strategy.deployCompoundV2Strategy.
 
 We need to set up the delayed withdrawal manager and mock withdrawal queue for LIDO strategy
 
