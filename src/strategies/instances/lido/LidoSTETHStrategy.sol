@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { Clone } from "@clones/Clone.sol";
+import { Clone } from "../base/Clone.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTETHConnector.sol";
@@ -68,7 +68,7 @@ contract LidoSTETHStrategy is
   // 2. Global Registry (20B)            - _getArgAddress(20)
   // 3. Delayed Withdrawal Adapter (20B) - _getArgAddress(40)
 
-  function _delayedWithdrawalAdapter() internal pure override returns (IDelayedWithdrawalAdapter) {
+  function _delayedWithdrawalAdapter() internal view override returns (IDelayedWithdrawalAdapter) {
     return IDelayedWithdrawalAdapter(_getArgAddress(40));
   }
 
@@ -79,7 +79,7 @@ contract LidoSTETHStrategy is
 
   function globalRegistry()
     public
-    pure
+    view
     override(ExternalFees, ExternalLiquidityMining, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
@@ -95,7 +95,7 @@ contract LidoSTETHStrategy is
     return BaseDelayedStrategy.strategyId();
   }
 
-  function _earnVault() internal pure override returns (IEarnVault) {
+  function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
   }
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
@@ -147,6 +148,7 @@ contract CompoundV2StrategyTest is Test {
   }
 
   function test_clone2Strategy() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -156,19 +158,21 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     CompoundV2Strategy clone = factory.clone2Strategy(
       CompoundV2StrategyData(
         vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
-      )
+      ),
+      salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
   }
 
   function test_clone2StrategyAndRegister() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -178,14 +182,15 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (CompoundV2Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       CompoundV2StrategyData(
         vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
-      )
+      ),
+      salt
     );
 
     assertEq(cloneAddress, address(clone));
@@ -193,6 +198,7 @@ contract CompoundV2StrategyTest is Test {
   }
 
   function test_clone2StrategyWithId() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -202,85 +208,10 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     CompoundV2Strategy clone = factory.clone2StrategyWithId(
-      strategyId,
-      CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
-      )
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId);
-  }
-
-  function test_clone3Strategy() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
-    CompoundV2Strategy clone = factory.clone3Strategy(
-      CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
-      ),
-      salt
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone);
-  }
-
-  function test_clone3StrategyAndRegister() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    (CompoundV2Strategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
-      owner,
-      CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
-      ),
-      salt
-    );
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId_);
-  }
-
-  function test_clone3StrategyWithId() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    CompoundV2Strategy clone = factory.clone3StrategyWithId(
       strategyId,
       CompoundV2StrategyData(
         vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
@@ -304,6 +235,12 @@ contract CompoundV2StrategyTest is Test {
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
     assertEq(clone.description(), description);
+    _assertCanReceiveNative(clone);
+  }
+
+  function _assertCanReceiveNative(CompoundV2Strategy clone) private {
+    Address.sendValue(payable(address(clone)), 0.1 ether);
+    assertEq(address(clone).balance, 0.1 ether);
   }
 }
 
