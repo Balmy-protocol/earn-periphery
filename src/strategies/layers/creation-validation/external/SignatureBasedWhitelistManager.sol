@@ -53,13 +53,22 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
   function getNonce(StrategyId strategyId, address account) public view returns (uint256) { }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
-  function getStrategySigner(StrategyId strategyId) public view returns (address) { }
+  function getStrategySigner(StrategyId strategyId) public view returns (address) {
+    bytes32 group = getStrategyGroup[strategyId];
+    if (group == bytes32(0)) return address(0);
+    return getGroupSigner[group];
+  }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
-  function updateSigner(bytes32 group, address signer) external { }
+  function updateSigner(bytes32 group, address signer) external onlyRole(MANAGE_SIGNERS_ROLE) {
+    getGroupSigner[group] = signer;
+    emit SignerUpdated(group, signer);
+  }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
-  function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external { }
+  function assignStrategyToGroup(StrategyId strategyId, bytes32 group) external onlyRole(MANAGE_SIGNERS_ROLE) {
+    _assignGroup(strategyId, group);
+  }
 
   /// @inheritdoc ICreationValidationManagerCore
   function validatePositionCreation(
@@ -78,5 +87,10 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
     for (uint256 i; i < accounts.length; ++i) {
       _grantRole(role, accounts[i]);
     }
+  }
+
+  function _assignGroup(StrategyId strategyId, bytes32 group) internal {
+    getStrategyGroup[strategyId] = group;
+    emit StrategyAssignedToGroup(strategyId, group);
   }
 }

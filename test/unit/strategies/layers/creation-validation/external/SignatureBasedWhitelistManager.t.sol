@@ -79,4 +79,60 @@ contract SignatureBasedWhitelistManagerTest is Test {
     assertEq(manager.owner(), superAdmin);
     assertEq(manager.defaultAdmin(), superAdmin);
   }
+
+  function test_assignStrategyToGroup() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectEmit();
+    emit StrategyAssignedToGroup(strategyId, GROUP_1);
+    vm.prank(manageSignersAccount);
+    manager.assignStrategyToGroup(strategyId, GROUP_1);
+    assertEq(manager.getStrategyGroup(strategyId), GROUP_1);
+  }
+
+  function test_assignStrategyToGroup_revertWhen_calledWithoutRole() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_SIGNERS_ROLE()
+      )
+    );
+    manager.assignStrategyToGroup(strategyId, GROUP_1);
+  }
+
+  function test_getStrategySigner_empty() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    assertEq(manager.getStrategySigner(strategyId), address(0));
+  }
+
+  function test_getStrategySigner_assigned() public {
+    address signer = address(1235);
+    StrategyId strategyId = StrategyId.wrap(1);
+    vm.prank(manageSignersAccount);
+    manager.assignStrategyToGroup(strategyId, GROUP_1);
+    vm.prank(manageSignersAccount);
+    manager.updateSigner(GROUP_1, signer);
+    assertEq(manager.getStrategySigner(strategyId), signer);
+  }
+
+  function test_updateSigner_clear() public {
+    address signer = address(1);
+
+    // Set a signer
+    vm.prank(manageSignersAccount);
+    manager.updateSigner(GROUP_1, signer);
+
+    // Clear it
+    vm.prank(manageSignersAccount);
+    manager.updateSigner(GROUP_1, address(0));
+    assertEq(manager.getGroupSigner(GROUP_1), address(0));
+  }
+
+  function test_updateSigner_revertWhen_calledWithoutRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_SIGNERS_ROLE()
+      )
+    );
+    manager.updateSigner(GROUP_1, address(1));
+  }
 }
