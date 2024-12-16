@@ -97,6 +97,7 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
 
     // Decode data
     (bytes memory signature, uint256 deadline) = abi.decode(data, (bytes, uint256));
+    // slither-disable-next-line timestamp
     if (block.timestamp > deadline) {
       // Revert if deadline was missed
       revert MissedDeadline(deadline, block.timestamp);
