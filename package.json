@@ -14,7 +14,6 @@
     "@prb/test": "github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19",
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d",
-    "clones": "github:wighawag/clones-with-immutable-args#196f1ecc6485c1bf2d41677fa01d3df4927ff9ce",
     "prettier": "^2.8.7",
     "solhint-community": "^3.5.0"
   },

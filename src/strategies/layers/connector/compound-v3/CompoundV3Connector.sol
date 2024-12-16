@@ -160,7 +160,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_deposited(
+  function _connector_deposit(
     address depositToken,
     uint256 depositAmount
   )
@@ -171,11 +171,13 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   {
     ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 balanceBefore = cToken_.balanceOf(address(this));
       cToken_.supply(depositToken, depositAmount);
       uint256 balanceAfter = cToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
     } else if (depositToken == address(cToken_)) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);
@@ -276,7 +278,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
 
     // Claim and transfer rewards
     ICometRewards cometRewards_ = cometRewards();
-    uint256 rewardBalance;
+    uint256 rewardBalance = 0;
     address rewardToken = cometRewards_.rewardConfig(address(cToken_)).token;
     if (rewardToken != address(0)) {
       cometRewards_.claimTo(address(cToken_), address(this), address(this), true);

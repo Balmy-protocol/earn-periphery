@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { Clone } from "@clones/Clone.sol";
+import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { AaveV2Connector, IAToken, IERC20, IAaveV2Pool } from "../../layers/connector/AaveV2Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
@@ -85,24 +85,24 @@ contract AaveV2Strategy is
   // 4. Asset (20B)             - _getArgAddress(60)
   // 5. AaveV2 pool (20B)       - _getArgAddress(80)
 
-  function _earnVault() internal pure override returns (IEarnVault) {
+  function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
   }
 
   function globalRegistry()
     public
-    pure
+    view
     override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));
   }
 
-  function aToken() public pure override returns (IAToken) {
+  function aToken() public view override returns (IAToken) {
     return IAToken(_getArgAddress(40));
   }
 
-  function _asset() internal pure override returns (IERC20) {
+  function _asset() internal view override returns (IERC20) {
     return IERC20(_getArgAddress(60));
   }
 

@@ -138,6 +138,7 @@ contract ERC4626StrategyTest is Test {
   }
 
   function test_clone2Strategy() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -147,17 +148,19 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     ERC4626Strategy clone = factory.clone2Strategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
   }
 
   function test_clone2StrategyAndRegister() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -167,12 +170,13 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      salt
     );
 
     assertEq(cloneAddress, address(clone));
@@ -180,6 +184,7 @@ contract ERC4626StrategyTest is Test {
   }
 
   function test_clone2StrategyWithId() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -189,79 +194,10 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     ERC4626Strategy clone = factory.clone2StrategyWithId(
-      strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId);
-  }
-
-  function test_clone3Strategy() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
-    ERC4626Strategy clone = factory.clone3Strategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
-      salt
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone);
-  }
-
-  function test_clone3StrategyAndRegister() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
-      owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
-      salt
-    );
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId_);
-  }
-
-  function test_clone3StrategyWithId() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    ERC4626Strategy clone = factory.clone3StrategyWithId(
       strategyId,
       ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
       salt

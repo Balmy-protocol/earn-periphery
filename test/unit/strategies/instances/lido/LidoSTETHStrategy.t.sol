@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.22;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Test } from "forge-std/Test.sol";
 import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
@@ -24,7 +25,7 @@ contract LidoSTETHStrategyTest is Test {
   IEarnStrategyRegistry private strategyRegistry;
   address private owner = address(2);
   IEarnVault private vault = IEarnVault(address(3));
-  IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
+  IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
   IDelayedWithdrawalAdapter private adapter = IDelayedWithdrawalAdapter(address(5));
   IFeeManagerCore private feeManager = IFeeManagerCore(address(6));
   ICreationValidationManagerCore private validationManager = ICreationValidationManagerCore(address(7));
@@ -110,33 +111,35 @@ contract LidoSTETHStrategyTest is Test {
   }
 
   function test_clone2Strategy() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
       abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
 
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     LidoSTETHStrategy clone = factory.clone2Strategy(
-      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
   }
 
   function test_clone2StrategyAndRegister() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
       abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
-      owner, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
+      owner, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
     );
 
     assertEq(cloneAddress, address(clone));
@@ -144,72 +147,21 @@ contract LidoSTETHStrategyTest is Test {
   }
 
   function test_clone2StrategyWithId() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
       abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone) = factory.clone2StrategyWithId(
-      strategyId, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId);
-  }
-
-  function test_clone3Strategy() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
-    LidoSTETHStrategy clone = factory.clone3Strategy(
-      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone);
-  }
-
-  function test_clone3StrategyAndRegister() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
-      owner, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
-    );
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId_);
-  }
-
-  function test_clone3StrategyWithId() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    LidoSTETHStrategy clone = factory.clone3StrategyWithId(
       strategyId,
       LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description),
       salt
     );
+
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }
@@ -225,6 +177,12 @@ contract LidoSTETHStrategyTest is Test {
     assertEq(address(clone.vault()), address(vault));
     assertEq(address(clone.delayedWithdrawalAdapter(Token.NATIVE_TOKEN)), address(adapter));
     assertEq(clone.description(), description);
+    _assertCanReceiveNative(clone);
+  }
+
+  function _assertCanReceiveNative(LidoSTETHStrategy clone) private {
+    Address.sendValue(payable(address(clone)), 0.1 ether);
+    assertEq(address(clone).balance, 0.1 ether);
   }
 }
 

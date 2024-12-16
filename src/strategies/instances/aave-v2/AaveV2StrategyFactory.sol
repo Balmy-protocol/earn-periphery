@@ -73,9 +73,15 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
     );
   }
 
-  function clone2Strategy(AaveV2StrategyData calldata strategyData) external returns (AaveV2Strategy clone) {
+  function clone2Strategy(
+    AaveV2StrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (AaveV2Strategy clone)
+  {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = AaveV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
     clone.init(
@@ -85,13 +91,14 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyAndRegister(
     address owner,
-    AaveV2StrategyData calldata strategyData
+    AaveV2StrategyData calldata strategyData,
+    bytes32 salt
   )
     external
     returns (AaveV2Strategy clone, StrategyId strategyId)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = AaveV2Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
       owner,
@@ -106,25 +113,6 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyWithId(
     StrategyId strategyId,
-    AaveV2StrategyData calldata strategyData
-  )
-    external
-    returns (AaveV2Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
-    clone = AaveV2Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, strategyId);
-    clone.initWithId(
-      strategyId,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-  }
-
-  function clone3Strategy(
     AaveV2StrategyData calldata strategyData,
     bytes32 salt
   )
@@ -132,46 +120,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
     returns (AaveV2Strategy clone)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
-    clone = AaveV2Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(
-      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
-    );
-  }
-
-  function clone3StrategyAndRegister(
-    address owner,
-    AaveV2StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (AaveV2Strategy clone, StrategyId strategyId)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
-    clone = AaveV2Strategy(payable(address(clone_)));
-    strategyId = clone.initAndRegister(
-      owner,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-    // slither-disable-next-line reentrancy-events
-    emit StrategyCloned(clone, strategyId);
-  }
-
-  function clone3StrategyWithId(
-    StrategyId strategyId,
-    AaveV2StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (AaveV2Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = AaveV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, strategyId);
     clone.initWithId(
@@ -187,14 +136,15 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
     IAToken aToken,
-    IAaveV2Pool aaveV2Pool
+    IAaveV2Pool aaveV2Pool,
+    bytes32 salta
   )
     external
     view
     returns (address clone)
   {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, aToken, aaveV2Pool);
-    return _addressOfClone2(immutableData);
+    return _addressOfClone2(immutableData, salta);
   }
 
   function _calculateImmutableData(AaveV2StrategyData calldata strategyData) internal view returns (bytes memory) {

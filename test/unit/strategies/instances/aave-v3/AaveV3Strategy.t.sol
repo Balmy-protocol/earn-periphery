@@ -172,6 +172,7 @@ contract AaveV3StrategyTest is Test {
   }
 
   function test_clone2Strategy() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -181,7 +182,7 @@ contract AaveV3StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     AaveV3Strategy clone = factory.clone2Strategy(
@@ -195,13 +196,15 @@ contract AaveV3StrategyTest is Test {
         guardianData,
         feesData,
         description
-      )
+      ),
+      salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
   }
 
   function test_clone2StrategyAndRegister() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -211,7 +214,7 @@ contract AaveV3StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (AaveV3Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
@@ -226,7 +229,8 @@ contract AaveV3StrategyTest is Test {
         guardianData,
         feesData,
         description
-      )
+      ),
+      salt
     );
 
     assertEq(cloneAddress, address(clone));
@@ -234,6 +238,7 @@ contract AaveV3StrategyTest is Test {
   }
 
   function test_clone2StrategyWithId() public {
+    bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
       address(validationManager),
@@ -243,7 +248,7 @@ contract AaveV3StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV3Pool, aaveV3Rewards, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     AaveV3Strategy clone = factory.clone2StrategyWithId(
@@ -258,108 +263,10 @@ contract AaveV3StrategyTest is Test {
         guardianData,
         feesData,
         description
-      )
-    );
-
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId);
-  }
-
-  function test_clone3Strategy() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
-    AaveV3Strategy clone = factory.clone3Strategy(
-      AaveV3StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV3Pool,
-        aaveV3Rewards,
-        creationValidationData,
-        guardianData,
-        feesData,
-        description
       ),
       salt
     );
 
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone);
-  }
-
-  function test_clone3StrategyAndRegister() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    (AaveV3Strategy clone, StrategyId strategyId_) = factory.clone3StrategyAndRegister(
-      owner,
-      AaveV3StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV3Pool,
-        aaveV3Rewards,
-        creationValidationData,
-        guardianData,
-        feesData,
-        description
-      ),
-      salt
-    );
-    assertEq(cloneAddress, address(clone));
-    _assertStrategyWasDeployedCorrectly(clone, strategyId_);
-  }
-
-  function test_clone3StrategyWithId() public {
-    bytes32 salt = bytes32(uint256(12_345));
-    vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
-    vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, creationValidationData)
-    );
-    vm.expectCall(
-      address(guardianManager),
-      abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
-    );
-    address cloneAddress = factory.addressOfClone3(salt);
-    vm.expectEmit();
-    emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    AaveV3Strategy clone = factory.clone3StrategyWithId(
-      strategyId,
-      AaveV3StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV3Pool,
-        aaveV3Rewards,
-        creationValidationData,
-        guardianData,
-        feesData,
-        description
-      ),
-      salt
-    );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }

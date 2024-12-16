@@ -75,9 +75,15 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     );
   }
 
-  function clone2Strategy(CompoundV2StrategyData calldata strategyData) external returns (CompoundV2Strategy clone) {
+  function clone2Strategy(
+    CompoundV2StrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (CompoundV2Strategy clone)
+  {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = CompoundV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
     clone.init(
@@ -87,13 +93,14 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyAndRegister(
     address owner,
-    CompoundV2StrategyData calldata strategyData
+    CompoundV2StrategyData calldata strategyData,
+    bytes32 salt
   )
     external
     returns (CompoundV2Strategy clone, StrategyId strategyId)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = CompoundV2Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
       owner,
@@ -108,25 +115,6 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyWithId(
     StrategyId strategyId,
-    CompoundV2StrategyData calldata strategyData
-  )
-    external
-    returns (CompoundV2Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
-    clone = CompoundV2Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, strategyId);
-    clone.initWithId(
-      strategyId,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-  }
-
-  function clone3Strategy(
     CompoundV2StrategyData calldata strategyData,
     bytes32 salt
   )
@@ -134,46 +122,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     returns (CompoundV2Strategy clone)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
-    clone = CompoundV2Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(
-      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
-    );
-  }
-
-  function clone3StrategyAndRegister(
-    address owner,
-    CompoundV2StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (CompoundV2Strategy clone, StrategyId strategyId)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
-    clone = CompoundV2Strategy(payable(address(clone_)));
-    strategyId = clone.initAndRegister(
-      owner,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-    // slither-disable-next-line reentrancy-events
-    emit StrategyCloned(clone, strategyId);
-  }
-
-  function clone3StrategyWithId(
-    StrategyId strategyId,
-    CompoundV2StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (CompoundV2Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    (IEarnBalmyStrategy clone_) = _clone3(immutableData, salt);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = CompoundV2Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, strategyId);
     clone.initWithId(
@@ -191,14 +140,15 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
     address asset,
     ICERC20 cToken,
     IComptroller comptroller,
-    IERC20 comp
+    IERC20 comp,
+    bytes32 salt
   )
     external
     view
     returns (address clone)
   {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, asset, cToken, comptroller, comp);
-    return _addressOfClone2(immutableData);
+    return _addressOfClone2(immutableData, salt);
   }
 
   function _calculateImmutableData(CompoundV2StrategyData calldata strategyData) internal pure returns (bytes memory) {

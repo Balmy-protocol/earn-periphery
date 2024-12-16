@@ -72,9 +72,15 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     );
   }
 
-  function clone2Strategy(ERC4626StrategyData calldata strategyData) external returns (ERC4626Strategy clone) {
+  function clone2Strategy(
+    ERC4626StrategyData calldata strategyData,
+    bytes32 salt
+  )
+    external
+    returns (ERC4626Strategy clone)
+  {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
     clone.init(
@@ -84,13 +90,14 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyAndRegister(
     address owner,
-    ERC4626StrategyData calldata strategyData
+    ERC4626StrategyData calldata strategyData,
+    bytes32 salt
   )
     external
     returns (ERC4626Strategy clone, StrategyId strategyId)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     strategyId = clone.initAndRegister(
       owner,
@@ -105,25 +112,6 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
 
   function clone2StrategyWithId(
     StrategyId strategyId,
-    ERC4626StrategyData calldata strategyData
-  )
-    external
-    returns (ERC4626Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone2(immutableData);
-    clone = ERC4626Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, strategyId);
-    clone.initWithId(
-      strategyId,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-  }
-
-  function clone3Strategy(
     ERC4626StrategyData calldata strategyData,
     bytes32 salt
   )
@@ -131,46 +119,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
     returns (ERC4626Strategy clone)
   {
     bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
-    clone = ERC4626Strategy(payable(address(clone_)));
-    emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(
-      strategyData.creationValidationData, strategyData.guardianData, strategyData.feesData, strategyData.description
-    );
-  }
-
-  function clone3StrategyAndRegister(
-    address owner,
-    ERC4626StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (ERC4626Strategy clone, StrategyId strategyId)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
-    clone = ERC4626Strategy(payable(address(clone_)));
-    strategyId = clone.initAndRegister(
-      owner,
-      strategyData.creationValidationData,
-      strategyData.guardianData,
-      strategyData.feesData,
-      strategyData.description
-    );
-    // slither-disable-next-line reentrancy-events
-    emit StrategyCloned(clone, strategyId);
-  }
-
-  function clone3StrategyWithId(
-    StrategyId strategyId,
-    ERC4626StrategyData calldata strategyData,
-    bytes32 salt
-  )
-    external
-    returns (ERC4626Strategy clone)
-  {
-    bytes memory immutableData = _calculateImmutableData(strategyData);
-    IEarnBalmyStrategy clone_ = _clone3(immutableData, salt);
+    IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = ERC4626Strategy(payable(address(clone_)));
     emit StrategyCloned(clone, strategyId);
     clone.initWithId(
@@ -185,14 +134,15 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
   function addressOfClone2(
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
-    IERC4626 erc4626Vault
+    IERC4626 erc4626Vault,
+    bytes32 salt
   )
     external
     view
     returns (address clone)
   {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, erc4626Vault);
-    return _addressOfClone2(immutableData);
+    return _addressOfClone2(immutableData, salt);
   }
 
   function _calculateImmutableData(ERC4626StrategyData calldata strategyData) internal view returns (bytes memory) {
