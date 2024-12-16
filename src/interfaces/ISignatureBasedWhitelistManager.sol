@@ -38,6 +38,7 @@ interface ISignatureBasedWhitelistManager is ICreationValidationManagerCore {
   function MANAGE_SIGNERS_ROLE() external view returns (bytes32);
 
   /// @notice Returns the typehash for the validation signature
+  // slither-disable-next-line naming-convention
   function VALIDATION_TYPEHASH() external view returns (bytes32);
 
   /// @notice Returns the address of the strategy registry
