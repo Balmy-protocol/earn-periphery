@@ -228,6 +228,26 @@ contract SignatureBasedWhitelistManagerTest is Test {
     manager.validatePositionCreation(strategyId, address(10), address(1000), abi.encode("", block.timestamp));
   }
 
+  function test_validate_revertWhen_nonceIsInvalid() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address accountToValidate = address(10);
+
+    // Set signer for strategy
+    vm.startPrank(manageSignersAccount);
+    manager.assignStrategyToGroup(strategyId, GROUP_1);
+    manager.updateSigner(GROUP_1, signer.addr);
+    vm.stopPrank();
+
+    bytes32 typedDataHash = _getTypedDataHash(strategyId, accountToValidate, block.timestamp, 1);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(signer, typedDataHash);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    vm.expectRevert(abi.encodeWithSelector(ISignatureBasedWhitelistManager.InvalidSignature.selector, signature));
+    manager.validatePositionCreation(
+      strategyId, accountToValidate, nonceSpenderAccount, abi.encode(signature, block.timestamp)
+    );
+  }
+
   function test_validate_notCalledByStrategy() public {
     StrategyId strategyId = StrategyId.wrap(1);
     address accountToValidate = address(10);
