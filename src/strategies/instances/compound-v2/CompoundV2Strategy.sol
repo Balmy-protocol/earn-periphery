@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { Clone } from "@clones/Clone.sol";
+import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import {
   CompoundV2Connector,
@@ -91,32 +91,32 @@ contract CompoundV2Strategy is
   // 5. CompoundV2 comptroller (20B)  - _getArgAddress(80)
   // 6. CompoundV2 comp (20B)         - _getArgAddress(100)
 
-  function _earnVault() internal pure override returns (IEarnVault) {
+  function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
   }
 
   function globalRegistry()
     public
-    pure
+    view
     override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));
   }
 
-  function _asset() internal pure override returns (address) {
+  function _asset() internal view override returns (address) {
     return _getArgAddress(40);
   }
 
-  function cToken() public pure override returns (ICERC20) {
+  function cToken() public view override returns (ICERC20) {
     return ICERC20(_getArgAddress(60));
   }
 
-  function comptroller() public pure override returns (IComptroller) {
+  function comptroller() public view override returns (IComptroller) {
     return IComptroller(_getArgAddress(80));
   }
 
-  function comp() public pure override returns (IERC20) {
+  function comp() public view override returns (IERC20) {
     return IERC20(_getArgAddress(100));
   }
 

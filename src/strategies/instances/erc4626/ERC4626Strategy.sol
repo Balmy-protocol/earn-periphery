@@ -3,7 +3,7 @@ pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { Clone } from "@clones/Clone.sol";
+import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
@@ -85,13 +85,13 @@ contract ERC4626Strategy is
   // 3. ERC4626 vault (20B)
   // 4. Asset (20B)
 
-  function _earnVault() internal pure override returns (IEarnVault) {
+  function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
   }
 
   function globalRegistry()
     public
-    pure
+    view
     override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
@@ -99,11 +99,11 @@ contract ERC4626Strategy is
   }
 
   // slither-disable-next-line naming-convention
-  function ERC4626Vault() public pure override returns (IERC4626) {
+  function ERC4626Vault() public view override returns (IERC4626) {
     return IERC4626(_getArgAddress(40));
   }
 
-  function _asset() internal pure override returns (IERC20) {
+  function _asset() internal view override returns (IERC20) {
     return IERC20(_getArgAddress(60));
   }
 
