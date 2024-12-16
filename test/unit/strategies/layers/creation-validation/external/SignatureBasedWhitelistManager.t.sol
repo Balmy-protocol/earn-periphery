@@ -135,4 +135,45 @@ contract SignatureBasedWhitelistManagerTest is Test {
     );
     manager.updateSigner(GROUP_1, address(1));
   }
+
+  function test_strategySelfConfigure_emptyBytes() public {
+    // Nothing happens
+    manager.strategySelfConfigure("");
+  }
+
+  function test_strategySelfConfigure() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector), abi.encode(strategyId)
+    );
+
+    vm.startPrank(strategy);
+    vm.expectEmit();
+    emit StrategyAssignedToGroup(strategyId, GROUP_1);
+    manager.strategySelfConfigure(abi.encode(GROUP_1));
+    assertEq(manager.getStrategyGroup(strategyId), GROUP_1);
+
+    // Now try updating it again
+    vm.expectEmit();
+    emit StrategyAssignedToGroup(strategyId, GROUP_2);
+    manager.strategySelfConfigure(abi.encode(GROUP_2));
+    assertEq(manager.getStrategyGroup(strategyId), GROUP_2);
+    vm.stopPrank();
+  }
+
+  function test_strategySelfConfigure_revertWhen_callerHasNoId() public {
+    address strategy = address(4);
+
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector),
+      abi.encode(StrategyId.wrap(0))
+    );
+
+    vm.prank(strategy);
+    vm.expectRevert(abi.encodeWithSelector(ISignatureBasedWhitelistManager.UnauthorizedCaller.selector));
+    manager.strategySelfConfigure(abi.encode(GROUP_1));
+  }
 }
