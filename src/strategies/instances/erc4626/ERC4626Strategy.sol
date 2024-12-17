@@ -8,8 +8,7 @@ import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol
 import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
-import { RegistryBasedCreationValidation } from
-  "../../layers/creation-validation/external/RegistryBasedCreationValidation.sol";
+import { ExternalCreationValidation } from "../../layers/creation-validation/external/ExternalCreationValidation.sol";
 import { ExternalLiquidityMining } from "../../layers/liquidity-mining/external/ExternalLiquidityMining.sol";
 import { BaseStrategy } from "../base/BaseStrategy.sol";
 
@@ -20,7 +19,7 @@ contract ERC4626Strategy is
   ExternalLiquidityMining,
   ExternalFees,
   ExternalGuardian,
-  RegistryBasedCreationValidation
+  ExternalCreationValidation
 {
   /// @inheritdoc IEarnStrategy
   string public description;
@@ -74,7 +73,7 @@ contract ERC4626Strategy is
   function strategyId()
     public
     view
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, RegistryBasedCreationValidation, BaseStrategy)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation, BaseStrategy)
     returns (StrategyId)
   {
     return BaseStrategy.strategyId();
@@ -93,7 +92,7 @@ contract ERC4626Strategy is
   function globalRegistry()
     public
     view
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, RegistryBasedCreationValidation)
+    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, ExternalCreationValidation)
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));
