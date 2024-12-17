@@ -52,10 +52,12 @@ abstract contract RegistryBasedCreationValidation is BaseCreationValidation, Ini
     }
   }
 
+  // slither-disable-next-line dead-code
   function _decodeData(bytes calldata data) private pure returns (bytes[] memory dataArray) {
     return data.length > 0 ? abi.decode(data, (bytes[])) : new bytes[](0);
   }
 
+  // slither-disable-next-line dead-code
   function _getRegistry() private view returns (IValidationManagersRegistryCore) {
     return IValidationManagersRegistryCore(globalRegistry().getAddressOrFail(VALIDATION_MANAGERS_REGISTRY));
   }
