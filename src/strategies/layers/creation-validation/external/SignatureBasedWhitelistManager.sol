@@ -81,7 +81,21 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
   { }
 
   /// @inheritdoc ICreationValidationManagerCore
-  function strategySelfConfigure(bytes calldata data) external { }
+  function strategySelfConfigure(bytes calldata data) external {
+    if (data.length == 0) {
+      return;
+    }
+
+    // Find the caller's strategy id
+    StrategyId strategyId = STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender));
+    if (strategyId == StrategyIdConstants.NO_STRATEGY) {
+      revert UnauthorizedCaller();
+    }
+
+    // Decode the group from the data and assign it to the strategy
+    bytes32 group = abi.decode(data, (bytes32));
+    _assignGroup(strategyId, group);
+  }
 
   function _grantRoles(bytes32 role, address[] memory accounts) private {
     for (uint256 i; i < accounts.length; ++i) {
