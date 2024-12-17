@@ -41,6 +41,10 @@ interface ISignatureBasedWhitelistManager is ICreationValidationManagerCore {
   // slither-disable-next-line naming-convention
   function VALIDATION_TYPEHASH() external view returns (bytes32);
 
+  /// @notice Returns the domain separator for the current chain
+  // slither-disable-next-line naming-convention
+  function DOMAIN_SEPARATOR() external view returns (bytes32);
+
   /// @notice Returns the address of the strategy registry
   // slither-disable-next-line naming-convention
   function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
