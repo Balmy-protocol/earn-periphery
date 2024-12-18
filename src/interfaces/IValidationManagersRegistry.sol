@@ -7,8 +7,9 @@ import { ICreationValidationManagerCore } from "./ICreationValidationManager.sol
 interface IValidationManagersRegistryCore {
   /**
    * @notice Allows the strategy to call the registry, for self-configuration
+   * @return The list of managers configured for the strategy
    */
-  function strategySelfConfigure(bytes calldata data) external;
+  function strategySelfConfigure(bytes calldata data) external returns (ICreationValidationManagerCore[] memory);
 
   /**
    * @notice Returns the list of registered managers for the given strategy

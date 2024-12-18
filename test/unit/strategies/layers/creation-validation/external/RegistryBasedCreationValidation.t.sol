@@ -12,7 +12,6 @@ import {
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 contract RegistryBasedCreationValidationTest is Test {
-  bytes32 private constant GROUP_1 = keccak256("group1");
   RegistryBasedCreationValidationInstance private validation;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
   IValidationManagersRegistryCore private managersRegistry = IValidationManagersRegistryCore(address(2));
@@ -37,6 +36,11 @@ contract RegistryBasedCreationValidationTest is Test {
     );
     vm.mockCall(
       address(manager2), abi.encodeWithSelector(ICreationValidationManagerCore.validatePositionCreation.selector), ""
+    );
+    vm.mockCall(
+      address(managersRegistry),
+      abi.encodeWithSelector(IValidationManagersRegistryCore.strategySelfConfigure.selector),
+      abi.encode(_arrayOf(manager1, manager2))
     );
   }
 
