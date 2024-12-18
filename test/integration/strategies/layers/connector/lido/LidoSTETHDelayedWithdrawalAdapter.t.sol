@@ -48,7 +48,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
 
     queue = new LidoSTETHQueueMock();
 
-    globalRegistry = new GlobalEarnRegistry(address(this));
+    globalRegistry = new GlobalEarnRegistry(new GlobalEarnRegistry.InitialConfig[](0), address(this));
 
     IEarnStrategyRegistry strategyRegistry = new EarnStrategyRegistry();
     IEarnNFTDescriptor nftDescriptor = IEarnNFTDescriptor(address(this));
