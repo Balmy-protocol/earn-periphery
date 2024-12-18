@@ -24,9 +24,8 @@ contract GlobalValidationManagersRegistry is IValidationManagersRegistry, Ownabl
   }
 
   /// @inheritdoc IValidationManagersRegistryCore
-  // solhint-disable-next-line no-empty-blocks
-  function strategySelfConfigure(bytes calldata) external {
-    // We'll do nothing here, but we need to implement it to satisfy the interface
+  function strategySelfConfigure(bytes calldata) external view returns (ICreationValidationManagerCore[] memory) {
+    return _managers;
   }
 
   /// @inheritdoc IValidationManagersRegistry

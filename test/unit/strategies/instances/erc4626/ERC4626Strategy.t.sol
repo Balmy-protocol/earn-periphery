@@ -17,7 +17,10 @@ import {
   ERC4626StrategyData
 } from "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
-import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
+import {
+  IValidationManagersRegistryCore,
+  ICreationValidationManagerCore
+} from "src/interfaces/IValidationManagersRegistry.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
@@ -29,9 +32,10 @@ contract ERC4626StrategyTest is Test {
   IERC4626 private erc4626Vault = IERC4626(address(5));
   address private asset = address(6);
   IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
-  ICreationValidationManagerCore private validationManager = ICreationValidationManagerCore(address(8));
-  IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(9));
-  bytes private validationData = abi.encodePacked("validationData");
+  IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
+  IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
+  bytes private validationManagersStrategyData = abi.encodePacked("registryData");
+  bytes private validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   string private description = "description";
@@ -66,13 +70,13 @@ contract ERC4626StrategyTest is Test {
     );
     vm.mockCall(
       address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("CREATION_VALIDATION_MANAGER")),
-      abi.encode(validationManager)
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
+      abi.encode(validationManagerRegistry)
     );
     vm.mockCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector),
-      ""
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(IValidationManagersRegistryCore.strategySelfConfigure.selector),
+      abi.encode(new ICreationValidationManagerCore[](0))
     );
     vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
     vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.approve.selector), abi.encode(true));
@@ -81,8 +85,10 @@ contract ERC4626StrategyTest is Test {
   function test_cloneStrategy() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),
@@ -100,8 +106,10 @@ contract ERC4626StrategyTest is Test {
   function test_cloneStrategyAndRegister() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),
@@ -120,8 +128,10 @@ contract ERC4626StrategyTest is Test {
   function test_cloneStrategyWithId() public {
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),
@@ -141,8 +151,10 @@ contract ERC4626StrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),
@@ -163,8 +175,10 @@ contract ERC4626StrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),
@@ -187,8 +201,10 @@ contract ERC4626StrategyTest is Test {
     bytes32 salt = bytes32(uint256(12_345));
     vm.expectCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector, feesData));
     vm.expectCall(
-      address(validationManager),
-      abi.encodeWithSelector(ICreationValidationManagerCore.strategySelfConfigure.selector, validationData)
+      address(validationManagerRegistry),
+      abi.encodeWithSelector(
+        IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
+      )
     );
     vm.expectCall(
       address(guardianManager),

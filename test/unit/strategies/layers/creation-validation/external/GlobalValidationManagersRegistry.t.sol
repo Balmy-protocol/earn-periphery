@@ -55,8 +55,10 @@ contract GlobalValidationManagersRegistryTest is Test {
   }
 
   function test_strategySelfConfigure() public {
-    // Make sure it can be called, even though it does nothing
-    registry.strategySelfConfigure("");
+    ICreationValidationManagerCore[] memory managers = registry.strategySelfConfigure("");
+    assertEq(managers.length, 2);
+    assertEq(address(managers[0]), address(initialManager1));
+    assertEq(address(managers[1]), address(initialManager2));
   }
 
   function _arrayOf(ICreationValidationManagerCore manager)

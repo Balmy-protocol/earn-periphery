@@ -24,9 +24,8 @@ abstract contract RegistryBasedCreationValidation is BaseCreationValidation, Ini
     (bytes memory registryData, bytes[] memory managersData) = abi.decode(data, (bytes, bytes[]));
 
     IValidationManagersRegistryCore registry = _getRegistry();
-    registry.strategySelfConfigure(registryData);
+    ICreationValidationManagerCore[] memory managers = registry.strategySelfConfigure(registryData);
 
-    ICreationValidationManagerCore[] memory managers = registry.getManagers(strategyId());
     if (managersData.length != managers.length) {
       revert InvalidData();
     }
