@@ -24,6 +24,7 @@ import {
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
+// solhint-disable-next-line max-states-count
 contract ERC4626StrategyTest is Test {
   MockStrategyRegistry private strategyRegistry;
   address private owner = address(2);
