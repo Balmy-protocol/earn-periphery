@@ -37,4 +37,10 @@ library CommonUtils {
     array[1] = amount2;
     array[2] = amount3;
   }
+
+  function arrayOf(bytes memory data1, bytes memory data2) internal pure returns (bytes[] memory array) {
+    array = new bytes[](2);
+    array[0] = data1;
+    array[1] = data2;
+  }
 }
