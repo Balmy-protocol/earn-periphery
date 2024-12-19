@@ -316,13 +316,14 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
       IERC20 token = IERC20(tokens[i]);
       uint256 amount = rewards_.getUserRewards(asset, address(this), address(token));
       if (amount > 0) {
-        rewards_.claimRewards(asset, amount, address(this), address(token));
+        amounts[i] += amount;
+        rewards_.claimRewards(asset, amount, address(newStrategy), address(token));
       }
 
       uint256 rewardBalance = token.balanceOf(address(this));
       if (rewardBalance > 0) {
         token.safeTransfer(address(newStrategy), rewardBalance);
-        amounts[i] = rewardBalance;
+        amounts[i] += rewardBalance;
       }
     }
 
