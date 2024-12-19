@@ -7,8 +7,8 @@ import { ICreationValidationManagerCore, StrategyId } from "src/interfaces/ICrea
 import { BaseCreationValidation } from "../base/BaseCreationValidation.sol";
 
 abstract contract ExternalCreationValidation is BaseCreationValidation, Initializable {
-  /// @notice The id for the Creation Validation Manager
-  bytes32 public constant CREATION_VALIDATION_MANAGER = keccak256("CREATION_VALIDATION_MANAGER");
+  /// @notice The key for the Creation Validation Manager
+  function validationManagerKey() public view virtual returns (bytes32);
 
   /// @notice The address of the global registry
   function globalRegistry() public view virtual returns (IGlobalEarnRegistry);
@@ -28,6 +28,6 @@ abstract contract ExternalCreationValidation is BaseCreationValidation, Initiali
 
   // slither-disable-next-line dead-code
   function _getCreationValidationManager() private view returns (ICreationValidationManagerCore) {
-    return ICreationValidationManagerCore(globalRegistry().getAddressOrFail(CREATION_VALIDATION_MANAGER));
+    return ICreationValidationManagerCore(globalRegistry().getAddressOrFail(validationManagerKey()));
   }
 }

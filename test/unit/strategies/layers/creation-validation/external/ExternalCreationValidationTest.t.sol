@@ -11,15 +11,18 @@ import {
 
 contract ExternalCreationValidationTest is Test {
   bytes32 private constant GROUP_1 = keccak256("group1");
+  bytes32 private constant VALIDATION_MANAGER_KEY = keccak256("validationManagerKey");
   ExternalCreationValidationInstance private validation;
   IGlobalEarnRegistry private registry = IGlobalEarnRegistry(address(1));
   ICreationValidationManagerCore private manager = ICreationValidationManagerCore(address(2));
   StrategyId private strategyId = StrategyId.wrap(1);
 
   function setUp() public virtual {
-    validation = new ExternalCreationValidationInstance(registry, strategyId);
+    validation = new ExternalCreationValidationInstance(registry, strategyId, VALIDATION_MANAGER_KEY);
     vm.mockCall(
-      address(registry), abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector), abi.encode(manager)
+      address(registry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, VALIDATION_MANAGER_KEY),
+      abi.encode(manager)
     );
     vm.mockCall(
       address(manager),
@@ -52,10 +55,12 @@ contract ExternalCreationValidationTest is Test {
 contract ExternalCreationValidationInstance is ExternalCreationValidation {
   IGlobalEarnRegistry private _registry;
   StrategyId private _strategyId;
+  bytes32 private _validationManagerKey;
 
-  constructor(IGlobalEarnRegistry registry, StrategyId strategyId_) {
+  constructor(IGlobalEarnRegistry registry, StrategyId strategyId_, bytes32 validationManagerKey_) {
     _registry = registry;
     _strategyId = strategyId_;
+    _validationManagerKey = validationManagerKey_;
   }
 
   function init(bytes calldata data) external initializer {
@@ -72,5 +77,9 @@ contract ExternalCreationValidationInstance is ExternalCreationValidation {
 
   function strategyId() public view virtual override returns (StrategyId) {
     return _strategyId;
+  }
+
+  function validationManagerKey() public view virtual override returns (bytes32) {
+    return _validationManagerKey;
   }
 }
