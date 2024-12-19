@@ -240,7 +240,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
         IERC20 rewardToken = IERC20(tokens[i]);
         uint256 rewardBalance = rewardToken.balanceOf(address(this));
         if (rewardBalance < amountToWithdraw) {
-          rewards_.claimRewards(asset, amountToWithdraw - rewardBalance, recipient, tokens[i]);
+          rewards_.claimRewards(asset, amountToWithdraw - rewardBalance, recipient, address(rewardToken));
           if (rewardBalance > 0) {
             rewardToken.safeTransfer(recipient, rewardBalance);
           }
@@ -310,21 +310,24 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     IAaveV3Rewards rewards_ = rewards();
     address[] memory tokens = rewards_.getRewardsByAsset(address(vault_));
     address[] memory asset = new address[](1);
+    uint256[] memory amounts = new uint256[](tokens.length);
     asset[0] = address(vault_);
     for (uint256 i = 0; i < tokens.length; ++i) {
       IERC20 token = IERC20(tokens[i]);
       uint256 amount = rewards_.getUserRewards(asset, address(this), address(token));
       if (amount > 0) {
+        amounts[i] += amount;
         rewards_.claimRewards(asset, amount, address(newStrategy), address(token));
       }
 
       uint256 rewardBalance = token.balanceOf(address(this));
       if (rewardBalance > 0) {
         token.safeTransfer(address(newStrategy), rewardBalance);
+        amounts[i] += rewardBalance;
       }
     }
 
-    return abi.encode(balance);
+    return abi.encode(balance, tokens, amounts);
   }
 
   // solhint-disable no-empty-blocks

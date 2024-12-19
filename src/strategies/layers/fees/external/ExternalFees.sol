@@ -42,7 +42,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     uint256[] memory balances;
     (tokens, balances) = _fees_underlying_totalBalances();
     collected = new uint256[](tokens.length);
-    for (uint256 i = 0; i < tokens.length; i++) {
+    for (uint256 i = 0; i < tokens.length; ++i) {
       collected[i] = _calculateFees(tokens[i], balances[i], fees.performanceFee);
     }
   }
@@ -309,7 +309,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   )
     private
   {
-    for (uint256 i = 0; i < tokens.length; i++) {
+    for (uint256 i = 0; i < tokens.length; ++i) {
       uint256 amountToWithdraw = withdrawAmounts[i];
       if (amountToWithdraw > 0) {
         uint256 collected = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);

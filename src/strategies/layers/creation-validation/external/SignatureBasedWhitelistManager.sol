@@ -112,8 +112,8 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
       revert InvalidSignature(signature);
     }
 
-    // If this function was called by the strategy, and the validation was requested by someone with that can spend
-    // nonces, then we'll do so
+    // If this function was called by the strategy, and the validation was requested by someone that can spend nonces,
+    // then we'll do so
     if (
       STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender)) == strategyId
         && hasRole(NONCE_SPENDER_ROLE, validationRequestedBy)

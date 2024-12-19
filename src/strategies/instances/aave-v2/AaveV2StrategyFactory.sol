@@ -137,14 +137,14 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
     IGlobalEarnRegistry globalRegistry,
     IAToken aToken,
     IAaveV2Pool aaveV2Pool,
-    bytes32 salta
+    bytes32 salt
   )
     external
     view
     returns (address clone)
   {
     bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, aToken, aaveV2Pool);
-    return _addressOfClone2(immutableData, salta);
+    return _addressOfClone2(immutableData, salt);
   }
 
   function _calculateImmutableData(AaveV2StrategyData calldata strategyData) internal view returns (bytes memory) {
