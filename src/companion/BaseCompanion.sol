@@ -4,6 +4,7 @@ pragma solidity >=0.8.22;
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Ownable2Step, Ownable } from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { SimulationAdapter } from "@balmy/call-simulation/SimulationAdapter.sol";
 import { IPermit2 } from "../interfaces/external/IPermit2.sol";
 import { PayableMulticall } from "src/base/PayableMulticall.sol";
 
@@ -13,7 +14,7 @@ import { PayableMulticall } from "src/base/PayableMulticall.sol";
  * @dev All public functions are payable, so that they can be multicalled together with other payable functions when
  *      msg.value > 0
  */
-abstract contract BaseCompanion is Ownable2Step, PayableMulticall {
+abstract contract BaseCompanion is SimulationAdapter, Ownable2Step, PayableMulticall {
   event SwapperChanged(address newSwapper, address newAllowanceTarget);
 
   using SafeERC20 for IERC20;
