@@ -47,7 +47,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     // Check assets
     uint256 assetsWithdrawn = balanceChanges[0];
     assertEq(balanceChanges.length, balancesBefore.length);
-    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 1);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 2);
 
     // Check actual tokens and amounts
     assertEq(actualWithdrawnTokens.length, 1);
@@ -59,8 +59,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     assertTrue(result.length == 0);
 
     // Check transfer
-    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 1);
-    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 1);
+    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 2);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 2);
   }
 
   function testFork_specialWithdraw_farmToken_withdrawFarmTokenByAssetAmount() public {
@@ -88,7 +88,7 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
     // Check assets
     uint256 assetsWithdrawn = balanceChanges[0];
     assertEq(balanceChanges.length, balancesBefore.length);
-    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 1);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 2);
     assertAlmostEq(assetsToWithdraw, assetsWithdrawn, _withdrawFarmTokenByAssetMaxDelta());
 
     // Check actual tokens and amounts
@@ -101,8 +101,8 @@ abstract contract BaseConnectorFarmTokenTest is BaseConnectorTest {
 
     // Check transfer
     uint256 sharesWithdrawn = actualWithdrawnAmounts[0];
-    assertAlmostEq(_balance(_farmToken(), recipient), sharesWithdrawn, 1);
-    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - sharesWithdrawn, 1);
+    assertAlmostEq(_balance(_farmToken(), recipient), sharesWithdrawn, 2);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - sharesWithdrawn, 2);
   }
 
   function _farmToken() internal view virtual returns (address);

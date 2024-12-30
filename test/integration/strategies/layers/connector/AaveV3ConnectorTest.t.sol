@@ -43,6 +43,20 @@ contract AaveV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     return address(aAaveV3Vault);
   }
 
+  function testFork_totalBalances_addExternalRewards() public {
+    IAaveV3Rewards aAaveV3RewardsControllerMock = new AaveV3RewardsMock();
+
+    AaveV3ConnectorInstance aaveV3Connector =
+      new AaveV3ConnectorInstance(aAaveV3Vault, aAaveV3Asset, aAaveV3Pool, aAaveV3RewardsControllerMock);
+
+    (address[] memory tokens, uint256[] memory balancesBefore) = aaveV3Connector.totalBalances();
+    _setBalance(address(tokens[1]), address(aaveV3Connector), 3e18);
+
+    (, uint256[] memory balancesAfter) = aaveV3Connector.totalBalances();
+
+    assertEq(balancesAfter[1], balancesBefore[1] + 3e18);
+  }
+
   function testFork_claimRewardTokens() public {
     // Mock the rewards controller to include the asset as a reward
     IAaveV3Rewards aAaveV3RewardsControllerMock =
@@ -178,7 +192,7 @@ contract AaveV3RewardsMock is IAaveV3Rewards {
 
   function getRewardsByAsset(address) external pure override returns (address[] memory returnRewardsList) {
     returnRewardsList = new address[](1);
-    returnRewardsList[0] = address(15);
+    returnRewardsList[0] = 0x94b008aA00579c1307B0EF2c499aD98a8ce58e58; // USDT
   }
 
   function getUserRewards(address[] calldata, address, address) external pure override returns (uint256) {

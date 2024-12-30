@@ -4,6 +4,7 @@ forge-std/=node_modules/forge-std/src
 src/=src/
 @openzeppelin/=node_modules/@openzeppelin/
 @balmy/nft-permissions/=node_modules/@balmy/nft-permissions/src/
+@balmy/call-simulation/=node_modules/@balmy/call-simulation/src/
 @balmy/nft-permissions-test/=node_modules/@balmy/nft-permissions/test/
 @balmy/earn-core/=node_modules/@balmy/earn-core/src/
 @balmy/earn-core-test/=node_modules/@balmy/earn-core/test/

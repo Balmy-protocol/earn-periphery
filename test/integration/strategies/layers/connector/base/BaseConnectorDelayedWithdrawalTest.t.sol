@@ -59,7 +59,4 @@ abstract contract BaseConnectorDelayedWithdrawalTest is BaseConnectorTest {
       assertAlmostEq(toWithdraw[i], balancesBefore[i] - balancesAfter[i], 1);
     }
   }
-
-  // solhint-disable no-empty-blocks
-  function _generateYield() internal virtual { }
 }

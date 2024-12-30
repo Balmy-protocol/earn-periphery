@@ -7,68 +7,78 @@ import {
   SpecialWithdrawalCode,
   IDelayedWithdrawalAdapter,
   StrategyId
-} from "./base/BaseConnector.sol";
+} from "../base/BaseConnector.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
+import { Token } from "@balmy/earn-core/libraries/Token.sol";
+import { ICERC20 } from "./ICERC20.sol";
 
-interface IAToken is IERC20 {
-  function scaledTotalSupply() external view returns (uint256);
-  // slither-disable-next-line naming-convention
-  function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+interface ICometRewards {
+  struct RewardConfig {
+    address token;
+    uint64 rescaleFactor;
+    bool shouldUpscale;
+  }
+
+  function rewardConfig(address) external view returns (RewardConfig memory);
+  function claim(address comet, address src, bool shouldAccrue) external;
+  function claimTo(address comet, address src, address to, bool shouldAccrue) external;
 }
 
-interface IAaveV2Pool {
-  function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
-  function withdraw(address asset, uint256 amount, address to) external returns (uint256);
-}
-
-abstract contract AaveV2Connector is BaseConnector, Initializable {
+abstract contract CompoundV3Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
+  using Token for address;
 
-  /// @notice Returns the pool's address
-  function pool() public view virtual returns (IAaveV2Pool);
-  /// @notice Returns the aToken's address
-  function aToken() public view virtual returns (IAToken);
-  function _asset() internal view virtual returns (IERC20);
+  /// @notice Returns the cToken's address
+  function cToken() public view virtual returns (ICERC20);
+  /// @notice Returns the rewards controller
+  function cometRewards() public view virtual returns (ICometRewards);
 
-  /// @notice Performs a max approve to the pool, so that we can deposit without any worries
-  function maxApprovePool() public {
-    _asset().forceApprove(address(pool()), type(uint256).max);
+  function _asset() internal view virtual returns (address);
+
+  /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
+  function maxApproveCToken() public {
+    address asset = _asset();
+    IERC20(asset).forceApprove(address(cToken()), type(uint256).max);
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_init() internal onlyInitializing {
-    maxApprovePool();
+    maxApproveCToken();
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_asset() internal view override returns (address) {
-    return address(_asset());
+  function _connector_asset() internal view virtual override returns (address) {
+    return _asset();
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_allTokens() internal view override returns (address[] memory tokens) {
-    tokens = new address[](1);
+  function _connector_allTokens() internal view virtual override returns (address[] memory tokens) {
+    address rewardToken = address(cometRewards().rewardConfig(address(cToken())).token);
+    tokens = new address[](rewardToken == address(0) ? 1 : 2);
     tokens[0] = _connector_asset();
+    if (rewardToken != address(0)) {
+      tokens[1] = rewardToken;
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(aToken());
+  function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
+    return depositToken == _connector_asset() || depositToken == address(cToken());
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_supportedDepositTokens() internal view override returns (address[] memory supported) {
+  function _connector_supportedDepositTokens() internal view virtual override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
-    supported[1] = address(aToken());
+    supported[1] = address(cToken());
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_maxDeposit(address depositToken) internal view override returns (uint256) {
+  function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
     if (!_connector_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
@@ -76,14 +86,21 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_supportedWithdrawals() internal pure override returns (IEarnStrategy.WithdrawalType[] memory) {
-    return new IEarnStrategy.WithdrawalType[](1); // IMMEDIATE
+  function _connector_supportedWithdrawals()
+    internal
+    view
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return new IEarnStrategy.WithdrawalType[](_connector_allTokens().length);
   }
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
     internal
-    pure
+    view
+    virtual
     override
     returns (bool)
   {
@@ -94,7 +111,8 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedSpecialWithdrawals()
     internal
-    pure
+    view
+    virtual
     override
     returns (SpecialWithdrawalCode[] memory codes)
   {
@@ -107,6 +125,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   function _connector_maxWithdraw()
     internal
     view
+    virtual
     override
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
@@ -117,17 +136,26 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   function _connector_totalBalances()
     internal
     view
+    virtual
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    tokens = new address[](1);
-    balances = new uint256[](1);
-    tokens[0] = _connector_asset();
-    balances[0] = aToken().balanceOf(address(this));
+    tokens = _connector_allTokens();
+    balances = new uint256[](tokens.length);
+    balances[0] = cToken().balanceOf(address(this));
+    if (tokens.length > 1) {
+      balances[1] = IERC20(tokens[1]).balanceOf(address(this)); // TODO: calculate unclaimed rewards
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_delayedWithdrawalAdapter(address) internal pure override returns (IDelayedWithdrawalAdapter) {
+  function _connector_delayedWithdrawalAdapter(address)
+    internal
+    view
+    virtual
+    override
+    returns (IDelayedWithdrawalAdapter)
+  {
     return IDelayedWithdrawalAdapter(address(0));
   }
 
@@ -137,17 +165,18 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     uint256 depositAmount
   )
     internal
+    virtual
     override
     returns (uint256 assetsDeposited)
   {
-    IAToken aToken_ = aToken();
+    ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
       IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
-      uint256 balanceBefore = aToken_.balanceOf(address(this));
-      pool().deposit(depositToken, depositAmount, address(this), 0);
-      uint256 balanceAfter = aToken_.balanceOf(address(this));
+      uint256 balanceBefore = cToken_.balanceOf(address(this));
+      cToken_.supply(depositToken, depositAmount);
+      uint256 balanceAfter = cToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
-    } else if (depositToken == address(aToken_)) {
+    } else if (depositToken == address(cToken_)) {
       IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return depositAmount;
     } else {
@@ -158,18 +187,41 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256,
-    address[] memory,
+    address[] memory tokens,
     uint256[] memory toWithdraw,
     address recipient
   )
     internal
+    virtual
     override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
+    ICERC20 cToken_ = cToken();
     uint256 assets = toWithdraw[0];
-    // slither-disable-next-line unused-return
-    pool().withdraw(address(_asset()), assets, recipient);
-    return _connector_supportedWithdrawals();
+    if (assets > 0) {
+      address asset = tokens[0];
+      cToken_.withdraw(asset, assets);
+      asset.transfer({ recipient: recipient, amount: assets });
+    }
+
+    if (tokens.length > 1) {
+      IERC20 rewardToken = IERC20(tokens[1]);
+      uint256 rewardAmount = toWithdraw[1];
+      if (rewardAmount > 0) {
+        uint256 rewardBalance = rewardToken.balanceOf(address(this));
+        if (rewardBalance < rewardAmount) {
+          // Claim all rewards
+          address[] memory holders = new address[](1);
+          holders[0] = address(this);
+          ICERC20[] memory cTokens = new ICERC20[](1);
+          cTokens[0] = cToken_;
+          cometRewards().claimTo(address(cToken_), address(this), address(this), true);
+        }
+        rewardToken.safeTransfer(recipient, rewardAmount);
+      }
+    }
+
+    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -181,6 +233,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     address recipient
   )
     internal
+    virtual
     override
     returns (
       uint256[] memory balanceChanges,
@@ -193,15 +246,15 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
       withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
         || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT
     ) {
-      IERC20 aaveVault = aToken();
-      balanceChanges = new uint256[](1);
+      IERC20 cToken_ = cToken();
+      balanceChanges = new uint256[](_connector_allTokens().length);
       actualWithdrawnTokens = new address[](1);
       actualWithdrawnAmounts = new uint256[](1);
       result = "";
       uint256 assets = toWithdraw[0];
-      aaveVault.safeTransfer(recipient, assets);
+      cToken_.safeTransfer(recipient, assets);
       balanceChanges[0] = assets;
-      actualWithdrawnTokens[0] = address(aaveVault);
+      actualWithdrawnTokens[0] = address(cToken_);
       actualWithdrawnAmounts[0] = assets;
     } else {
       revert InvalidSpecialWithdrawalCode(withdrawalCode);
@@ -214,13 +267,26 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     bytes calldata
   )
     internal
+    virtual
     override
     returns (bytes memory)
   {
-    IERC20 vault_ = aToken();
-    uint256 balance = vault_.balanceOf(address(this));
-    vault_.safeTransfer(address(newStrategy), balance);
-    return abi.encode(balance);
+    // Transfer cToken
+    ICERC20 cToken_ = cToken();
+    uint256 cTokenBalance = cToken_.balanceOf(address(this));
+    IERC20(cToken_).safeTransfer(address(newStrategy), cTokenBalance);
+
+    // Claim and transfer rewards
+    ICometRewards cometRewards_ = cometRewards();
+    uint256 rewardBalance = 0;
+    address rewardToken = cometRewards_.rewardConfig(address(cToken_)).token;
+    if (rewardToken != address(0)) {
+      cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
+      rewardBalance = IERC20(rewardToken).balanceOf(address(this));
+      IERC20(rewardToken).safeTransfer(address(newStrategy), rewardBalance);
+    }
+
+    return abi.encode(cTokenBalance, rewardBalance);
   }
 
   // solhint-disable no-empty-blocks
@@ -231,6 +297,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     bytes calldata migrationData
   )
     internal
+    virtual
     override
   { }
 }

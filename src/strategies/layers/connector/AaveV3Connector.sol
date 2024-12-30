@@ -61,7 +61,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
 
   /// @notice Checks if there are rewards generated where the asset is the same as the reward token, claims them, and
   /// deposits them
-  function claimAndDepositAssetRewards() external returns (uint256 amountToClaim) {
+  function claimAndDepositAssetRewards() public returns (uint256 amountToClaim) {
     IAaveV3Rewards rewards_ = rewards();
     address[] memory asset = new address[](1);
     asset[0] = address(aToken());
@@ -181,7 +181,8 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     address[] memory asset = new address[](1);
     asset[0] = address(vault_);
     for (uint256 i = 1; i < tokens.length; ++i) {
-      balances[i] = rewards_.getUserRewards(asset, address(this), tokens[i]);
+      balances[i] =
+        IERC20(tokens[i]).balanceOf(address(this)) + rewards_.getUserRewards(asset, address(this), tokens[i]);
     }
   }
 
@@ -236,7 +237,16 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     for (uint256 i = 1; i < tokens.length; ++i) {
       uint256 amountToWithdraw = toWithdraw[i];
       if (amountToWithdraw > 0) {
-        rewards_.claimRewards(asset, amountToWithdraw, recipient, tokens[i]);
+        IERC20 rewardToken = IERC20(tokens[i]);
+        uint256 rewardBalance = rewardToken.balanceOf(address(this));
+        if (rewardBalance < amountToWithdraw) {
+          rewards_.claimRewards(asset, amountToWithdraw - rewardBalance, recipient, address(rewardToken));
+          if (rewardBalance > 0) {
+            rewardToken.safeTransfer(recipient, rewardBalance);
+          }
+        } else {
+          rewardToken.safeTransfer(recipient, amountToWithdraw);
+        }
       }
     }
     return new IEarnStrategy.WithdrawalType[](tokens.length);
@@ -287,10 +297,37 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
     override
     returns (bytes memory)
   {
+    // Claim and deposit the asset rewards
+    // slither-disable-next-line unused-return
+    claimAndDepositAssetRewards();
+
+    // Migrate the aToken
     IERC20 vault_ = aToken();
     uint256 balance = vault_.balanceOf(address(this));
     vault_.safeTransfer(address(newStrategy), balance);
-    return abi.encode(balance);
+
+    // Claim and migrate the rewards
+    IAaveV3Rewards rewards_ = rewards();
+    address[] memory tokens = rewards_.getRewardsByAsset(address(vault_));
+    address[] memory asset = new address[](1);
+    uint256[] memory amounts = new uint256[](tokens.length);
+    asset[0] = address(vault_);
+    for (uint256 i = 0; i < tokens.length; ++i) {
+      IERC20 token = IERC20(tokens[i]);
+      uint256 amount = rewards_.getUserRewards(asset, address(this), address(token));
+      if (amount > 0) {
+        amounts[i] += amount;
+        rewards_.claimRewards(asset, amount, address(newStrategy), address(token));
+      }
+
+      uint256 rewardBalance = token.balanceOf(address(this));
+      if (rewardBalance > 0) {
+        token.safeTransfer(address(newStrategy), rewardBalance);
+        amounts[i] += rewardBalance;
+      }
+    }
+
+    return abi.encode(balance, tokens, amounts);
   }
 
   // solhint-disable no-empty-blocks

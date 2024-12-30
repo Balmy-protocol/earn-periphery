@@ -2,6 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { StdUtils } from "forge-std/StdUtils.sol";
@@ -16,6 +17,7 @@ import { BaseConnectorInstance } from "./BaseConnectorInstance.sol";
 
 abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   using SafeERC20 for IERC20;
+  using Token for address;
 
   BaseConnectorInstance internal connector;
 
@@ -119,9 +121,11 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
       if (depositToken == Token.NATIVE_TOKEN) {
         value = 10e10;
       } else {
-        IERC20(depositToken).forceApprove(address(connector), 10e10);
+        IERC20(depositToken).forceApprove(address(connector), type(uint256).max);
       }
-      uint256 assetsDeposited = connector.deposit{ value: value }(depositToken, 10e10);
+      // Note: some rebasing tokens might provide a little less than expected, so we need to make this check
+      uint256 toDeposit = Math.min(depositToken.balanceOf(address(this)), 10e10);
+      uint256 assetsDeposited = connector.deposit{ value: value }(depositToken, toDeposit);
       (, uint256[] memory balancesAfter) = connector.totalBalances();
       assertAlmostEq(assetsDeposited, balancesAfter[0] - balancesBefore[0], 1);
     }
@@ -134,8 +138,22 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
   }
 
   function testFork_migrateToNewStrategy() public {
+    _give(connector.asset(), address(this), 10e18);
+    uint256 value = 0;
+    if (connector.asset() == Token.NATIVE_TOKEN) {
+      value = 10e18;
+    } else {
+      IERC20(connector.asset()).forceApprove(address(connector), 10e18);
+    }
+    connector.deposit{ value: value }(connector.asset(), 10e18);
+
+    // Generate yield if connector handles it
+    _generateYield();
+
     BaseConnectorInstance newConnector = _buildNewConnector();
+
     (, uint256[] memory oldConnectorBalancesBefore) = connector.totalBalances();
+    (, uint256[] memory newConnectorBalancesBefore) = newConnector.totalBalances();
 
     // Migrate
     connector.migrateToNewStrategy(IEarnStrategy(address(newConnector)), "");
@@ -143,8 +161,12 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     // Make sure balances were migrated correctly
     (, uint256[] memory oldConnectorBalancesAfter) = connector.totalBalances();
     (, uint256[] memory newConnectorBalancesAfter) = newConnector.totalBalances();
-    assertEq(oldConnectorBalancesBefore, newConnectorBalancesAfter);
-    assertEq(oldConnectorBalancesAfter, new uint256[](oldConnectorBalancesAfter.length));
+
+    for (uint256 i; i < oldConnectorBalancesAfter.length; ++i) {
+      // Allow for some loss due to rebasing tokens transfers
+      assertAlmostEq(newConnectorBalancesAfter[i] - newConnectorBalancesBefore[i], oldConnectorBalancesBefore[i], 2);
+      assertAlmostEq(oldConnectorBalancesAfter[i], 0, 2);
+    }
   }
 
   function testFork_strategyRegistered() public {
@@ -175,4 +197,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     _setBalance(asset, account, balance + amount);
     return balance + amount;
   }
+
+  // solhint-disable no-empty-blocks
+  function _generateYield() internal virtual { }
 }

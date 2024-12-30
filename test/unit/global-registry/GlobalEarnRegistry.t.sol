@@ -10,11 +10,22 @@ contract GlobalEarnRegistryTest is PRBTest {
   event AddressSet(bytes32 indexed id, address contractAddress);
 
   bytes32 private constant ID_1 = keccak256("id 1");
+  bytes32 private constant ID_2 = keccak256("id 2");
   address private owner = address(1);
+  address private initialAddress = address(10);
+
   GlobalEarnRegistry private globalRegistry;
 
   function setUp() public virtual {
-    globalRegistry = new GlobalEarnRegistry(owner);
+    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](1);
+    config[0] = GlobalEarnRegistry.InitialConfig({ id: ID_2, contractAddress: initialAddress });
+    vm.expectEmit();
+    emit IGlobalEarnRegistry.AddressSet(ID_2, initialAddress);
+    globalRegistry = new GlobalEarnRegistry(config, owner);
+  }
+
+  function test_constructor() public {
+    assertEq(globalRegistry.getAddress(ID_2), initialAddress);
   }
 
   function test_getAddress_NotSet() public {

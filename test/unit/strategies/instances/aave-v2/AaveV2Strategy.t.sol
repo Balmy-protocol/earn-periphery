@@ -3,19 +3,20 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import {
-  ERC4626StrategyFactory,
-  ERC4626Strategy,
+  AaveV2StrategyFactory,
+  AaveV2Strategy,
   StrategyId,
-  IERC4626,
   IEarnVault,
   IGlobalEarnRegistry,
   StrategyIdConstants,
   BaseStrategyFactory,
   IEarnBalmyStrategy,
-  ERC4626StrategyData
-} from "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
+  IAToken,
+  IAaveV2Pool,
+  AaveV2StrategyData
+} from "src/strategies/instances/aave-v2/AaveV2StrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
 import {
   IValidationManagersRegistryCore,
@@ -25,28 +26,29 @@ import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 // solhint-disable-next-line max-states-count
-contract ERC4626StrategyTest is Test {
-  MockStrategyRegistry private strategyRegistry;
+contract AaveV2StrategyTest is Test {
+  IEarnStrategyRegistry private strategyRegistry;
   address private owner = address(2);
   IEarnVault private vault = IEarnVault(address(3));
   IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(address(4));
-  IERC4626 private erc4626Vault = IERC4626(address(5));
-  address private asset = address(6);
-  IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
+  IAToken private aToken = IAToken(address(5));
+  IAaveV2Pool private aaveV2Pool = IAaveV2Pool(address(6));
+  IERC20 private asset = IERC20(address(7));
+  IFeeManagerCore private feeManager = IFeeManagerCore(address(8));
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
   bytes private validationManagersStrategyData = abi.encodePacked("registryData");
-  bytes private validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
+  bytes private creationValidationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
-  ERC4626StrategyFactory private factory;
+  AaveV2StrategyFactory private factory;
 
   function setUp() public virtual {
-    ERC4626Strategy implementation = new ERC4626Strategy();
-    factory = new ERC4626StrategyFactory(implementation);
-    strategyRegistry = new MockStrategyRegistry();
+    AaveV2Strategy implementation = new AaveV2Strategy();
+    factory = new AaveV2StrategyFactory(implementation);
+    strategyRegistry = IEarnStrategyRegistry(address(new MockStrategyRegistry()));
     vm.mockCall(
       address(vault),
       abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector),
@@ -79,7 +81,7 @@ contract ERC4626StrategyTest is Test {
       abi.encodeWithSelector(IValidationManagersRegistryCore.strategySelfConfigure.selector),
       abi.encode(new ICreationValidationManagerCore[](0))
     );
-    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
+    vm.mockCall(address(aToken), abi.encodeWithSelector(IAToken.UNDERLYING_ASSET_ADDRESS.selector), abi.encode(asset));
     vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.approve.selector), abi.encode(true));
   }
 
@@ -97,8 +99,10 @@ contract ERC4626StrategyTest is Test {
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
-    ERC4626Strategy clone = factory.cloneStrategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+    AaveV2Strategy clone = factory.cloneStrategy(
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone);
@@ -118,9 +122,11 @@ contract ERC4626StrategyTest is Test {
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
+    (AaveV2Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
@@ -140,11 +146,12 @@ contract ERC4626StrategyTest is Test {
     );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
-    ERC4626Strategy clone = factory.cloneStrategyWithId(
+    AaveV2Strategy clone = factory.cloneStrategyWithId(
       strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      )
     );
-
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }
 
@@ -161,11 +168,13 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
-    ERC4626Strategy clone = factory.clone2Strategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+    AaveV2Strategy clone = factory.clone2Strategy(
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      ),
       salt
     );
     assertEq(cloneAddress, address(clone));
@@ -185,12 +194,14 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
+    (AaveV2Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      ),
       salt
     );
 
@@ -211,28 +222,32 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
-    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
+    address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
-    ERC4626Strategy clone = factory.clone2StrategyWithId(
+    AaveV2Strategy clone = factory.clone2StrategyWithId(
       strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      AaveV2StrategyData(
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+      ),
       salt
     );
+
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
   }
 
-  function _assertStrategyWasDeployedCorrectly(ERC4626Strategy clone, StrategyId strategyId_) private {
+  function _assertStrategyWasDeployedCorrectly(AaveV2Strategy clone, StrategyId strategyId_) private {
     assertTrue(strategyId_ == strategyId);
     assertTrue(clone.strategyId() == strategyId);
     _assertStrategyWasDeployedCorrectly(clone);
   }
 
-  function _assertStrategyWasDeployedCorrectly(ERC4626Strategy clone) private {
-    assertEq(address(clone.ERC4626Vault()), address(erc4626Vault));
+  function _assertStrategyWasDeployedCorrectly(AaveV2Strategy clone) private {
+    assertEq(address(clone.aToken()), address(aToken));
+    assertEq(address(clone.pool()), address(aaveV2Pool));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
-    assertEq(clone.asset(), asset);
+    assertEq(clone.asset(), address(asset));
     assertEq(clone.description(), description);
   }
 }

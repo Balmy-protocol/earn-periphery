@@ -6,7 +6,13 @@ import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 /// @notice Interface for the Creation Validation Manager that the strategies call
 interface ICreationValidationManagerCore {
   /// @notice Validates a position creation for the given strategy
-  function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata data) external view;
+  function validatePositionCreation(
+    StrategyId strategyId,
+    address toValidate,
+    address validationRequestedBy,
+    bytes calldata data
+  )
+    external;
 
   /**
    * @notice Allows the strategy to call the manager, for self-configuration

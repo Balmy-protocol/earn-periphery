@@ -45,9 +45,17 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ICreationValidationManagerCore
-  function validatePositionCreation(StrategyId strategyId, address sender, bytes calldata signature) external view {
+  function validatePositionCreation(
+    StrategyId strategyId,
+    address toValidate,
+    address,
+    bytes calldata signature
+  )
+    external
+    view
+  {
     bytes32 tosHash = getStrategyTOSHash(strategyId);
-    if (tosHash != bytes32(0) && !SignatureChecker.isValidSignatureNow(sender, tosHash, signature)) {
+    if (tosHash != bytes32(0) && !SignatureChecker.isValidSignatureNow(toValidate, tosHash, signature)) {
       revert InvalidTOSSignature();
     }
   }

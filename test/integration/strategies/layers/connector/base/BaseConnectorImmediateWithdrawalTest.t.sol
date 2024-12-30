@@ -4,6 +4,7 @@ pragma solidity >=0.8.22;
 import { BaseConnectorTest, IEarnStrategy, SafeERC20, IERC20, Token } from "./BaseConnectorTest.t.sol";
 
 /// @notice A test for connectors that have immediate withdrawals
+
 abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
   using SafeERC20 for IERC20;
 
@@ -65,10 +66,9 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     for (uint256 i; i < tokens.length; ++i) {
       assertEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i]);
       // Note: We use a delta of 1 because of rounding errors
-      assertGte(balancesAfter[i], balancesBefore[i] - toWithdraw[i] - 1);
+      if (toWithdraw[i] > 0) {
+        assertGte(balancesAfter[i] + 1, balancesBefore[i] - toWithdraw[i]);
+      }
     }
   }
-
-  // solhint-disable no-empty-blocks
-  function _generateYield() internal virtual { }
 }
