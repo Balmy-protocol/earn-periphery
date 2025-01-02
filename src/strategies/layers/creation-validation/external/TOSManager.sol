@@ -12,6 +12,16 @@ import { ITOSManager, ICreationValidationManagerCore, IEarnStrategyRegistry } fr
 contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   using MessageHashUtils for bytes;
 
+  struct InitialToS {
+    bytes tos;
+    bytes32 group;
+  }
+
+  struct InitialGroup {
+    StrategyId[] strategyIds;
+    bytes32 group;
+  }
+
   error UnauthorizedCaller();
 
   /// @inheritdoc ITOSManager
@@ -27,13 +37,24 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   constructor(
     IEarnStrategyRegistry registry,
     address superAdmin,
-    address[] memory initialManageTOSdmins
+    address[] memory initialManageTOSAdmins,
+    InitialToS[] memory initialToS,
+    InitialGroup[] memory initialGroups
   )
     AccessControlDefaultAdminRules(3 days, superAdmin)
   {
     STRATEGY_REGISTRY = registry;
-    for (uint256 i; i < initialManageTOSdmins.length; ++i) {
-      _grantRole(MANAGE_TOS_ROLE, initialManageTOSdmins[i]);
+    for (uint256 i; i < initialManageTOSAdmins.length; ++i) {
+      _grantRole(MANAGE_TOS_ROLE, initialManageTOSAdmins[i]);
+    }
+    for (uint256 i; i < initialToS.length; ++i) {
+      _assignToS(initialToS[i].group, initialToS[i].tos);
+    }
+    for (uint256 i; i < initialGroups.length; ++i) {
+      StrategyId[] memory strategyIds = initialGroups[i].strategyIds;
+      for (uint256 j; j < strategyIds.length; ++j) {
+        _assignGroup(strategyIds[j], initialGroups[i].group);
+      }
     }
   }
 
@@ -62,9 +83,7 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
 
   /// @inheritdoc ITOSManager
   function updateTOS(bytes32 group, bytes calldata tos) external onlyRole(MANAGE_TOS_ROLE) {
-    bytes32 tosHash = tos.length == 0 ? bytes32(0) : tos.toEthSignedMessageHash();
-    getGroupTOSHash[group] = tosHash;
-    emit TOSUpdated(group, tos);
+    _assignToS(group, tos);
   }
 
   /// @inheritdoc ITOSManager
@@ -92,5 +111,11 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   function _assignGroup(StrategyId strategyId, bytes32 group) internal {
     getStrategyGroup[strategyId] = group;
     emit StrategyAssignedToGroup(strategyId, group);
+  }
+
+  function _assignToS(bytes32 group, bytes memory tos) internal {
+    bytes32 tosHash = tos.length == 0 ? bytes32(0) : tos.toEthSignedMessageHash();
+    getGroupTOSHash[group] = tosHash;
+    emit TOSUpdated(group, tos);
   }
 }
