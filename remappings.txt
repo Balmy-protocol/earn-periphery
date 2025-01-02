@@ -9,3 +9,4 @@ src/=src/
 @balmy/earn-core/=node_modules/@balmy/earn-core/src/
 @balmy/earn-core-test/=node_modules/@balmy/earn-core/test/
 @forta/firewall/=node_modules/@forta/firewall/src
+createx-forge/=node_modules/createx-forge
