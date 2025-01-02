@@ -5,7 +5,7 @@ import { BaseDeployStrategies } from "../BaseDeployStrategies.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external {
-    vm.startBroadcast(deployerPrivateKey);
+    vm.startBroadcast();
 
     address aaveV3Pool = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5;
     address aaveV3Rewards = 0xf9cc4F0D883F1a1eb2c253bdb46c254Ca51E1F44;

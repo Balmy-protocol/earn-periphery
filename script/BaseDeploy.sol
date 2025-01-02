@@ -5,9 +5,8 @@ import { CreateXScript } from "createx-forge/script/CreateXScript.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract BaseDeploy is CreateXScript {
-  uint256 internal deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-  address internal deployer = vm.envAddress("DEPLOYER");
   address internal admin = vm.envAddress("GOVERNOR");
+  address internal deployer = vm.envAddress("DEPLOYER");
 
   // solhint-disable-next-line var-name-mixedcase
   bytes32 internal SIGNER_GROUP = keccak256("signer_group");
