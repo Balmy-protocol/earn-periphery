@@ -1,38 +1,41 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
-import "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import "@balmy/earn-core/vault/FirewalledEarnVault.sol";
-import "@balmy/earn-core/nft-descriptor/EarnNFTDescriptor.sol";
-import "src/companion/FirewalledEarnVaultCompanion.sol";
+import {
+  IEarnStrategyRegistry, EarnStrategyRegistry
+} from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
+import { FirewalledEarnVault } from "@balmy/earn-core/vault/FirewalledEarnVault.sol";
+import { EarnNFTDescriptor } from "@balmy/earn-core/nft-descriptor/EarnNFTDescriptor.sol";
+import { FirewalledEarnVaultCompanion, IPermit2 } from "src/companion/FirewalledEarnVaultCompanion.sol";
+import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
 
-import "src/global-registry/GlobalEarnRegistry.sol";
-import "src/strategies/layers/fees/external/FeeManager.sol";
-import "src/strategies/layers/guardian/external/GuardianManager.sol";
-import "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
-import "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
-import "src/strategies/layers/creation-validation/external/TOSManager.sol";
-import "src/strategies/layers/creation-validation/external/GlobalValidationManagersRegistry.sol";
-import "src/strategies/layers/creation-validation/external/SignatureBasedWhitelistManager.sol";
-import "@forta/firewall/ExternalFirewall.sol";
-import "@forta/firewall/FirewallAccess.sol";
-import "@forta/firewall/SecurityValidator.sol";
-import "@forta/firewall/FirewallRouter.sol";
+import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
+import { FeeManager, Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
+import { GuardianManager } from "src/strategies/layers/guardian/external/GuardianManager.sol";
+import { LiquidityMiningManager } from "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
+import { DelayedWithdrawalManager } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+import { TOSManager } from "src/strategies/layers/creation-validation/external/TOSManager.sol";
+import { GlobalValidationManagersRegistry } from
+  "src/strategies/layers/creation-validation/external/GlobalValidationManagersRegistry.sol";
+import { SignatureBasedWhitelistManager } from
+  "src/strategies/layers/creation-validation/external/SignatureBasedWhitelistManager.sol";
+import { ExternalFirewall } from "@forta/firewall/ExternalFirewall.sol";
+import {
+  FirewallAccess,
+  FIREWALL_ADMIN_ROLE,
+  PROTOCOL_ADMIN_ROLE,
+  ATTESTER_MANAGER_ROLE,
+  CHECKPOINT_EXECUTOR_ROLE,
+  TRUSTED_ATTESTER_ROLE
+} from "@forta/firewall/FirewallAccess.sol";
+import { ISecurityValidator } from "@forta/firewall/SecurityValidator.sol";
+import { FirewallRouter } from "@forta/firewall/FirewallRouter.sol";
 
-import "@forta/firewall/interfaces/ICheckpointHook.sol";
-import "@forta/firewall/interfaces/Checkpoint.sol";
+import { ICheckpointHook } from "@forta/firewall/interfaces/ICheckpointHook.sol";
+import { Checkpoint, Activation } from "@forta/firewall/interfaces/Checkpoint.sol";
 
-import "src/strategies/instances/aave-v3/AaveV3Strategy.sol";
-import "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
-
-import "src/strategies/instances/erc4626/ERC4626Strategy.sol";
-import "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
-
-import "src/strategies/instances/lido/LidoSTETHStrategy.sol";
-import "src/strategies/instances/lido/LidoSTETHStrategyFactory.sol";
-
-import "./BaseDeploy.sol";
+import { BaseDeploy } from "./BaseDeploy.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract DeployVault is BaseDeploy {
   function run() external {
@@ -44,13 +47,13 @@ contract DeployVault is BaseDeploy {
     address nftDescriptor = deployContract(
       "V1_NFT_DESCRIPTOR",
       abi.encodePacked(
-        type(EarnNFTDescriptor).creationCode, abi.encode("http://api.balmy.xyz/v1/earn/metadata/", admin)
+        type(EarnNFTDescriptor).creationCode, abi.encode("https://api.balmy.xyz/v1/earn/metadata/", admin)
       )
     );
     console2.log("NFT descriptor:", nftDescriptor);
     address[] memory initialAdmins = new address[](2);
     initialAdmins[0] = admin;
-    initialAdmins[1] = deployer;
+    initialAdmins[1] = deployer; // TODO: remove this
 
     // FORTA
     bytes32 attesterControllerId = bytes32("3");
@@ -129,9 +132,8 @@ contract DeployVault is BaseDeploy {
       "V1_TOS_MANAGER",
       abi.encodePacked(type(TOSManager).creationCode, abi.encode(strategyRegistry, admin, initialAdmins))
     );
-    bytes32 GROUP = keccak256("guardian_tos");
     TOSManager(tosManager).updateTOS(
-      GROUP,
+      TOS_GROUP,
       // solhint-disable-next-line max-line-length
       "By selecting a Guardian, you acknowledge and accept the terms and conditions outlined in our Earn service's Terms of Use available at https://app.balmy.xyz/terms_of_use.pdf, including those related to the accuracy of data provided by third-party oracles and the actions taken by the Guardian in response to potential threats. Please note: Balmy does not guarantee the accuracy, completeness, or reliability of information from third-party yield providers. The Guardian operates on a best-effort basis to protect your funds in the event of a hack, and actions taken by the Guardian may impact the performance of your investment. Rescue fees may apply if funds are saved. Timing and decisions regarding redepositing or relocating funds are made in good faith, and Balmy is not liable for any financial losses resulting from these actions. Each Guardian may have its own specific terms of service, which will be presented to you before you engage with their service. By selecting a Guardian and proceeding, you agree to those terms. By signing this I acknowledge and agree to the above terms and conditions."
     );
@@ -153,7 +155,6 @@ contract DeployVault is BaseDeploy {
       )
     );
 
-    bytes32 SIGNER_GROUP = keccak256("signer_group");
     SignatureBasedWhitelistManager(signatureBasedWhitelistManager).updateSigner(SIGNER_GROUP, signer);
     ICreationValidationManagerCore[] memory managers = new ICreationValidationManagerCore[](2);
     managers[0] = ICreationValidationManagerCore(tosManager);
