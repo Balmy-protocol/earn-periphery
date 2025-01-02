@@ -27,16 +27,28 @@ contract SignatureBasedWhitelistManagerTest is Test {
   address private nonceSpenderAccount = address(3);
   address private manageSignersAccount = address(4);
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(5));
+  address private initialSigner = address(6);
+  StrategyId private initialStrategyId = StrategyId.wrap(1000);
   SignatureBasedWhitelistManager private manager;
   VmSafe.Wallet private signer = vm.createWallet("signer");
 
   function setUp() public virtual {
+    SignatureBasedWhitelistManager.InitialSigner[] memory initialSigners =
+      new SignatureBasedWhitelistManager.InitialSigner[](1);
+    initialSigners[0] = SignatureBasedWhitelistManager.InitialSigner({ signer: initialSigner, group: GROUP_1 });
+    SignatureBasedWhitelistManager.InitialGroup[] memory initialGroups =
+      new SignatureBasedWhitelistManager.InitialGroup[](1);
+    StrategyId[] memory strategyIds = new StrategyId[](1);
+    strategyIds[0] = initialStrategyId;
+    initialGroups[0] = SignatureBasedWhitelistManager.InitialGroup({ strategyIds: strategyIds, group: GROUP_1 });
     manager = new SignatureBasedWhitelistManager(
       registry,
       superAdmin,
       CommonUtils.arrayOf(noValidationAccount),
       CommonUtils.arrayOf(nonceSpenderAccount),
-      CommonUtils.arrayOf(manageSignersAccount)
+      CommonUtils.arrayOf(manageSignersAccount),
+      initialSigners,
+      initialGroups
     );
   }
 
@@ -78,6 +90,10 @@ contract SignatureBasedWhitelistManagerTest is Test {
     assertEq(manager.defaultAdminDelay(), 3 days);
     assertEq(manager.owner(), superAdmin);
     assertEq(manager.defaultAdmin(), superAdmin);
+
+    // Initial config
+    assertEq(manager.getGroupSigner(GROUP_1), initialSigner);
+    assertEq(manager.getStrategyGroup(initialStrategyId), GROUP_1);
   }
 
   function test_getNonce_start() public {

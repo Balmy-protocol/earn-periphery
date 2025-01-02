@@ -15,6 +15,16 @@ import {
 } from "src/interfaces/ISignatureBasedWhitelistManager.sol";
 
 contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP712, AccessControlDefaultAdminRules {
+  struct InitialSigner {
+    address signer;
+    bytes32 group;
+  }
+
+  struct InitialGroup {
+    StrategyId[] strategyIds;
+    bytes32 group;
+  }
+
   /// @inheritdoc ISignatureBasedWhitelistManager
   bytes32 public constant NO_VALIDATION_ROLE = keccak256("NO_VALIDATION_ROLE");
   /// @inheritdoc ISignatureBasedWhitelistManager
@@ -39,7 +49,9 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
     address superAdmin,
     address[] memory initialNoValidation,
     address[] memory initialNonceSpenders,
-    address[] memory initialManagerSigners
+    address[] memory initialManagerSigners,
+    InitialSigner[] memory initialSigners,
+    InitialGroup[] memory initialGroups
   )
     AccessControlDefaultAdminRules(3 days, superAdmin)
     EIP712("Balmy Earn - Signature Based Whitelist Manager", "1")
@@ -48,6 +60,15 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
     _grantRoles(NO_VALIDATION_ROLE, initialNoValidation);
     _grantRoles(NONCE_SPENDER_ROLE, initialNonceSpenders);
     _grantRoles(MANAGE_SIGNERS_ROLE, initialManagerSigners);
+    for (uint256 i; i < initialSigners.length; ++i) {
+      _assignSigner(initialSigners[i].group, initialSigners[i].signer);
+    }
+    for (uint256 i; i < initialGroups.length; ++i) {
+      StrategyId[] memory strategyIds = initialGroups[i].strategyIds;
+      for (uint256 j; j < strategyIds.length; ++j) {
+        _assignGroup(strategyIds[j], initialGroups[i].group);
+      }
+    }
   }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
@@ -70,8 +91,7 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
 
   /// @inheritdoc ISignatureBasedWhitelistManager
   function updateSigner(bytes32 group, address signer) external onlyRole(MANAGE_SIGNERS_ROLE) {
-    getGroupSigner[group] = signer;
-    emit SignerUpdated(group, signer);
+    _assignSigner(group, signer);
   }
 
   /// @inheritdoc ISignatureBasedWhitelistManager
@@ -143,6 +163,11 @@ contract SignatureBasedWhitelistManager is ISignatureBasedWhitelistManager, EIP7
     for (uint256 i; i < accounts.length; ++i) {
       _grantRole(role, accounts[i]);
     }
+  }
+
+  function _assignSigner(bytes32 group, address signer) internal {
+    getGroupSigner[group] = signer;
+    emit SignerUpdated(group, signer);
   }
 
   function _assignGroup(StrategyId strategyId, bytes32 group) internal {
