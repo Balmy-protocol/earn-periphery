@@ -63,12 +63,13 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   /// deposits them
   function claimAndDepositAssetRewards() public returns (uint256 amountToClaim) {
     IAaveV3Rewards rewards_ = rewards();
-    address[] memory asset = new address[](1);
-    asset[0] = address(aToken());
-    amountToClaim = rewards_.getUserRewards(asset, address(this), _connector_asset());
+    address asset = _connector_asset();
+    address[] memory aaveAsset = new address[](1);
+    aaveAsset[0] = address(aToken());
+    amountToClaim = rewards_.getUserRewards(aaveAsset, address(this), asset);
     if (amountToClaim > 0) {
-      rewards_.claimRewards(asset, amountToClaim, address(this), _connector_asset());
-      pool().supply(_connector_asset(), amountToClaim, address(this), 0);
+      rewards_.claimRewards(aaveAsset, amountToClaim, address(this), asset);
+      pool().supply(asset, amountToClaim, address(this), 0);
     }
   }
 
@@ -85,15 +86,17 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   // slither-disable-start assembly
   // slither-disable-next-line naming-convention,dead-code,assembly
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
-    address[] memory rewardsList = rewards().getRewardsByAsset(address(aToken()));
+    address asset = _connector_asset();
+    address aToken_ = address(aToken());
+    address[] memory rewardsList = rewards().getRewardsByAsset(aToken_);
 
     uint256 rewardsListLength = rewardsList.length;
     tokens = new address[](rewardsListLength + 1);
-    tokens[0] = _connector_asset();
+    tokens[0] = asset;
     uint256 amountOfValidTokens = 1;
     for (uint256 i = 0; i < rewardsListLength; ++i) {
       address rewardToken = rewardsList[i];
-      if (rewardToken != _connector_asset()) {
+      if (rewardToken != asset && rewardToken != aToken_) {
         tokens[amountOfValidTokens++] = rewardToken;
       }
     }
