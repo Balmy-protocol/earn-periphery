@@ -16,7 +16,7 @@ jobs:
   compare_gas_reports:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
 
@@ -26,7 +26,7 @@ jobs:
           version: nightly
 
       - name: Install node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20.12.2"
           cache: yarn
