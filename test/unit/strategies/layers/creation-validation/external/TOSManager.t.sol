@@ -25,11 +25,19 @@ contract TosManagerTest is Test {
   address private superAdmin = address(1);
   address private manageTosAdmin = address(2);
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(3));
+  bytes private initialTOS = "initial tos";
+  StrategyId private initialStrategyId = StrategyId.wrap(1000);
   TOSManager private tosManager;
   VmSafe.Wallet private alice = vm.createWallet("alice");
 
   function setUp() public virtual {
-    tosManager = new TOSManager(registry, superAdmin, CommonUtils.arrayOf(manageTosAdmin));
+    TOSManager.InitialToS[] memory initialToS = new TOSManager.InitialToS[](1);
+    initialToS[0] = TOSManager.InitialToS({ tos: initialTOS, group: GROUP_1 });
+    TOSManager.InitialGroup[] memory initialGroups = new TOSManager.InitialGroup[](1);
+    StrategyId[] memory strategyIds = new StrategyId[](1);
+    strategyIds[0] = initialStrategyId;
+    initialGroups[0] = TOSManager.InitialGroup({ strategyIds: strategyIds, group: GROUP_1 });
+    tosManager = new TOSManager(registry, superAdmin, CommonUtils.arrayOf(manageTosAdmin), initialToS, initialGroups);
   }
 
   function test_constants() public {
@@ -44,6 +52,10 @@ contract TosManagerTest is Test {
     assertEq(tosManager.defaultAdminDelay(), 3 days);
     assertEq(tosManager.owner(), superAdmin);
     assertEq(tosManager.defaultAdmin(), superAdmin);
+
+    // Initial config
+    assertEq(tosManager.getGroupTOSHash(GROUP_1), MessageHashUtils.toEthSignedMessageHash(bytes(initialTOS)));
+    assertEq(tosManager.getStrategyGroup(initialStrategyId), GROUP_1);
   }
 
   function test_getStrategyTOSHash_empty() public {
