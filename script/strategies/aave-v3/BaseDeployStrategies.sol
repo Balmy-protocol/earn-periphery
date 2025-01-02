@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../../BaseDeploy.sol";
+import { BaseDeploy } from "../../BaseDeploy.sol";
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
+import {
+  AaveV3StrategyFactory,
+  AaveV3Strategy,
+  IAaveV3Pool,
+  IAaveV3Rewards,
+  IAToken,
+  AaveV3StrategyData
+} from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
+import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
+import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { DeployVault } from "../../DeployVault.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract BaseDeployStrategies is BaseDeploy {
   function setUp() public override {
     super.setUp();
     // Assume vault is already deployed
+    DeployVault deployVault = new DeployVault();
+    deployVault.run();
   }
 
   function deployAaveV3Strategy(
@@ -30,11 +44,10 @@ contract BaseDeployStrategies is BaseDeploy {
     address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
 
     bytes memory registryData = "";
-    bytes32 TOS_GROUP = keccak256("guardian_tos");
     bytes memory manager1Data = abi.encode(TOS_GROUP);
     bytes memory manager2Data = "";
     if (isProtected) {
-      bytes32 SIGNER_GROUP = keccak256("signer_group");
+      // solhint-disable-next-line mi
       manager2Data = abi.encode(SIGNER_GROUP);
     }
 

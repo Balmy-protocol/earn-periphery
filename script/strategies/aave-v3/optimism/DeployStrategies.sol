@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies } from "../BaseDeployStrategies.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external {

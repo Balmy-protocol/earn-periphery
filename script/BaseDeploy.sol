@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
 import { CreateXScript } from "createx-forge/script/CreateXScript.sol";
+import { console2 } from "forge-std/console2.sol";
 
-import "src/strategies/instances/aave-v3/AaveV3Strategy.sol";
-import "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
+contract BaseDeploy is CreateXScript {
+  uint256 internal deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+  address internal deployer = vm.envAddress("DEPLOYER");
+  address internal admin = vm.envAddress("GOVERNOR");
 
-import "src/strategies/instances/erc4626/ERC4626Strategy.sol";
-import "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
+  // solhint-disable-next-line var-name-mixedcase
+  bytes32 internal SIGNER_GROUP = keccak256("signer_group");
+  // solhint-disable-next-line var-name-mixedcase
+  bytes32 internal TOS_GROUP = keccak256("guardian_tos");
 
-import "src/strategies/instances/lido/LidoSTETHStrategy.sol";
-import "src/strategies/instances/lido/LidoSTETHStrategyFactory.sol";
-
-contract BaseDeploy is Script, CreateXScript {
-  uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-  address deployer = vm.envAddress("DEPLOYER");
-  address admin = vm.envAddress("GOVERNOR");
-
+  // solhint-disable-next-line no-empty-blocks
   function setUp() public virtual withCreateX {
     //
     // `withCreateX` modifier checks there is a CreateX factory deployed
@@ -45,7 +42,7 @@ contract BaseDeploy is Script, CreateXScript {
       return computedAddress;
     }
     address deployedAddress = create3(salt, creationCode);
-    //console2.log("Deployed address:", deployedAddress);
+    // solhint-disable-next-line reason-string
     require(computedAddress == deployedAddress, "Computed and deployed address do not match!");
     return deployedAddress;
   }
