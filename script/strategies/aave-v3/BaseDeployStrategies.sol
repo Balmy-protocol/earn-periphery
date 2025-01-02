@@ -44,7 +44,6 @@ contract BaseDeployStrategies is BaseDeploy {
     bytes memory creationValidationData = abi.encode(registryData, validationManagersStrategyData);
     bytes memory guardianData = "";
     bytes memory feesData = "";
-
     (IEarnBalmyStrategy strategy, StrategyId strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
       admin,
       AaveV3StrategyData(
@@ -59,6 +58,7 @@ contract BaseDeployStrategies is BaseDeploy {
         string.concat(
           "Earn returns with one of DeFi's most reliable lending markets. When you deposit ",
           symbol,
+          // solhint-disable-next-line max-line-length
           " into Aave, your funds automatically generate interest by being lent to trusted borrowers - offering better returns than traditional savings. The protocol has handled over $100 billion in loans with a spotless security record, while keeping your funds available to withdraw at any time."
         )
       )
