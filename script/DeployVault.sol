@@ -40,7 +40,8 @@ import { console2 } from "forge-std/console2.sol";
 contract DeployVault is BaseDeploy {
   function run() external {
     address signer = vm.envAddress("SIGNER");
-    vm.startBroadcast(deployerPrivateKey);
+    vm.startBroadcast();
+    console2.log("Deployer:", deployer);
     address strategyRegistry =
       deployContract("V1_STRATEGY_REGISTRY", abi.encodePacked(type(EarnStrategyRegistry).creationCode));
     console2.log("Strategy registry:", strategyRegistry);
@@ -53,7 +54,6 @@ contract DeployVault is BaseDeploy {
     console2.log("NFT descriptor:", nftDescriptor);
     address[] memory initialAdmins = new address[](2);
     initialAdmins[0] = admin;
-    initialAdmins[1] = deployer; // TODO: remove this
 
     // FORTA
     bytes32 attesterControllerId = bytes32("3");
@@ -82,52 +82,19 @@ contract DeployVault is BaseDeploy {
         abi.encode(IEarnStrategyRegistry(strategyRegistry), admin, initialAdmins, nftDescriptor, firewallRouter)
       )
     );
-    address permit2Adapter = 0xED306e38BB930ec9646FF3D917B2e513a97530b1;
     address companion = deployContract(
       "V1_COMPANION",
       abi.encodePacked(
         type(FirewalledEarnVaultCompanion).creationCode,
         abi.encode(
-          permit2Adapter, address(0), admin, IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3), firewallRouter
+          permit2Adapter(), address(0), admin, IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3), firewallRouter
         )
       )
     );
     console2.log("Vault:", vault);
     console2.log("Companion:", companion);
-    /// will renounce later below
-    FirewallAccess(firewallAccess).grantRole(FIREWALL_ADMIN_ROLE, deployer);
-    FirewallAccess(firewallAccess).grantRole(PROTOCOL_ADMIN_ROLE, deployer);
-    FirewallAccess(firewallAccess).grantRole(ATTESTER_MANAGER_ROLE, deployer);
 
-    /// let protected contract execute checkpoints on the external firewall
-    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(vault));
-    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(companion));
-    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(firewallRouter));
-
-    /// set the trusted attester:
-    /// this will be necessary when "foo()" receives an attested call later.
-    FirewallAccess(firewallAccess).grantRole(TRUSTED_ATTESTER_ROLE, deployer);
-
-    Checkpoint memory checkpoint =
-      Checkpoint({ threshold: 0, refStart: 4, refEnd: 36, activation: Activation.AlwaysActive, trustedOrigin: false });
-
-    ExternalFirewall(externalFirewall).setCheckpoint(FirewalledEarnVault(payable(vault)).withdraw.selector, checkpoint);
-    ExternalFirewall(externalFirewall).setCheckpoint(
-      FirewalledEarnVault(payable(vault)).specialWithdraw.selector, checkpoint
-    );
-
-    ExternalFirewall(externalFirewall).setCheckpoint(
-      FirewalledEarnVaultCompanion(payable(companion)).withdraw.selector, checkpoint
-    );
-    ExternalFirewall(externalFirewall).setCheckpoint(
-      FirewalledEarnVaultCompanion(payable(companion)).specialWithdraw.selector, checkpoint
-    );
-
-    FirewallAccess(firewallAccess).renounceRole(TRUSTED_ATTESTER_ROLE, deployer);
-    FirewallAccess(firewallAccess).renounceRole(FIREWALL_ADMIN_ROLE, deployer);
-    FirewallAccess(firewallAccess).renounceRole(PROTOCOL_ADMIN_ROLE, deployer);
-    FirewallAccess(firewallAccess).renounceRole(ATTESTER_MANAGER_ROLE, deployer);
-    console2.log("Firewall access:", firewallAccess);
+    configureCheckpoints(firewallAccess, externalFirewall, vault, companion, firewallRouter);
     TOSManager.InitialToS[] memory initialToS = new TOSManager.InitialToS[](1);
     initialToS[0] = TOSManager.InitialToS({
       // solhint-disable-next-line max-line-length
@@ -149,8 +116,6 @@ contract DeployVault is BaseDeploy {
     initialNonceSpenders[1] = vault;
     address[] memory initialManagerSigners = new address[](3);
     initialManagerSigners[0] = signer;
-    initialManagerSigners[1] = deployer;
-    initialManagerSigners[2] = admin;
 
     SignatureBasedWhitelistManager.InitialSigner[] memory initialSigners =
       new SignatureBasedWhitelistManager.InitialSigner[](1);
@@ -223,4 +188,63 @@ contract DeployVault is BaseDeploy {
 
     vm.stopBroadcast();
   }
+
+  function configureCheckpoints(
+    address firewallAccess,
+    address externalFirewall,
+    address vault,
+    address companion,
+    address firewallRouter
+  )
+    private
+  {
+    /// will renounce later below
+    FirewallAccess(firewallAccess).grantRole(FIREWALL_ADMIN_ROLE, deployer);
+    FirewallAccess(firewallAccess).grantRole(PROTOCOL_ADMIN_ROLE, deployer);
+    FirewallAccess(firewallAccess).grantRole(ATTESTER_MANAGER_ROLE, deployer);
+
+    /// let protected contract execute checkpoints on the external firewall
+    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(vault));
+    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(companion));
+    FirewallAccess(firewallAccess).grantRole(CHECKPOINT_EXECUTOR_ROLE, address(firewallRouter));
+
+    /// set the trusted attester:
+    /// this will be necessary when "foo()" receives an attested call later.
+    FirewallAccess(firewallAccess).grantRole(TRUSTED_ATTESTER_ROLE, deployer);
+
+    Checkpoint memory checkpoint =
+      Checkpoint({ threshold: 0, refStart: 4, refEnd: 36, activation: Activation.AlwaysActive, trustedOrigin: false });
+
+    ExternalFirewall(externalFirewall).setCheckpoint(FirewalledEarnVault(payable(vault)).withdraw.selector, checkpoint);
+    ExternalFirewall(externalFirewall).setCheckpoint(
+      FirewalledEarnVault(payable(vault)).specialWithdraw.selector, checkpoint
+    );
+
+    ExternalFirewall(externalFirewall).setCheckpoint(
+      FirewalledEarnVaultCompanion(payable(companion)).withdraw.selector, checkpoint
+    );
+    ExternalFirewall(externalFirewall).setCheckpoint(
+      FirewalledEarnVaultCompanion(payable(companion)).specialWithdraw.selector, checkpoint
+    );
+
+    FirewallAccess(firewallAccess).renounceRole(TRUSTED_ATTESTER_ROLE, deployer);
+    FirewallAccess(firewallAccess).renounceRole(FIREWALL_ADMIN_ROLE, deployer);
+    FirewallAccess(firewallAccess).renounceRole(PROTOCOL_ADMIN_ROLE, deployer);
+    FirewallAccess(firewallAccess).renounceRole(ATTESTER_MANAGER_ROLE, deployer);
+    console2.log("Firewall access:", firewallAccess);
+  }
+}
+
+function permit2Adapter() view returns (address) {
+  if (
+    block.chainid == 8453 // base
+      || block.chainid == 1 // mainnet
+      || block.chainid == 10 // optimism
+      || block.chainid == 137 // polygon
+      || block.chainid == 34_443 // mode
+      || block.chainid == 42_161 // arbitrum
+  ) {
+    return 0xED306e38BB930ec9646FF3D917B2e513a97530b1;
+  }
+  revert("Unsupported chain");
 }
