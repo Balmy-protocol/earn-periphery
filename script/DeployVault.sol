@@ -128,14 +128,18 @@ contract DeployVault is BaseDeploy {
     FirewallAccess(firewallAccess).renounceRole(PROTOCOL_ADMIN_ROLE, deployer);
     FirewallAccess(firewallAccess).renounceRole(ATTESTER_MANAGER_ROLE, deployer);
     console2.log("Firewall access:", firewallAccess);
+    TOSManager.InitialToS[] memory initialToS = new TOSManager.InitialToS[](1);
+    initialToS[0] = TOSManager.InitialToS({
+      // solhint-disable-next-line max-line-length
+      tos: "By selecting a Guardian, you acknowledge and accept the terms and conditions outlined in our Earn service's Terms of Use available at https://app.balmy.xyz/terms_of_use.pdf, including those related to the accuracy of data provided by third-party oracles and the actions taken by the Guardian in response to potential threats. Please note: Balmy does not guarantee the accuracy, completeness, or reliability of information from third-party yield providers. The Guardian operates on a best-effort basis to protect your funds in the event of a hack, and actions taken by the Guardian may impact the performance of your investment. Rescue fees may apply if funds are saved. Timing and decisions regarding redepositing or relocating funds are made in good faith, and Balmy is not liable for any financial losses resulting from these actions. Each Guardian may have its own specific terms of service, which will be presented to you before you engage with their service. By selecting a Guardian and proceeding, you agree to those terms. By signing this I acknowledge and agree to the above terms and conditions.",
+      group: TOS_GROUP
+    });
     address tosManager = deployContract(
       "V1_TOS_MANAGER",
-      abi.encodePacked(type(TOSManager).creationCode, abi.encode(strategyRegistry, admin, initialAdmins))
-    );
-    TOSManager(tosManager).updateTOS(
-      TOS_GROUP,
-      // solhint-disable-next-line max-line-length
-      "By selecting a Guardian, you acknowledge and accept the terms and conditions outlined in our Earn service's Terms of Use available at https://app.balmy.xyz/terms_of_use.pdf, including those related to the accuracy of data provided by third-party oracles and the actions taken by the Guardian in response to potential threats. Please note: Balmy does not guarantee the accuracy, completeness, or reliability of information from third-party yield providers. The Guardian operates on a best-effort basis to protect your funds in the event of a hack, and actions taken by the Guardian may impact the performance of your investment. Rescue fees may apply if funds are saved. Timing and decisions regarding redepositing or relocating funds are made in good faith, and Balmy is not liable for any financial losses resulting from these actions. Each Guardian may have its own specific terms of service, which will be presented to you before you engage with their service. By selecting a Guardian and proceeding, you agree to those terms. By signing this I acknowledge and agree to the above terms and conditions."
+      abi.encodePacked(
+        type(TOSManager).creationCode,
+        abi.encode(strategyRegistry, admin, initialAdmins, initialToS, new TOSManager.InitialGroup[](0))
+      )
     );
 
     address[] memory initialNoValidation = new address[](1);
@@ -147,15 +151,26 @@ contract DeployVault is BaseDeploy {
     initialManagerSigners[0] = signer;
     initialManagerSigners[1] = deployer;
     initialManagerSigners[2] = admin;
+
+    SignatureBasedWhitelistManager.InitialSigner[] memory initialSigners =
+      new SignatureBasedWhitelistManager.InitialSigner[](1);
+    initialSigners[0] = SignatureBasedWhitelistManager.InitialSigner({ signer: signer, group: SIGNER_GROUP });
     address signatureBasedWhitelistManager = deployContract(
       "V1_SIGNATURE",
       abi.encodePacked(
         type(SignatureBasedWhitelistManager).creationCode,
-        abi.encode(strategyRegistry, admin, initialNoValidation, initialNonceSpenders, initialManagerSigners)
+        abi.encode(
+          strategyRegistry,
+          admin,
+          initialNoValidation,
+          initialNonceSpenders,
+          initialManagerSigners,
+          initialSigners,
+          new SignatureBasedWhitelistManager.InitialGroup[](0)
+        )
       )
     );
 
-    SignatureBasedWhitelistManager(signatureBasedWhitelistManager).updateSigner(SIGNER_GROUP, signer);
     ICreationValidationManagerCore[] memory managers = new ICreationValidationManagerCore[](2);
     managers[0] = ICreationValidationManagerCore(tosManager);
     managers[1] = ICreationValidationManagerCore(signatureBasedWhitelistManager);
