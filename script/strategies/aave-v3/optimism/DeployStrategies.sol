@@ -2,8 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "../BaseDeployStrategies.sol";
-import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
-import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external {
