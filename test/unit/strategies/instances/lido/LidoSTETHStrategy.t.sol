@@ -18,6 +18,7 @@ import {
   IDelayedWithdrawalAdapter
 } from "src/strategies/instances/lido/LidoSTETHStrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
+import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import {
   IValidationManagersRegistryCore,
   ICreationValidationManagerCore
@@ -31,10 +32,12 @@ contract LidoSTETHStrategyTest is Test {
   IGlobalEarnRegistry private globalRegistry = IGlobalEarnRegistry(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
   IDelayedWithdrawalAdapter private adapter = IDelayedWithdrawalAdapter(address(5));
   IFeeManagerCore private feeManager = IFeeManagerCore(address(6));
+  ILiquidityMiningManagerCore private liquidityMiningManager = ILiquidityMiningManagerCore(address(7));
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   bytes private validationManagersStrategyData = abi.encodePacked("registryData");
   bytes private creationValidationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private feesData = abi.encodePacked("feesData");
+  bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
   string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   LidoSTETHStrategyFactory private factory;
@@ -58,6 +61,16 @@ contract LidoSTETHStrategyTest is Test {
     );
     vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.strategySelfConfigure.selector), "");
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
+      ""
+    );
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
+      abi.encode(liquidityMiningManager)
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
       abi.encode(validationManagerRegistry)
@@ -77,10 +90,16 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     LidoSTETHStrategy clone = factory.cloneStrategy(
-      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone);
@@ -94,10 +113,17 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
-      owner, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
+      owner,
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
@@ -111,10 +137,17 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     LidoSTETHStrategy clone = factory.cloneStrategyWithId(
-      strategyId, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description)
+      strategyId,
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -129,12 +162,19 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
 
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     LidoSTETHStrategy clone = factory.clone2Strategy(
-      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      ),
+      salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
@@ -149,11 +189,19 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
-      owner, LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description), salt
+      owner,
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      ),
+      salt
     );
 
     assertEq(cloneAddress, address(clone));
@@ -169,12 +217,18 @@ contract LidoSTETHStrategyTest is Test {
         IValidationManagersRegistryCore.strategySelfConfigure.selector, validationManagersStrategyData
       )
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, adapter, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone) = factory.clone2StrategyWithId(
       strategyId,
-      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, description),
+      LidoSTETHStrategyData(
+        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
+      ),
       salt
     );
 

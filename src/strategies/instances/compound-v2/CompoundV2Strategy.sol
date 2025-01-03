@@ -35,13 +35,20 @@ contract CompoundV2Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     external
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init(creationValidationData, guardianData, feesData, description_);
+    init({
+      creationValidationData: creationValidationData,
+      guardianData: guardianData,
+      feesData: feesData,
+      liquidityMiningData: liquidityMiningData,
+      description_: description_
+    });
   }
 
   // slither-disable-next-line reentrancy-benign
@@ -50,12 +57,19 @@ contract CompoundV2Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     external
   {
     _strategyId = strategyId_;
-    init(creationValidationData, guardianData, feesData, description_);
+    init({
+      creationValidationData: creationValidationData,
+      guardianData: guardianData,
+      feesData: feesData,
+      liquidityMiningData: liquidityMiningData,
+      description_: description_
+    });
   }
 
   // slither-disable-next-line reentrancy-benign
@@ -63,15 +77,17 @@ contract CompoundV2Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     public
     initializer
   {
+    _connector_init();
     _creationValidation_init(creationValidationData);
     _guardian_init(guardianData);
     _fees_init(feesData);
-    _connector_init();
+    _liquidity_mining_init(liquidityMiningData);
     description = description_;
   }
 

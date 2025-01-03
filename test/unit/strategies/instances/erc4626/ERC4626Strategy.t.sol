@@ -17,6 +17,7 @@ import {
   ERC4626StrategyData
 } from "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
+import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import {
   IValidationManagersRegistryCore,
   ICreationValidationManagerCore
@@ -35,10 +36,12 @@ contract ERC4626StrategyTest is Test {
   IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
+  ILiquidityMiningManagerCore private liquidityMiningManager = ILiquidityMiningManagerCore(address(11));
   bytes private validationManagersStrategyData = abi.encodePacked("registryData");
   bytes private validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
+  bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
   string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   ERC4626StrategyFactory private factory;
@@ -70,6 +73,16 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
     );
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
+      ""
+    );
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
+      abi.encode(liquidityMiningManager)
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
       abi.encode(validationManagerRegistry)
@@ -95,10 +108,16 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     ERC4626Strategy clone = factory.cloneStrategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone);
@@ -116,11 +135,17 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     (ERC4626Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
@@ -138,11 +163,17 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     ERC4626Strategy clone = factory.cloneStrategyWithId(
       strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description)
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      )
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -161,11 +192,17 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     ERC4626Strategy clone = factory.clone2Strategy(
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      ),
       salt
     );
     assertEq(cloneAddress, address(clone));
@@ -185,12 +222,18 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      ),
       salt
     );
 
@@ -211,12 +254,18 @@ contract ERC4626StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, erc4626Vault, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     ERC4626Strategy clone = factory.clone2StrategyWithId(
       strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, description),
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+      ),
       salt
     );
     assertEq(cloneAddress, address(clone));
