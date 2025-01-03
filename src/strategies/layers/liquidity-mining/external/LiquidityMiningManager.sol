@@ -177,7 +177,6 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     _setCampaign(campaign, campaignMem, strategyId, reward, emissionPerSecond, duration);
   }
 
-  //slither-disable-next-line reentrancy-no-eth
   function _setCampaign(
     Campaign storage campaign,
     Campaign memory campaignMem,
@@ -203,6 +202,12 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     uint256 currentBalance = (campaignMem.deadline > block.timestamp)
       ? campaignMem.emissionPerSecond * (campaignMem.deadline - block.timestamp)
       : 0;
+
+    campaign.emissionPerSecond = emissionPerSecond.toUint88();
+    campaign.deadline = deadline.toUint32();
+    campaign.lastUpdated = block.timestamp.toUint32();
+    emit CampaignSet(strategyId, reward, emissionPerSecond, deadline);
+
     if (currentBalance < balanceNeeded) {
       uint256 missing = balanceNeeded - currentBalance;
       if (reward == Token.NATIVE_TOKEN) {
@@ -219,14 +224,8 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
       }
     } else if (currentBalance > balanceNeeded) {
       // Return the excess tokens
-      // slither-disable-next-line arbitrary-send-eth,reentrancy-eth,reentrancy-events,reentrancy-unlimited-gas
       reward.transfer({ recipient: msg.sender, amount: currentBalance - balanceNeeded });
     }
-
-    campaign.emissionPerSecond = emissionPerSecond.toUint88();
-    campaign.deadline = deadline.toUint32();
-    campaign.lastUpdated = block.timestamp.toUint32();
-    emit CampaignSet(strategyId, reward, emissionPerSecond, deadline);
   }
   //slither-disable-end timestamp
 
