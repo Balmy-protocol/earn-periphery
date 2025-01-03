@@ -50,6 +50,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes memory creationValidationData = abi.encode(registryData, validationManagersStrategyData);
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory feesData = "";
+    bytes memory liquidityMiningData = "";
     string memory symbol = ERC20(aToken.UNDERLYING_ASSET_ADDRESS()).symbol();
     (strategy, strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
       admin,
@@ -62,6 +63,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         creationValidationData,
         guardianData,
         feesData,
+        liquidityMiningData,
         string.concat(
           "Earn returns with one of DeFi's most reliable lending markets. When you deposit ",
           symbol,
