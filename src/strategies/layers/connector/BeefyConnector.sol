@@ -267,6 +267,6 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
     if (totalSupply == 0) {
       return assets;
     }
-    return assets.mulDiv(totalSupply, vault.balance(), Math.Rounding.Ceil);
+    return assets.mulDiv(totalSupply, vault.balance(), Math.Rounding.Floor);
   }
 }
