@@ -218,6 +218,115 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
     manager.setCampaign({ strategyId: strategyId, reward: Token.NATIVE_TOKEN, emissionPerSecond: 3, duration: 1 days });
   }
 
+  function test_addToCampaign_create() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign = 3 * 10;
+    reward.approve(address(manager), balanceForCampaign);
+    uint256 previousBalance = reward.balanceOf(address(adminManageCampaigns));
+    vm.expectEmit();
+    emit CampaignSet(strategyId, address(reward), 3, block.timestamp + 10);
+    manager.addToCampaign({ strategyId: strategyId, reward: address(reward), amount: balanceForCampaign, duration: 10 });
+    vm.stopPrank();
+    assertEq(reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign);
+    assertEq(reward.balanceOf(address(manager)), balanceForCampaign);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(address(reward)));
+  }
+
+  function test_addToCampaign_create_Native() public {
+    uint256 balanceForCampaign = 3 * 10;
+    uint256 previousBalance = address(adminManageCampaigns).balance;
+    vm.expectEmit();
+    emit CampaignSet(strategyId, Token.NATIVE_TOKEN, 3, block.timestamp + 10);
+    vm.prank(adminManageCampaigns);
+    manager.addToCampaign{ value: balanceForCampaign }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      amount: balanceForCampaign,
+      duration: 10
+    });
+    assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign);
+    assertEq(address(manager).balance, balanceForCampaign);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(Token.NATIVE_TOKEN));
+  }
+
+  function test_addToCampaign_NativeExcessFundsAreReturned() public {
+    uint256 balanceForCampaign = 3 * 10;
+    uint256 previousBalance = address(adminManageCampaigns).balance;
+    vm.expectEmit();
+    emit CampaignSet(strategyId, Token.NATIVE_TOKEN, 3, block.timestamp + 10);
+    vm.prank(adminManageCampaigns);
+    manager.addToCampaign{ value: balanceForCampaign + 10 }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      amount: balanceForCampaign,
+      duration: 10
+    });
+    assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign);
+    assertEq(address(manager).balance, balanceForCampaign);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(Token.NATIVE_TOKEN));
+  }
+
+  function test_addToCampaign_addBalance() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign1 = 3 * 10;
+    uint256 balanceForCampaign2 = 5 * 10;
+    reward.approve(address(manager), balanceForCampaign1 + balanceForCampaign2);
+    uint256 previousBalance = reward.balanceOf(address(adminManageCampaigns));
+    manager.setCampaign({ strategyId: strategyId, reward: address(reward), emissionPerSecond: 3, duration: 10 });
+    manager.addToCampaign({ strategyId: strategyId, reward: address(reward), amount: balanceForCampaign2, duration: 10 });
+    vm.stopPrank();
+    assertEq(
+      reward.balanceOf(address(adminManageCampaigns)), previousBalance - balanceForCampaign1 - balanceForCampaign2
+    );
+    assertEq(reward.balanceOf(address(manager)), balanceForCampaign1 + balanceForCampaign2);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(address(reward)));
+  }
+
+  function test_addToCampaign_addBalance_Native() public {
+    vm.startPrank(adminManageCampaigns);
+    uint256 balanceForCampaign1 = 3 * 10;
+    uint256 balanceForCampaign2 = 5 * 10;
+    uint256 previousBalance = address(adminManageCampaigns).balance;
+    manager.setCampaign{ value: balanceForCampaign1 }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      emissionPerSecond: 3,
+      duration: 10
+    });
+
+    manager.addToCampaign{ value: balanceForCampaign2 }({
+      strategyId: strategyId,
+      reward: Token.NATIVE_TOKEN,
+      amount: balanceForCampaign2,
+      duration: 10
+    });
+    vm.stopPrank();
+    assertEq(address(adminManageCampaigns).balance, previousBalance - balanceForCampaign1 - balanceForCampaign2);
+    assertEq(address(manager).balance, balanceForCampaign1 + balanceForCampaign2);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(Token.NATIVE_TOKEN));
+  }
+
+  function test_addToCampaign_RevertWhen_callerDoesntHaveRole() public {
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector, address(this), manager.MANAGE_CAMPAIGNS_ROLE()
+      )
+    );
+    manager.addToCampaign({ strategyId: strategyId, reward: address(reward), amount: 100, duration: 10 });
+  }
+
+  function test_addToCampaign_RevertWhen_rewardIsStrategyAsset() public {
+    vm.prank(adminManageCampaigns);
+    vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InvalidReward.selector));
+    manager.addToCampaign({ strategyId: strategyId, reward: address(asset), amount: 300, duration: 10 });
+  }
+
+  function test_addToCampaign_RevertWhen_Native_InsufficientBalance() public {
+    vm.prank(adminManageCampaigns);
+    vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.InsufficientBalance.selector));
+    manager.addToCampaign({ strategyId: strategyId, reward: Token.NATIVE_TOKEN, amount: 300, duration: 10 });
+  }
+
   function test_rewardAmounts_twoCampaigns() public {
     uint256 timestamp = 10;
     vm.warp(timestamp);

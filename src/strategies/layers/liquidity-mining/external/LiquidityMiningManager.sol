@@ -121,8 +121,6 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManager
-  //slither-disable-start timestamp
-  //slither-disable-next-line reentrancy-no-eth
   function setCampaign(
     StrategyId strategyId,
     address reward,
@@ -134,10 +132,51 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     override
     onlyRole(MANAGE_CAMPAIGNS_ROLE)
   {
-    bytes32 key = _key(strategyId, reward);
-    Campaign storage campaign = _campaigns[key];
-    Campaign memory campaignMem = campaign;
+    _setCampaign(strategyId, reward, emissionPerSecond, duration);
+  }
 
+  /// @inheritdoc ILiquidityMiningManager
+  function addToCampaign(
+    StrategyId strategyId,
+    address reward,
+    uint256 amount,
+    uint256 duration
+  )
+    external
+    payable
+    onlyRole(MANAGE_CAMPAIGNS_ROLE)
+  {
+    _addToCampaign(strategyId, reward, amount, duration);
+  }
+
+  function _addToCampaign(StrategyId strategyId, address reward, uint256 amount, uint256 newDuration) internal {
+    Campaign storage campaign = _campaigns[_key(strategyId, reward)];
+    Campaign memory campaignMem = campaign;
+    uint256 amountLeft = (campaignMem.deadline > block.timestamp)
+      ? campaignMem.emissionPerSecond * (campaignMem.deadline - block.timestamp)
+      : 0;
+    uint256 newEmissionPerSecond = (amountLeft + amount) / newDuration;
+    _setCampaign(campaign, campaignMem, strategyId, reward, newEmissionPerSecond, newDuration);
+  }
+
+  function _setCampaign(StrategyId strategyId, address reward, uint256 emissionPerSecond, uint256 duration) internal {
+    Campaign storage campaign = _campaigns[_key(strategyId, reward)];
+    Campaign memory campaignMem = campaign;
+    _setCampaign(campaign, campaignMem, strategyId, reward, emissionPerSecond, duration);
+  }
+
+  //slither-disable-start timestamp
+  //slither-disable-next-line reentrancy-no-eth
+  function _setCampaign(
+    Campaign storage campaign,
+    Campaign memory campaignMem,
+    StrategyId strategyId,
+    address reward,
+    uint256 emissionPerSecond,
+    uint256 duration
+  )
+    internal
+  {
     if (campaignMem.lastUpdated == 0) {
       IEarnStrategy strategy = STRATEGY_REGISTRY.getStrategy(strategyId);
       if (strategy.asset() == reward) {
