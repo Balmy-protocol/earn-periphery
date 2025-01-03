@@ -14,6 +14,7 @@ struct LidoSTETHStrategyData {
   IDelayedWithdrawalAdapter adapter;
   bytes creationValidationData;
   bytes feesData;
+  bytes liquidityMiningData;
   string description;
 }
 
@@ -25,7 +26,12 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = LidoSTETHStrategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    clone.init({
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
   }
 
   function cloneStrategyAndRegister(
@@ -38,8 +44,13 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = LidoSTETHStrategy(payable(address(clone_)));
-    strategyId =
-      clone.initAndRegister(owner, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    strategyId = clone.initAndRegister({
+      owner: owner,
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
@@ -55,7 +66,13 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone(immutableData);
     clone = LidoSTETHStrategy(payable(address(clone_)));
     emit StrategyCloned(clone, strategyId);
-    clone.initWithId(strategyId, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    clone.initWithId({
+      strategyId_: strategyId,
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
   }
 
   function clone2Strategy(
@@ -69,7 +86,12 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = LidoSTETHStrategy(payable(address(clone_)));
     emit StrategyCloned(clone, StrategyIdConstants.NO_STRATEGY);
-    clone.init(strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    clone.init({
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
   }
 
   function clone2StrategyAndRegister(
@@ -83,8 +105,13 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     bytes memory immutableData = _calculateImmutableData(strategyData);
     IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = LidoSTETHStrategy(payable(address(clone_)));
-    strategyId =
-      clone.initAndRegister(owner, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    strategyId = clone.initAndRegister({
+      owner: owner,
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
   }
@@ -101,7 +128,13 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     IEarnBalmyStrategy clone_ = _clone2(immutableData, salt);
     clone = LidoSTETHStrategy(payable(address(clone_)));
     emit StrategyCloned(clone, strategyId);
-    clone.initWithId(strategyId, strategyData.creationValidationData, strategyData.feesData, strategyData.description);
+    clone.initWithId({
+      strategyId_: strategyId,
+      creationValidationData: strategyData.creationValidationData,
+      feesData: strategyData.feesData,
+      liquidityMiningData: strategyData.liquidityMiningData,
+      description_: strategyData.description
+    });
   }
 
   function addressOfClone2(

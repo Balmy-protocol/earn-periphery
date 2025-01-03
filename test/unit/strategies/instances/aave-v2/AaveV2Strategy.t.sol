@@ -23,6 +23,7 @@ import {
   ICreationValidationManagerCore
 } from "src/interfaces/IValidationManagersRegistry.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
+import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 // solhint-disable-next-line max-states-count
@@ -37,10 +38,12 @@ contract AaveV2StrategyTest is Test {
   IFeeManagerCore private feeManager = IFeeManagerCore(address(8));
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
+  ILiquidityMiningManagerCore private liquidityMiningManager = ILiquidityMiningManagerCore(address(11));
   bytes private validationManagersStrategyData = abi.encodePacked("registryData");
   bytes private creationValidationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
+  bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
   string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   AaveV2StrategyFactory private factory;
@@ -72,6 +75,16 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
     );
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
+      abi.encode("")
+    );
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
+      abi.encode(liquidityMiningManager)
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
       abi.encode(validationManagerRegistry)
@@ -97,11 +110,23 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     AaveV2Strategy clone = factory.cloneStrategy(
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
 
@@ -120,12 +145,24 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     (AaveV2Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
 
@@ -144,12 +181,24 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     AaveV2Strategy clone = factory.cloneStrategyWithId(
       strategyId,
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -168,12 +217,24 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     AaveV2Strategy clone = factory.clone2Strategy(
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );
@@ -194,13 +255,25 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (AaveV2Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );
@@ -222,13 +295,25 @@ contract AaveV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, aToken, aaveV2Pool, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     AaveV2Strategy clone = factory.clone2StrategyWithId(
       strategyId,
       AaveV2StrategyData(
-        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        aToken,
+        aaveV2Pool,
+        creationValidationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );

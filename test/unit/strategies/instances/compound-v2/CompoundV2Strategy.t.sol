@@ -24,6 +24,7 @@ import {
   ICreationValidationManagerCore
 } from "src/interfaces/IValidationManagersRegistry.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
+import { ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import { Fees } from "src/types/Fees.sol";
 
 // solhint-disable-next-line max-states-count
@@ -39,10 +40,12 @@ contract CompoundV2StrategyTest is Test {
   IFeeManagerCore private feeManager = IFeeManagerCore(address(9));
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
+  ILiquidityMiningManagerCore private liquidityMiningManager = ILiquidityMiningManagerCore(address(11));
   bytes private validationManagersStrategyData = abi.encodePacked("registryData");
   bytes private validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
+  bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
   string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   CompoundV2StrategyFactory private factory;
@@ -74,6 +77,16 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
     );
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
+      ""
+    );
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
+      abi.encode(liquidityMiningManager)
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
       abi.encode(validationManagerRegistry)
@@ -99,11 +112,25 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     CompoundV2Strategy clone = factory.cloneStrategy(
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
 
@@ -122,12 +149,26 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     (CompoundV2Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
 
@@ -146,12 +187,26 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     CompoundV2Strategy clone = factory.cloneStrategyWithId(
       strategyId,
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -170,12 +225,26 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     CompoundV2Strategy clone = factory.clone2Strategy(
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );
@@ -196,13 +265,27 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (CompoundV2Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );
@@ -224,13 +307,27 @@ contract CompoundV2StrategyTest is Test {
       address(guardianManager),
       abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector, guardianData)
     );
+    vm.expectCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector, liquidityMiningData)
+    );
     address cloneAddress = factory.addressOfClone2(vault, globalRegistry, asset, cToken, comptroller, comp, salt);
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     CompoundV2Strategy clone = factory.clone2StrategyWithId(
       strategyId,
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, guardianData, feesData, description
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        description
       ),
       salt
     );

@@ -28,13 +28,19 @@ contract LidoSTETHStrategy is
     address owner,
     bytes calldata creationValidationData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     external
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init(creationValidationData, feesData, description_);
+    init({
+      creationValidationData: creationValidationData,
+      feesData: feesData,
+      liquidityMiningData: liquidityMiningData,
+      description_: description_
+    });
   }
 
   // slither-disable-next-line reentrancy-benign
@@ -42,18 +48,25 @@ contract LidoSTETHStrategy is
     StrategyId strategyId_,
     bytes calldata creationValidationData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     external
   {
     _strategyId = strategyId_;
-    init(creationValidationData, feesData, description_);
+    init({
+      creationValidationData: creationValidationData,
+      feesData: feesData,
+      liquidityMiningData: liquidityMiningData,
+      description_: description_
+    });
   }
 
   // slither-disable-next-line reentrancy-benign
   function init(
     bytes calldata creationValidationData,
     bytes calldata feesData,
+    bytes calldata liquidityMiningData,
     string calldata description_
   )
     public
@@ -61,6 +74,7 @@ contract LidoSTETHStrategy is
   {
     _creationValidation_init(creationValidationData);
     _fees_init(feesData);
+    _liquidity_mining_init(liquidityMiningData);
     description = description_;
   }
 
