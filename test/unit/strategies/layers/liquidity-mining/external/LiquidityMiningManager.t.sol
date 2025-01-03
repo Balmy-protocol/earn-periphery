@@ -33,9 +33,9 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
 
   function setUp() public virtual {
     manager = new LiquidityMiningManager(registry, superAdmin, CommonUtils.arrayOf(adminManageCampaigns));
-    reward.mint(address(adminManageCampaigns), type(uint256).max);
-    anotherReward.mint(address(adminManageCampaigns), type(uint256).max);
-    vm.deal(address(adminManageCampaigns), type(uint256).max);
+    reward.mint(address(adminManageCampaigns), 1e30);
+    anotherReward.mint(address(adminManageCampaigns), 1e30);
+    vm.deal(address(adminManageCampaigns), 1e30);
 
     vm.mockCall(
       address(registry),
@@ -63,6 +63,38 @@ contract LiquidityMiningManagerTest is PRBTest, StdCheats {
   function test_strategySelfConfigure_emptyBytes() public {
     // Nothing happens
     manager.strategySelfConfigure("");
+  }
+
+  function test_strategySelfConfigure() public {
+    uint256 amount = 100;
+    uint256 duration = 10;
+    reward.mint(address(strategy), amount);
+
+    vm.mockCall(
+      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector), abi.encode(strategyId)
+    );
+
+    vm.startPrank(address(strategy));
+    reward.approve(address(manager), amount);
+    vm.expectEmit();
+    emit CampaignSet(strategyId, address(reward), amount / duration, block.timestamp + duration);
+    manager.strategySelfConfigure(abi.encode(reward, amount, duration));
+    vm.stopPrank();
+    assertEq(reward.balanceOf(address(strategy)), 0);
+    assertEq(reward.balanceOf(address(manager)), amount);
+    assertEq(manager.rewards(strategyId), CommonUtils.arrayOf(address(reward)));
+  }
+
+  function test_strategySelfConfigure_revertWhen_callerHasNoId() public {
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector),
+      abi.encode(StrategyId.wrap(0))
+    );
+
+    vm.prank(address(strategy));
+    vm.expectRevert(abi.encodeWithSelector(LiquidityMiningManager.UnauthorizedCaller.selector));
+    manager.strategySelfConfigure(abi.encode(address(1), 10, 10));
   }
 
   function test_setCampaign_firstCampaign() public {
