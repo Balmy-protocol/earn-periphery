@@ -8,4 +8,6 @@ src/=src/
 @balmy/nft-permissions-test/=node_modules/@balmy/nft-permissions/test/
 @balmy/earn-core/=node_modules/@balmy/earn-core/src/
 @balmy/earn-core-test/=node_modules/@balmy/earn-core/test/
+@balmy/earn-core-script/=node_modules/@balmy/earn-core/script/
 @forta/firewall/=node_modules/@forta/firewall/src
+createx-forge/=node_modules/createx-forge
