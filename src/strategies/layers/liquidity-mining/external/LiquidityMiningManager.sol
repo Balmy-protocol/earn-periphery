@@ -149,6 +149,7 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     _addToCampaign(strategyId, reward, amount, duration);
   }
 
+  //slither-disable-start timestamp
   function _addToCampaign(StrategyId strategyId, address reward, uint256 amount, uint256 newDuration) internal {
     Campaign storage campaign = _campaigns[_key(strategyId, reward)];
     Campaign memory campaignMem = campaign;
@@ -165,7 +166,6 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
     _setCampaign(campaign, campaignMem, strategyId, reward, emissionPerSecond, duration);
   }
 
-  //slither-disable-start timestamp
   //slither-disable-next-line reentrancy-no-eth
   function _setCampaign(
     Campaign storage campaign,
