@@ -64,7 +64,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
-      assertEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i]);
+      assertAlmostEq(_balance(tokens[i], recipient) - recipientBalancesBefore[i], toWithdraw[i], 1);
       // Note: We use a delta of 1 because of rounding errors
       if (toWithdraw[i] > 0) {
         assertGte(balancesAfter[i] + 1, balancesBefore[i] - toWithdraw[i]);
