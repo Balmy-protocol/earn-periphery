@@ -108,5 +108,21 @@ interface ILiquidityMiningManager is ILiquidityMiningManagerCore {
     external
     payable;
 
+  /**
+   * @notice Adds funds to a campaign for a given strategy. If a campaign isn't set for the given
+   *         strategy and reward token, then it will create a new one
+   * @param strategyId The id of the strategy
+   * @param reward The reward token for the campaign
+   * @param amount The amount to add to the campaign
+   * @param duration The new duration of the campaign
+   */
+  function addToCampaign(StrategyId strategyId, address reward, uint256 amount, uint256 duration) external payable;
+
+  /**
+   * @notice Aborts the given campaign and returns all the unclaimed rewards to the recipient
+   * @param strategyId The id of the strategy
+   * @param reward The reward token for the campaign
+   * @param recipient The recipient
+   */
   function abortCampaign(StrategyId strategyId, address reward, address recipient) external;
 }
