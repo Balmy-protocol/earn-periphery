@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeploy } from "../../BaseDeploy.sol";
+import { BaseDeployPeriphery } from "../../BaseDeployPeriphery.sol";
+
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import {
@@ -14,25 +16,20 @@ import {
 } from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { DeployVault } from "../../DeployVault.sol";
 import { console2 } from "forge-std/console2.sol";
 
-contract BaseDeployStrategies is BaseDeploy {
-  function setUp() public override {
-    super.setUp();
-    // Assume vault is already deployed
-    DeployVault deployVault = new DeployVault();
-    deployVault.run();
-  }
-
+contract BaseDeployStrategies is BaseDeployPeriphery {
   function deployAaveV3Strategy(
     address aaveV3Pool,
     address aaveV3Rewards,
-    address aToken,
-    string memory symbol,
-    bool isProtected
+    IAToken aToken,
+    bytes32 tosGroup,
+    bytes32 signerGroup,
+    address[] memory guardians,
+    address[] memory judges
   )
     internal
+    returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
     address implementation = deployContract("V1_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
     AaveV3StrategyFactory aaveV3StrategyFactory = AaveV3StrategyFactory(
@@ -44,25 +41,22 @@ contract BaseDeployStrategies is BaseDeploy {
     address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
 
     bytes memory registryData = "";
-    bytes memory manager1Data = abi.encode(TOS_GROUP);
-    bytes memory manager2Data = "";
-    if (isProtected) {
-      // solhint-disable-next-line mi
-      manager2Data = abi.encode(SIGNER_GROUP);
-    }
+    bytes memory manager1Data = tosGroup != bytes32(0) ? abi.encode(tosGroup) : bytes("");
+    bytes memory manager2Data = signerGroup != bytes32(0) ? abi.encode(signerGroup) : bytes("");
 
     bytes[] memory validationManagersStrategyData = new bytes[](2);
     validationManagersStrategyData[0] = manager1Data;
     validationManagersStrategyData[1] = manager2Data;
     bytes memory creationValidationData = abi.encode(registryData, validationManagersStrategyData);
-    bytes memory guardianData = "";
+    bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory feesData = "";
-    (IEarnBalmyStrategy strategy, StrategyId strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
+    string memory symbol = ERC20(aToken.UNDERLYING_ASSET_ADDRESS()).symbol();
+    (strategy, strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
       admin,
       AaveV3StrategyData(
         IEarnVault(vault),
         IGlobalEarnRegistry(globalRegistry),
-        IAToken(aToken),
+        aToken,
         IAaveV3Pool(aaveV3Pool),
         IAaveV3Rewards(aaveV3Rewards),
         creationValidationData,
@@ -76,6 +70,7 @@ contract BaseDeployStrategies is BaseDeploy {
         )
       )
     );
+
     console2.log("Strategy:", address(strategy));
     console2.log("Strategy ID:", StrategyId.unwrap(strategyId));
   }
