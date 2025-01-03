@@ -3,7 +3,8 @@ pragma solidity >=0.8.22;
 
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import { IEarnStrategy, StrategyId, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { ILiquidityMiningManager, ILiquidityMiningManagerCore } from "src/interfaces/ILiquidityMiningManager.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
@@ -115,9 +116,19 @@ contract LiquidityMiningManager is ILiquidityMiningManager, AccessControlDefault
   }
 
   /// @inheritdoc ILiquidityMiningManagerCore
-  // solhint-disable-next-line no-empty-blocks
-  function strategySelfConfigure(bytes calldata data) external override {
-    // Does nothing, we want to have this function for future liquidity mining manager implementations
+  function strategySelfConfigure(bytes calldata data) external payable {
+    if (data.length == 0) {
+      return;
+    }
+
+    // Find the caller's strategy id
+    StrategyId strategyId = STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender));
+    if (strategyId == StrategyIdConstants.NO_STRATEGY) {
+      revert UnauthorizedCaller();
+    }
+
+    (address reward, uint256 amount, uint256 duration) = abi.decode(data, (address, uint256, uint256));
+    _addToCampaign(strategyId, reward, amount, duration);
   }
 
   /// @inheritdoc ILiquidityMiningManager

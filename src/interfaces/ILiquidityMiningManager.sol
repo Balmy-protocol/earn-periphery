@@ -64,7 +64,7 @@ interface ILiquidityMiningManagerCore {
   function withdrew(StrategyId strategyId, uint256 assetsWithdrawn) external;
 
   /// @notice Allows the strategy to call the manager, for self-configuration
-  function strategySelfConfigure(bytes calldata data) external;
+  function strategySelfConfigure(bytes calldata data) external payable;
 }
 
 /**
