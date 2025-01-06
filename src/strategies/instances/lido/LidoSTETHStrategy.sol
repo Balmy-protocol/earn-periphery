@@ -97,6 +97,7 @@ contract LidoSTETHStrategy is
     return IEarnVault(_getArgAddress(0));
   }
 
+  // slither-disable-next-line naming-convention
   function _fees_underlying_supportedWithdrawals()
     internal
     view
