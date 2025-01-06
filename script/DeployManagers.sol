@@ -36,7 +36,7 @@ contract DeployManagers is BaseDeployPeriphery {
     initialToS[0] = TOSManager.InitialToS({
       // solhint-disable-next-line max-line-length
       tos: "By selecting a Guardian, you acknowledge and accept the terms and conditions outlined in our Earn service's Terms of Use available at https://app.balmy.xyz/terms_of_use.pdf, including those related to the accuracy of data provided by third-party oracles and the actions taken by the Guardian in response to potential threats. Please note: Balmy does not guarantee the accuracy, completeness, or reliability of information from third-party yield providers. The Guardian operates on a best-effort basis to protect your funds in the event of a hack, and actions taken by the Guardian may impact the performance of your investment. Rescue fees may apply if funds are saved. Timing and decisions regarding redepositing or relocating funds are made in good faith, and Balmy is not liable for any financial losses resulting from these actions. Each Guardian may have its own specific terms of service, which will be presented to you before you engage with their service. By selecting a Guardian and proceeding, you agree to those terms. By signing this I acknowledge and agree to the above terms and conditions.",
-      group: TOS_GROUP
+      group: BALMY_GUARDIAN_TOS_GROUP
     });
     address tosManager = deployContract(
       "V1_TOS_MANAGER",
@@ -56,7 +56,7 @@ contract DeployManagers is BaseDeployPeriphery {
 
     SignatureBasedWhitelistManager.InitialSigner[] memory initialSigners =
       new SignatureBasedWhitelistManager.InitialSigner[](1);
-    initialSigners[0] = SignatureBasedWhitelistManager.InitialSigner({ signer: signer, group: SIGNER_GROUP });
+    initialSigners[0] = SignatureBasedWhitelistManager.InitialSigner({ signer: signer, group: DEFAULT_SIGNER_GROUP });
     address signatureBasedWhitelistManager = deployContract(
       "V1_SIGNATURE",
       abi.encodePacked(
