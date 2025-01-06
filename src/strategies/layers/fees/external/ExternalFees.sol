@@ -52,10 +52,10 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     (address[] memory allTokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     _updateFeesForWithdraw({ tokens: tokens, withdrawAmounts: toWithdraw, currentBalances: currentBalances, fees: fees });
     _fees_underlying_withdraw(0, tokens, toWithdraw, recipient);
-    IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_supportedWithdrawals();
     if (tokens.length != allTokens.length) {
       revert InvalidTokens();
     }
+    IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_supportedWithdrawals();
     for (uint256 i; i < tokens.length; ++i) {
       if (allTokens[i] != tokens[i]) {
         revert InvalidTokens();

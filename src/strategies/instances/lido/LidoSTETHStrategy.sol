@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
@@ -95,16 +95,5 @@ contract LidoSTETHStrategy is
 
   function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
-  }
-
-  // slither-disable-next-line naming-convention
-  function _fees_underlying_supportedWithdrawals()
-    internal
-    view
-    virtual
-    override
-    returns (IEarnStrategy.WithdrawalType[] memory)
-  {
-    return _connector_supportedWithdrawals();
   }
 }

@@ -330,6 +330,17 @@ abstract contract BaseDelayedStrategy is
   {
     return _connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
+  
+  // slither-disable-next-line naming-convention
+  function _fees_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _connector_supportedWithdrawals();
+  }
 
   ////////////////////////////////////////////////////////
   ///////////////////     VIRTUAL      ///////////////////
