@@ -77,7 +77,7 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-        judges: judges,
+      judges: judges,
       feesData: ""
     });
     deployAaveV3Strategy({
@@ -112,4 +112,3 @@ contract DeployStrategies is BaseDeployStrategies {
     });
   }
 }
-
