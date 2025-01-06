@@ -51,10 +51,11 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     Fees memory fees = _getFeesOrFailIfSenderCantWithdraw();
     (address[] memory allTokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     _updateFeesForWithdraw({ tokens: tokens, withdrawAmounts: toWithdraw, currentBalances: currentBalances, fees: fees });
-    IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_withdraw(0, tokens, toWithdraw, recipient);
+    _fees_underlying_withdraw(0, tokens, toWithdraw, recipient);
     if (tokens.length != allTokens.length) {
       revert InvalidTokens();
     }
+    IEarnStrategy.WithdrawalType[] memory types = _fees_underlying_supportedWithdrawals();
     for (uint256 i; i < tokens.length; ++i) {
       if (allTokens[i] != tokens[i]) {
         revert InvalidTokens();
@@ -191,14 +192,13 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     Fees memory fees = _getFees();
     if (fees.performanceFee == 0) {
       for (uint256 i; i < tokens.length; ++i) {
         _clearBalanceIfSet(tokens[i]);
       }
-      return _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+      _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
     }
 
     (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
@@ -215,7 +215,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
       });
     }
 
-    return _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+    _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   // slither-disable-next-line naming-convention,dead-code

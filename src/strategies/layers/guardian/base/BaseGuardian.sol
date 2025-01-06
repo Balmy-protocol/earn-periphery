@@ -36,8 +36,7 @@ abstract contract BaseGuardian {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory);
+    virtual;
   function _guardian_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -53,6 +52,11 @@ abstract contract BaseGuardian {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
+  function _guardian_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    returns (IEarnStrategy.WithdrawalType[] memory);
   function _guardian_underlying_migrateToNewStrategy(
     IEarnStrategy newStrategy,
     bytes calldata migrationData
@@ -77,8 +81,7 @@ abstract contract BaseGuardian {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory types);
+    virtual;
   function _guardian_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,

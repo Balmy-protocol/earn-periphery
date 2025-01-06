@@ -3,7 +3,8 @@ pragma solidity >=0.8.22;
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Test } from "forge-std/Test.sol";
-import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import {
   LidoSTETHStrategyFactory,
@@ -38,7 +39,6 @@ contract LidoSTETHStrategyTest is Test {
   bytes private creationValidationData = abi.encode(validationManagersStrategyData, new bytes[](0));
   bytes private feesData = abi.encodePacked("feesData");
   bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
-  string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   LidoSTETHStrategyFactory private factory;
 
@@ -97,9 +97,7 @@ contract LidoSTETHStrategyTest is Test {
     vm.expectEmit(false, true, false, false);
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     LidoSTETHStrategy clone = factory.cloneStrategy(
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      )
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData)
     );
 
     _assertStrategyWasDeployedCorrectly(clone);
@@ -121,9 +119,7 @@ contract LidoSTETHStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      )
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData)
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId_);
@@ -145,9 +141,7 @@ contract LidoSTETHStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), strategyId);
     LidoSTETHStrategy clone = factory.cloneStrategyWithId(
       strategyId,
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      )
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData)
     );
 
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -171,10 +165,7 @@ contract LidoSTETHStrategyTest is Test {
     vm.expectEmit();
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     LidoSTETHStrategy clone = factory.clone2Strategy(
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      ),
-      salt
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData), salt
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone);
@@ -198,9 +189,7 @@ contract LidoSTETHStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      ),
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData),
       salt
     );
 
@@ -226,9 +215,7 @@ contract LidoSTETHStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), strategyId);
     (LidoSTETHStrategy clone) = factory.clone2StrategyWithId(
       strategyId,
-      LidoSTETHStrategyData(
-        vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData, description
-      ),
+      LidoSTETHStrategyData(vault, globalRegistry, adapter, creationValidationData, feesData, liquidityMiningData),
       salt
     );
 
@@ -246,7 +233,6 @@ contract LidoSTETHStrategyTest is Test {
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(address(clone.vault()), address(vault));
     assertEq(address(clone.delayedWithdrawalAdapter(Token.NATIVE_TOKEN)), address(adapter));
-    assertEq(clone.description(), description);
     _assertCanReceiveNative(clone);
   }
 

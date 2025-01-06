@@ -13,15 +13,9 @@ abstract contract BaseConnector {
   function _connector_asset() internal view virtual returns (address);
 
   function _connector_allTokens() internal view virtual returns (address[] memory tokens);
-  function _connector_isDepositTokenSupported(address depositToken) internal view virtual returns (bool);
   function _connector_supportedDepositTokens() internal view virtual returns (address[] memory supported);
   function _connector_maxDeposit(address depositToken) internal view virtual returns (uint256);
   function _connector_supportedWithdrawals() internal view virtual returns (IEarnStrategy.WithdrawalType[] memory);
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    view
-    virtual
-    returns (bool);
   function _connector_supportedSpecialWithdrawals()
     internal
     view
@@ -52,8 +46,7 @@ abstract contract BaseConnector {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory);
+    virtual;
   function _connector_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,

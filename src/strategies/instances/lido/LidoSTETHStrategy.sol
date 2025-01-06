@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IDelayedWithdrawalAdapter } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
@@ -20,27 +20,18 @@ contract LidoSTETHStrategy is
   ExternalFees,
   RegistryBasedCreationValidation
 {
-  /// @inheritdoc IEarnStrategy
-  string public description;
-
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init({
-      creationValidationData: creationValidationData,
-      feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
-    });
+    init({ creationValidationData: creationValidationData, feesData: feesData, liquidityMiningData: liquidityMiningData });
   }
 
   // slither-disable-next-line reentrancy-benign
@@ -48,26 +39,19 @@ contract LidoSTETHStrategy is
     StrategyId strategyId_,
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
   {
     _strategyId = strategyId_;
-    init({
-      creationValidationData: creationValidationData,
-      feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
-    });
+    init({ creationValidationData: creationValidationData, feesData: feesData, liquidityMiningData: liquidityMiningData });
   }
 
   // slither-disable-next-line reentrancy-benign
   function init(
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     public
     initializer
@@ -75,7 +59,6 @@ contract LidoSTETHStrategy is
     _creationValidation_init(creationValidationData);
     _fees_init(feesData);
     _liquidity_mining_init(liquidityMiningData);
-    description = description_;
   }
 
   // Immutable params:

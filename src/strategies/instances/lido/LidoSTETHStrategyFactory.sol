@@ -15,7 +15,6 @@ struct LidoSTETHStrategyData {
   bytes creationValidationData;
   bytes feesData;
   bytes liquidityMiningData;
-  string description;
 }
 
 contract LidoSTETHStrategyFactory is BaseStrategyFactory {
@@ -29,8 +28,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     clone.init({
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -48,8 +46,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
       owner: owner,
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -70,8 +67,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
       strategyId_: strategyId,
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -89,8 +85,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
     clone.init({
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -109,8 +104,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
       owner: owner,
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -132,8 +126,7 @@ contract LidoSTETHStrategyFactory is BaseStrategyFactory {
       strategyId_: strategyId,
       creationValidationData: strategyData.creationValidationData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 

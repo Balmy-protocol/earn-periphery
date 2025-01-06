@@ -36,8 +36,7 @@ abstract contract BaseLiquidityMining {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory types);
+    virtual;
   function _liquidity_mining_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -75,8 +74,7 @@ abstract contract BaseLiquidityMining {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory types);
+    virtual;
   function _liquidity_mining_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,

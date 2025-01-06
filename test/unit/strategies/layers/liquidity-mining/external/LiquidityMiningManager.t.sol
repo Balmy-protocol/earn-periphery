@@ -9,9 +9,9 @@ import {
   LiquidityMiningManager,
   ILiquidityMiningManager,
   StrategyId,
-  IEarnStrategyRegistry,
-  IEarnStrategy
+  IEarnStrategyRegistry
 } from "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";

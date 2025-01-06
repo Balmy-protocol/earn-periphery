@@ -34,9 +34,9 @@
   version "0.0.2"
   resolved "https://codeload.github.com/balmy-protocol/call-simulation/tar.gz/a510c80c7e81480eb5806422101d199a39662024"
 
-"@balmy/earn-core@github:balmy-protocol/earn-core#33385c0ddcf13ad8b035fda3f45c307bdc9e6528":
+"@balmy/earn-core@github:balmy-protocol/earn-core#750e659691e3c02160ebf55b0b2eb80b1fc10b42":
   version "0.0.0"
-  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/33385c0ddcf13ad8b035fda3f45c307bdc9e6528"
+  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/750e659691e3c02160ebf55b0b2eb80b1fc10b42"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"

@@ -62,7 +62,7 @@ contract LidoSTETHDelayedWithdrawalAdapterTest is PRBTest {
     globalRegistry.setAddress(DELAYED_WITHDRAWAL_MANAGER, address(new DelayedWithdrawalManager(vault)));
     lidoSTETHDelayedWithdrawalAdapter = new LidoSTETHDelayedWithdrawalAdapter(globalRegistry, queue);
 
-    strategy = new LidoSTETHStrategyMock(vault, "LidoSTETHStrategy", lidoSTETHDelayedWithdrawalAdapter);
+    strategy = new LidoSTETHStrategyMock(vault, lidoSTETHDelayedWithdrawalAdapter);
     strategyId = strategy.registerStrategy(owner);
 
     (position,) = vault.createPosition{ value: amountToDeposit1 }(

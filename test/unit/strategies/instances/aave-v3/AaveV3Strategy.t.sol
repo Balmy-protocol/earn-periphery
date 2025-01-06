@@ -3,7 +3,8 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import {
   AaveV3StrategyFactory,
   AaveV3Strategy,
@@ -46,7 +47,6 @@ contract AaveV3StrategyTest is Test {
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
-  string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   AaveV3StrategyFactory private factory;
 
@@ -128,8 +128,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
 
@@ -165,8 +164,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
 
@@ -202,8 +200,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -239,8 +236,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -279,8 +275,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -320,8 +315,7 @@ contract AaveV3StrategyTest is Test {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -342,7 +336,6 @@ contract AaveV3StrategyTest is Test {
     assertEq(address(clone.rewards()), address(aaveV3Rewards));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
-    assertEq(clone.description(), description);
   }
 }
 

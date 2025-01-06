@@ -66,7 +66,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
+  function _isDepositTokenSupported(address depositToken) private view returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(cToken());
   }
 
@@ -79,7 +79,7 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
-    if (!_connector_isDepositTokenSupported(depositToken)) {
+    if (!_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
     return comptroller().mintGuardianPaused(cToken()) ? 0 : type(uint256).max;
@@ -94,18 +94,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return new IEarnStrategy.WithdrawalType[](2); // IMMEDIATE
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    view
-    virtual
-    override
-    returns (bool)
-  {
-    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
-      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -203,7 +191,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     internal
     virtual
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
@@ -228,8 +215,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       }
       comp_.safeTransfer(recipient, rewardAmount);
     }
-
-    return _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

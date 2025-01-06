@@ -6,7 +6,6 @@ import {
   SpecialWithdrawalCode,
   StrategyId,
   IEarnVault,
-  IEarnStrategyRegistry,
   IERC165
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
@@ -17,8 +16,6 @@ import { LidoSTETHConnector } from "src/strategies/layers/connector/lido/LidoSTE
 contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   /// @inheritdoc IEarnStrategy
   IEarnVault public immutable vault;
-  /// @inheritdoc IEarnStrategy
-  string public description;
 
   // slither-disable-next-line naming-convention
   IDelayedWithdrawalAdapter internal immutable __delayedWithdrawalAdapter;
@@ -26,25 +23,18 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   constructor(
     // General
     IEarnVault vault_,
-    string memory description_,
     IDelayedWithdrawalAdapter delayedWithdrawalAdapter_
   )
     initializer
   {
     vault = vault_;
-    description = description_;
     __delayedWithdrawalAdapter = delayedWithdrawalAdapter_;
   }
 
   receive() external payable { }
 
   function registerStrategy(address owner) external returns (StrategyId) {
-    return registry().registerStrategy(owner);
-  }
-
-  /// @inheritdoc IEarnStrategy
-  function registry() public view returns (IEarnStrategyRegistry) {
-    return vault.STRATEGY_REGISTRY();
+    return vault.STRATEGY_REGISTRY().registerStrategy(owner);
   }
 
   /// @inheritdoc IERC165
@@ -64,11 +54,6 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IEarnStrategy
-  function isDepositTokenSupported(address depositToken) external view returns (bool) {
-    return _connector_isDepositTokenSupported(depositToken);
-  }
-
-  /// @inheritdoc IEarnStrategy
   function supportedDepositTokens() external pure returns (address[] memory) {
     return _connector_supportedDepositTokens();
   }
@@ -81,11 +66,6 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   /// @inheritdoc IEarnStrategy
   function supportedWithdrawals() external view returns (WithdrawalType[] memory) {
     return _connector_supportedWithdrawals();
-  }
-
-  /// @inheritdoc IEarnStrategy
-  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external pure returns (bool) {
-    return _connector_isSpecialWithdrawalSupported(withdrawalCode);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -130,7 +110,6 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
     address recipient
   )
     external
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }

@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { ERC4626Connector } from "../../layers/connector/ERC4626Connector.sol";
@@ -22,17 +22,13 @@ contract ERC4626Strategy is
   ExternalGuardian,
   RegistryBasedCreationValidation
 {
-  /// @inheritdoc IEarnStrategy
-  string public description;
-
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
     returns (StrategyId strategyId_)
@@ -42,8 +38,7 @@ contract ERC4626Strategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
+      liquidityMiningData: liquidityMiningData
     });
   }
 
@@ -53,8 +48,7 @@ contract ERC4626Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
   {
@@ -63,8 +57,7 @@ contract ERC4626Strategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
+      liquidityMiningData: liquidityMiningData
     });
   }
 
@@ -73,8 +66,7 @@ contract ERC4626Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     public
     initializer
@@ -84,7 +76,6 @@ contract ERC4626Strategy is
     _guardian_init(guardianData);
     _fees_init(feesData);
     _liquidity_mining_init(liquidityMiningData);
-    description = description_;
   }
 
   function strategyId()

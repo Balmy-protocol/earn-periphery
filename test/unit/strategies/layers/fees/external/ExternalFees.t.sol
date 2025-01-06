@@ -509,9 +509,8 @@ contract ExternalFeesInstance is ExternalFees {
     address recipient
   )
     external
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+    _fees_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function specialWithdraw(
@@ -585,15 +584,10 @@ contract ExternalFeesInstance is ExternalFees {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory withdrawalTypes)
   {
     _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
     for (uint256 i = 0; i < tokens.length; i++) {
       _balances[tokens[i]] -= toWithdraw[i];
-    }
-    withdrawalTypes = new IEarnStrategy.WithdrawalType[](tokens.length);
-    for (uint256 i = 0; i < tokens.length; i++) {
-      withdrawalTypes[i] = _types[tokens[i]];
     }
   }
 
@@ -630,5 +624,18 @@ contract ExternalFeesInstance is ExternalFees {
 
   function _fees_underlying_tokens() internal view virtual override returns (address[] memory tokens) {
     return _tokens;
+  }
+
+  function _fees_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    types = new IEarnStrategy.WithdrawalType[](_tokens.length);
+    for (uint256 i = 0; i < _tokens.length; i++) {
+      types[i] = _types[_tokens[i]];
+    }
   }
 }

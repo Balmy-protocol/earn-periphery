@@ -125,7 +125,7 @@ contract EarnVaultCompanion is BaseCompanion, IERC1271 {
     external
     payable
     verifyPermission(vault, positionId, WITHDRAW_PERMISSION)
-    returns (uint256[] memory, IEarnStrategy.WithdrawalType[] memory)
+    returns (uint256[] memory)
   {
     // slither-disable-next-line unused-return (not sure why this is necessary)
     return vault.withdraw({

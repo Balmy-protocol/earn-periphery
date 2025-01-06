@@ -39,14 +39,6 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     assertEq(depositTokens[0], connector.asset());
   }
 
-  function testFork_isDepositTokenSupported() public {
-    address[] memory depositTokens = connector.supportedDepositTokens();
-    for (uint256 i; i < depositTokens.length; ++i) {
-      assertTrue(connector.isDepositTokenSupported(depositTokens[i]));
-    }
-    assertFalse(connector.isDepositTokenSupported(address(1)));
-  }
-
   function testFork_maxDeposit() public {
     address[] memory depositTokens = connector.supportedDepositTokens();
     for (uint256 i; i < depositTokens.length; ++i) {
@@ -87,14 +79,6 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     for (uint256 i; i < withdrawable.length; i++) {
       assertLte(withdrawable[i], balances[i]);
     }
-  }
-
-  function testFork_isSpecialWithdrawalSupported() public {
-    SpecialWithdrawalCode[] memory supportedCodes = connector.supportedSpecialWithdrawals();
-    for (uint256 i; i < supportedCodes.length; ++i) {
-      assertTrue(connector.isSpecialWithdrawalSupported(supportedCodes[i]));
-    }
-    assertFalse(connector.isSpecialWithdrawalSupported(SpecialWithdrawalCode.wrap(type(uint256).max)));
   }
 
   function testFork_specialWithdraw_RevertWhen_InvalidCode() public {

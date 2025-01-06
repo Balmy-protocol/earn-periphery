@@ -4,7 +4,8 @@ pragma solidity >=0.8.22;
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import {
   CompoundV2StrategyFactory,
   CompoundV2Strategy,
@@ -46,7 +47,6 @@ contract CompoundV2StrategyTest is Test {
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
-  string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   CompoundV2StrategyFactory private factory;
 
@@ -129,8 +129,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
 
@@ -167,8 +166,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
 
@@ -205,8 +203,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -243,8 +240,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -284,8 +280,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -326,8 +321,7 @@ contract CompoundV2StrategyTest is Test {
         validationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        description
+        liquidityMiningData
       ),
       salt
     );
@@ -347,7 +341,6 @@ contract CompoundV2StrategyTest is Test {
     assertEq(address(clone.comp()), address(comp));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
-    assertEq(clone.description(), description);
     _assertCanReceiveNative(clone);
   }
 

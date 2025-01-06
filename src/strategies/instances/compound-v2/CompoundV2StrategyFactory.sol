@@ -19,7 +19,6 @@ struct CompoundV2StrategyData {
   bytes guardianData;
   bytes feesData;
   bytes liquidityMiningData;
-  string description;
 }
 
 contract CompoundV2StrategyFactory is BaseStrategyFactory {
@@ -34,8 +33,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -54,8 +52,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -77,8 +74,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -97,8 +93,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -118,8 +113,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -142,8 +136,7 @@ contract CompoundV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 

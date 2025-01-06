@@ -42,7 +42,6 @@ contract ERC4626StrategyTest is Test {
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
-  string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   ERC4626StrategyFactory private factory;
 
@@ -116,7 +115,7 @@ contract ERC4626StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     ERC4626Strategy clone = factory.cloneStrategy(
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       )
     );
 
@@ -144,7 +143,7 @@ contract ERC4626StrategyTest is Test {
     (ERC4626Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       )
     );
 
@@ -172,7 +171,7 @@ contract ERC4626StrategyTest is Test {
     ERC4626Strategy clone = factory.cloneStrategyWithId(
       strategyId,
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       )
     );
 
@@ -201,7 +200,7 @@ contract ERC4626StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     ERC4626Strategy clone = factory.clone2Strategy(
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -232,7 +231,7 @@ contract ERC4626StrategyTest is Test {
     (ERC4626Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -264,7 +263,7 @@ contract ERC4626StrategyTest is Test {
     ERC4626Strategy clone = factory.clone2StrategyWithId(
       strategyId,
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, description
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -282,7 +281,6 @@ contract ERC4626StrategyTest is Test {
     assertEq(address(clone.ERC4626Vault()), address(erc4626Vault));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
-    assertEq(clone.description(), description);
   }
 }
 
