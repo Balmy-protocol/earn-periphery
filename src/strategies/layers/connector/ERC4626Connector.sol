@@ -54,11 +54,6 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
-    return depositToken == _connector_asset() || depositToken == address(ERC4626Vault());
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedDepositTokens() internal view virtual override returns (address[] memory supported) {
     supported = new address[](2);
     supported[0] = _connector_asset();
@@ -90,18 +85,6 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     tokens[0] = _connector_asset();
     balances = new uint256[](1);
     balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    view
-    virtual
-    override
-    returns (bool)
-  {
-    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
-      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code

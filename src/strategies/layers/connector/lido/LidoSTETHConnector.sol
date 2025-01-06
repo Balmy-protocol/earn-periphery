@@ -55,7 +55,7 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
+  function _isDepositTokenSupported(address depositToken) private pure returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(_stETH);
   }
 
@@ -90,22 +90,11 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_maxDeposit(address depositToken) internal view override returns (uint256) {
-    if (!_connector_isDepositTokenSupported(depositToken)) {
+  function _connector_maxDeposit(address depositToken) internal pure override returns (uint256) {
+    if (!_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
     return type(uint256).max;
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    pure
-    override
-    returns (bool)
-  {
-    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
-      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code

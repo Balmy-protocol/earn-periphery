@@ -18,10 +18,6 @@ abstract contract BaseConnectorInstance is BaseConnector {
     return _connector_allTokens();
   }
 
-  function isDepositTokenSupported(address depositToken) external view returns (bool) {
-    return _connector_isDepositTokenSupported(depositToken);
-  }
-
   function supportedDepositTokens() external view returns (address[] memory supported) {
     return _connector_supportedDepositTokens();
   }
@@ -32,10 +28,6 @@ abstract contract BaseConnectorInstance is BaseConnector {
 
   function supportedWithdrawals() external view returns (IEarnStrategy.WithdrawalType[] memory) {
     return _connector_supportedWithdrawals();
-  }
-
-  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external view returns (bool) {
-    return _connector_isSpecialWithdrawalSupported(withdrawalCode);
   }
 
   function supportedSpecialWithdrawals() external view returns (SpecialWithdrawalCode[] memory codes) {

@@ -56,7 +56,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view override returns (bool) {
+  function _isDepositTokenSupported(address depositToken) private view returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(aToken());
   }
 
@@ -69,7 +69,7 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view override returns (uint256) {
-    if (!_connector_isDepositTokenSupported(depositToken)) {
+    if (!_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
     return type(uint256).max;
@@ -78,17 +78,6 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedWithdrawals() internal pure override returns (IEarnStrategy.WithdrawalType[] memory) {
     return new IEarnStrategy.WithdrawalType[](1); // IMMEDIATE
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    pure
-    override
-    returns (bool)
-  {
-    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
-      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code

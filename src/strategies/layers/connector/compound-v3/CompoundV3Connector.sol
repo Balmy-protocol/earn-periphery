@@ -66,7 +66,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_isDepositTokenSupported(address depositToken) internal view virtual override returns (bool) {
+  function _isDepositTokenSupported(address depositToken) private view returns (bool) {
     return depositToken == _connector_asset() || depositToken == address(cToken());
   }
 
@@ -79,7 +79,7 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_maxDeposit(address depositToken) internal view virtual override returns (uint256) {
-    if (!_connector_isDepositTokenSupported(depositToken)) {
+    if (!_isDepositTokenSupported(depositToken)) {
       revert InvalidDepositToken(depositToken);
     }
     return type(uint256).max;
@@ -94,18 +94,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return new IEarnStrategy.WithdrawalType[](_connector_allTokens().length);
-  }
-
-  // slither-disable-next-line naming-convention,dead-code
-  function _connector_isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode)
-    internal
-    view
-    virtual
-    override
-    returns (bool)
-  {
-    return withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT
-      || withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_ASSET_AMOUNT;
   }
 
   // slither-disable-next-line naming-convention,dead-code
