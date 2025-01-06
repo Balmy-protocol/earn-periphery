@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import { BaseDeployStrategies, IAToken, StrategyId } from "../BaseDeployStrategies.sol";
-import { FeeManager, Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
+import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external virtual {
@@ -21,7 +21,6 @@ contract DeployStrategies is BaseDeployStrategies {
     judges[0] = getMsig();
 
     StrategyId strategyId;
-    
     // Tier 0 = default fees
     // USDC
     deployAaveV3Strategy({

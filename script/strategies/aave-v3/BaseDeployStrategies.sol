@@ -15,7 +15,6 @@ import {
 } from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-import { Fees } from "src/interfaces/IFeeManager.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract BaseDeployStrategies is BaseDeployPeriphery {
