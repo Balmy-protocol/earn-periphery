@@ -33,7 +33,8 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: ""
     });
 
     // WETH
@@ -44,7 +45,8 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: ""
     });
 
     // cbBTC
@@ -55,11 +57,12 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: ""
     });
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
-    Fees memory tier1Fees = Fees(0, 0, 750, 375);
+    Fees memory tier1Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 750, rescueFee: 375 });
 
     // USDC
     (, strategyId) = deployAaveV3Strategy({
@@ -69,9 +72,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier1Fees)
     });
-    //feeManager.updateFees(strategyId, tier1Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -81,9 +84,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier1Fees)
     });
-    //feeManager.updateFees(strategyId, tier1Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -93,12 +96,12 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier1Fees)
     });
-    //feeManager.updateFees(strategyId, tier1Fees);
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
-    Fees memory tier2Fees = Fees(0, 0, 500, 250);
+    Fees memory tier2Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 500, rescueFee: 250 });
     // USDC
     (, strategyId) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -107,9 +110,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier2Fees)
     });
-    //feeManager.updateFees(strategyId, tier2Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -119,9 +122,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier2Fees)
     });
-    //feeManager.updateFees(strategyId, tier2Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -131,12 +134,12 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier2Fees)
     });
-    //feeManager.updateFees(strategyId, tier2Fees);
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
-    Fees memory tier3Fees = Fees(0, 0, 250, 100);
+    Fees memory tier3Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 250, rescueFee: 100 });
 
     // USDC
     (, strategyId) = deployAaveV3Strategy({
@@ -146,9 +149,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier3Fees)
     });
-    //feeManager.updateFees(strategyId, tier3Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -158,9 +161,9 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier3Fees)
     });
-    //feeManager.updateFees(strategyId, tier3Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -170,8 +173,8 @@ contract DeployStrategies is BaseDeployStrategies {
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
-      judges: judges
+      judges: judges,
+      feesData: abi.encode(tier3Fees)
     });
-    //feeManager.updateFees(strategyId, tier3Fees);
   }
 }

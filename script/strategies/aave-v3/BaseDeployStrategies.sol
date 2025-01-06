@@ -15,6 +15,7 @@ import {
 } from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { Fees } from "src/interfaces/IFeeManager.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract BaseDeployStrategies is BaseDeployPeriphery {
@@ -25,7 +26,8 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes32 tosGroup,
     bytes32 signerGroup,
     address[] memory guardians,
-    address[] memory judges
+    address[] memory judges,
+    bytes memory feesData
   )
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
@@ -52,7 +54,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     validationManagersStrategyData[1] = manager2Data;
     bytes memory creationValidationData = abi.encode(registryData, validationManagersStrategyData);
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
-    bytes memory feesData = "";
     bytes memory liquidityMiningData = "";
     (strategy, strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
       admin,
