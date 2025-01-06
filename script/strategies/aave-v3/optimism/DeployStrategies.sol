@@ -4,9 +4,13 @@ pragma solidity ^0.8.13;
 import { BaseDeployStrategies, IAToken } from "../BaseDeployStrategies.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
-  function run() external {
+  function run() external virtual {
     vm.startBroadcast();
+    deployStrategies();
+    vm.stopBroadcast();
+  }
 
+  function deployStrategies() internal {
     address aaveV3Pool = 0x794a61358D6845594F94dc1DB02A252b5b4814aD;
     address aaveV3Rewards = 0x929EC64c34a17401F460460D4B9390518E5B473e;
 
@@ -97,7 +101,5 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-
-    vm.stopBroadcast();
   }
 }

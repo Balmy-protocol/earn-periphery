@@ -31,13 +31,17 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
     address implementation = deployContract("V1_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
+    console2.log("Implementation deployed: ", implementation);
     AaveV3StrategyFactory aaveV3StrategyFactory = AaveV3StrategyFactory(
       deployContract(
         "V1_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
       )
     );
+    console2.log("Factory deployed: ", address(aaveV3StrategyFactory));
     address vault = getDeployedAddress("V1_VAULT");
+    console2.log("Vault deployed: ", vault);
     address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
+    console2.log("Global registry deployed: ", globalRegistry);
 
     bytes memory registryData = "";
     bytes memory manager1Data = tosGroup != bytes32(0) ? abi.encode(tosGroup) : bytes("");

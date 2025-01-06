@@ -85,7 +85,13 @@ contract DeployManagers is BaseDeployPeriphery {
     address feeManager = deployContract(
       "V1_FEE_MANAGER",
       abi.encodePacked(
-        type(FeeManager).creationCode, abi.encode(admin, initialAdmins, initialAdmins, Fees(0, 0, 1000, 500))
+        type(FeeManager).creationCode,
+        abi.encode(
+          admin,
+          initialAdmins,
+          initialAdmins,
+          Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 1000, rescueFee: 500 })
+        )
       )
     );
     console2.log("Fee manager:", feeManager);
@@ -93,7 +99,7 @@ contract DeployManagers is BaseDeployPeriphery {
       "V1_GUARDIAN_MANAGER",
       abi.encodePacked(
         type(GuardianManager).creationCode,
-        abi.encode(strategyRegistry, admin, initialAdmins, initialAdmins, initialAdmins, initialAdmins)
+        abi.encode(strategyRegistry, admin, new address[](0), initialAdmins, initialAdmins, initialAdmins)
       )
     );
     console2.log("Guardian manager:", guardianManager);

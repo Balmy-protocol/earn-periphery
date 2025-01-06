@@ -16,9 +16,6 @@ contract DeployCompanion is BaseDeployPeriphery {
   function deployCompanion() public returns (address) {
     address firewallRouter = getDeployedAddress("V1_FROUTER");
 
-    address[] memory initialAdmins = new address[](1);
-    initialAdmins[0] = admin;
-
     address companion = deployContract(
       "V1_COMPANION",
       abi.encodePacked(

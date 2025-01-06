@@ -5,8 +5,13 @@ import { BaseDeployStrategies, IAToken, StrategyId } from "../BaseDeployStrategi
 import { FeeManager, Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
-  function run() external {
+  function run() external virtual {
     vm.startBroadcast();
+    deployStrategies();
+    vm.stopBroadcast();
+  }
+
+  function deployStrategies() internal {
     address aaveV3Pool = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5;
     address aaveV3Rewards = 0xf9cc4F0D883F1a1eb2c253bdb46c254Ca51E1F44;
     address[] memory guardians = new address[](1);
@@ -66,7 +71,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier1Fees);
+    //feeManager.updateFees(strategyId, tier1Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -78,7 +83,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier1Fees);
+    //feeManager.updateFees(strategyId, tier1Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -90,7 +95,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier1Fees);
+    //feeManager.updateFees(strategyId, tier1Fees);
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
     Fees memory tier2Fees = Fees(0, 0, 500, 250);
@@ -104,7 +109,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier2Fees);
+    //feeManager.updateFees(strategyId, tier2Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -116,7 +121,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier2Fees);
+    //feeManager.updateFees(strategyId, tier2Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -128,7 +133,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier2Fees);
+    //feeManager.updateFees(strategyId, tier2Fees);
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
     Fees memory tier3Fees = Fees(0, 0, 250, 100);
@@ -143,7 +148,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier3Fees);
+    //feeManager.updateFees(strategyId, tier3Fees);
 
     // WETH
     (, strategyId) = deployAaveV3Strategy({
@@ -155,7 +160,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier3Fees);
+    //feeManager.updateFees(strategyId, tier3Fees);
 
     // cbBTC
     (, strategyId) = deployAaveV3Strategy({
@@ -167,8 +172,6 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-    feeManager.updateFees(strategyId, tier3Fees);
-
-    vm.stopBroadcast();
+    //feeManager.updateFees(strategyId, tier3Fees);
   }
 }
