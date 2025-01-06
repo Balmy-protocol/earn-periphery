@@ -3,8 +3,10 @@ pragma solidity >=0.8.22;
 
 import { AccessControlDefaultAdminRules } from
   "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
-import { IFeeManager, IFeeManagerCore, StrategyId } from "src/interfaces/IFeeManager.sol";
+import { IFeeManager, IFeeManagerCore, StrategyId, IEarnStrategyRegistry } from "src/interfaces/IFeeManager.sol";
 import { Fees } from "src/types/Fees.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 
 struct StrategyFees {
   bool isSet;
@@ -12,6 +14,8 @@ struct StrategyFees {
 }
 
 contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
+  error UnauthorizedCaller();
+
   /// @inheritdoc IFeeManager
   bytes32 public constant MANAGE_FEES_ROLE = keccak256("MANAGE_FEES_ROLE");
 
@@ -21,10 +25,15 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   /// @inheritdoc IFeeManager
   uint16 public constant MAX_FEE = 5000; // 50%
 
+  /// @inheritdoc IFeeManager
+  // slither-disable-next-line naming-convention
+  IEarnStrategyRegistry public immutable STRATEGY_REGISTRY;
+
   mapping(StrategyId strategy => StrategyFees fees) internal _fees;
   Fees internal _defaultFees;
 
   constructor(
+    IEarnStrategyRegistry registry,
     address superAdmin,
     address[] memory initialManageFeeAdmins,
     address[] memory initialWithdrawFeeAdmins,
@@ -32,6 +41,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   )
     AccessControlDefaultAdminRules(3 days, superAdmin)
   {
+    STRATEGY_REGISTRY = registry;
     _assignRoles(MANAGE_FEES_ROLE, initialManageFeeAdmins);
     _assignRoles(WITHDRAW_FEES_ROLE, initialWithdrawFeeAdmins);
     _setDefaultFees(initialDefaultFees);
@@ -40,7 +50,19 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
   /// @inheritdoc IFeeManagerCore
   // solhint-disable-next-line no-empty-blocks
   function strategySelfConfigure(bytes calldata data) external override {
-    // Does nothing, we we want to have this function for future fee manager implementations
+    if (data.length == 0) {
+      return;
+    }
+
+    // Find the caller's strategy id
+    StrategyId strategyId = STRATEGY_REGISTRY.assignedId(IEarnStrategy(msg.sender));
+    if (strategyId == StrategyIdConstants.NO_STRATEGY) {
+      revert UnauthorizedCaller();
+    }
+
+    // Decode the fees from the data and assign it to the strategy
+    Fees memory newFees = abi.decode(data, (Fees));
+    _updateFees(strategyId, newFees);
   }
 
   /// @inheritdoc IFeeManagerCore
@@ -54,9 +76,7 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
 
   /// @inheritdoc IFeeManager
   function updateFees(StrategyId strategyId, Fees calldata newFees) external override onlyRole(MANAGE_FEES_ROLE) {
-    _revertIfNewFeesGreaterThanMaximum(newFees);
-    _fees[strategyId] = StrategyFees(true, newFees);
-    emit StrategyFeesChanged(strategyId, newFees);
+    _updateFees(strategyId, newFees);
   }
 
   /// @inheritdoc IFeeManager
@@ -103,5 +123,11 @@ contract FeeManager is IFeeManager, AccessControlDefaultAdminRules {
     ) {
       revert FeesGreaterThanMaximum();
     }
+  }
+
+  function _updateFees(StrategyId strategyId, Fees memory newFees) internal {
+    _revertIfNewFeesGreaterThanMaximum(newFees);
+    _fees[strategyId] = StrategyFees(true, newFees);
+    emit StrategyFeesChanged(strategyId, newFees);
   }
 }
