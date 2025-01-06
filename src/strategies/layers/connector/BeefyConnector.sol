@@ -111,7 +111,7 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
     tokens = new address[](1);
     balances = new uint256[](1);
     tokens[0] = _connector_asset();
-    balances[0] = _convertSharesToAssets(vault, vault.balanceOf(address(this)));
+    balances[0] = _convertSharesToAssets(vault, vault.balanceOf(address(this)), Math.Rounding.Floor);
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -134,10 +134,10 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
       uint256 balance = vault.balanceOf(address(this));
       vault.deposit(depositAmount);
       uint256 sharesDeposited = vault.balanceOf(address(this)) - balance;
-      return _convertSharesToAssets(vault, sharesDeposited);
+      return _convertSharesToAssets(vault, sharesDeposited, Math.Rounding.Floor);
     } else if (depositToken == address(vault)) {
       IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
-      return _convertSharesToAssets(vault, depositAmount);
+      return _convertSharesToAssets(vault, depositAmount, Math.Rounding.Floor);
     } else {
       revert InvalidDepositToken(depositToken);
     }
@@ -195,7 +195,7 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
     result = "";
     if (withdrawalCode == SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT) {
       uint256 shares = toWithdraw[0];
-      uint256 assets = _convertSharesToAssets(vault, shares);
+      uint256 assets = _convertSharesToAssets(vault, shares, Math.Rounding.Ceil);
       vault.safeTransfer(recipient, shares);
       balanceChanges[0] = assets;
       actualWithdrawnTokens[0] = address(vault);
@@ -239,12 +239,20 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   { }
 
   // slither-disable-next-line dead-code
-  function _convertSharesToAssets(IBeefyVault vault, uint256 shares) private view returns (uint256) {
+  function _convertSharesToAssets(
+    IBeefyVault vault,
+    uint256 shares,
+    Math.Rounding rounding
+  )
+    private
+    view
+    returns (uint256)
+  {
     uint256 totalSupply = vault.totalSupply();
     if (totalSupply == 0) {
       return shares;
     }
-    return shares.mulDiv(vault.balance(), totalSupply, Math.Rounding.Floor);
+    return shares.mulDiv(vault.balance(), totalSupply, rounding);
   }
 
   // slither-disable-next-line dead-code
