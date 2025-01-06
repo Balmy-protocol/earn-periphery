@@ -45,6 +45,7 @@ contract DeployManagers is BaseDeployPeriphery {
         abi.encode(strategyRegistry, admin, initialAdmins, initialToS, new TOSManager.InitialGroup[](0))
       )
     );
+    console2.log("TOS manager:", tosManager);
 
     address[] memory initialNoValidation = new address[](1);
     initialNoValidation[0] = companion;
@@ -72,7 +73,7 @@ contract DeployManagers is BaseDeployPeriphery {
         )
       )
     );
-
+    console2.log("Signature based whitelist manager:", signatureBasedWhitelistManager);
     ICreationValidationManagerCore[] memory managers = new ICreationValidationManagerCore[](2);
     managers[0] = ICreationValidationManagerCore(tosManager);
     managers[1] = ICreationValidationManagerCore(signatureBasedWhitelistManager);
@@ -80,13 +81,14 @@ contract DeployManagers is BaseDeployPeriphery {
       "V1_VALIDATION_MANAGERS_REGISTRY",
       abi.encodePacked(type(GlobalValidationManagersRegistry).creationCode, abi.encode(managers, admin))
     );
-
+    console2.log("Validation managers registry:", validationManagersRegistry);
     address feeManager = deployContract(
       "V1_FEE_MANAGER",
       abi.encodePacked(
         type(FeeManager).creationCode, abi.encode(admin, initialAdmins, initialAdmins, Fees(0, 0, 1000, 500))
       )
     );
+    console2.log("Fee manager:", feeManager);
     address guardianManager = deployContract(
       "V1_GUARDIAN_MANAGER",
       abi.encodePacked(
@@ -94,13 +96,16 @@ contract DeployManagers is BaseDeployPeriphery {
         abi.encode(strategyRegistry, admin, initialAdmins, initialAdmins, initialAdmins, initialAdmins)
       )
     );
+    console2.log("Guardian manager:", guardianManager);
     address delayedWithdrawalManager = deployContract(
       "V1_DELAYED_WITHDRAWAL_MANAGER", abi.encodePacked(type(DelayedWithdrawalManager).creationCode, abi.encode(vault))
     );
+    console2.log("Delayed withdrawal manager:", delayedWithdrawalManager);
     address liquidityMiningManager = deployContract(
       "V1_LIQUIDITY_MINING_MANAGER",
       abi.encodePacked(type(LiquidityMiningManager).creationCode, abi.encode(strategyRegistry, admin, initialAdmins))
     );
+    console2.log("Liquidity mining manager:", liquidityMiningManager);
 
     GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](5);
     config[0] = GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: feeManager });
