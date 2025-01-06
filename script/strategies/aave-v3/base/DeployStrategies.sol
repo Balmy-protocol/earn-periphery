@@ -21,10 +21,8 @@ contract DeployStrategies is BaseDeployStrategies {
     judges[0] = getMsig();
 
     StrategyId strategyId;
-    FeeManager feeManager = FeeManager(getDeployedAddress("V1_FEE_MANAGER"));
-
+    
     // Tier 0 = default fees
-
     // USDC
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
