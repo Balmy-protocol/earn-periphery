@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IAToken, StrategyId } from "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies, IAToken, StrategyId, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
 import { FeeManager, Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
+import { console2 } from "forge-std/console2.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external {
@@ -16,12 +17,13 @@ contract DeployStrategies is BaseDeployStrategies {
     judges[0] = getMsig();
 
     StrategyId strategyId;
+    IEarnBalmyStrategy strategy;
     FeeManager feeManager = FeeManager(getDeployedAddress("V1_FEE_MANAGER"));
 
     // Tier 0 = default fees
 
     // USDC
-    deployAaveV3Strategy({
+    (strategy, strategyId) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
@@ -30,28 +32,7 @@ contract DeployStrategies is BaseDeployStrategies {
       guardians: guardians,
       judges: judges
     });
-
-    // WETH
-    deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-
-    // cbBTC
-    deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
+    console2.log("Strategy Tier 0 deployed: ", address(strategy));
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
     Fees memory tier1Fees = Fees(0, 0, 750, 375);
@@ -67,31 +48,7 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges
     });
     feeManager.updateFees(strategyId, tier1Fees);
-
-    // WETH
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier1Fees);
-
-    // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier1Fees);
-
+    console2.log("Strategy Tier 1 deployed: ", address(strategy));
     // Tier 2 = 5% performance fee + 2.5% rescue fee
     Fees memory tier2Fees = Fees(0, 0, 500, 250);
     // USDC
@@ -105,31 +62,7 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges
     });
     feeManager.updateFees(strategyId, tier2Fees);
-
-    // WETH
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier2Fees);
-
-    // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier2Fees);
-
+    console2.log("Strategy Tier 2 deployed: ", address(strategy));
     // Tier 3 = 2.5% performance fee + 1% rescue fee
     Fees memory tier3Fees = Fees(0, 0, 250, 100);
 
@@ -144,31 +77,7 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges
     });
     feeManager.updateFees(strategyId, tier3Fees);
-
-    // WETH
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier3Fees);
-
-    // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges
-    });
-    feeManager.updateFees(strategyId, tier3Fees);
-
+    console2.log("Strategy Tier 3 deployed: ", address(strategy));
     vm.stopBroadcast();
   }
 }
