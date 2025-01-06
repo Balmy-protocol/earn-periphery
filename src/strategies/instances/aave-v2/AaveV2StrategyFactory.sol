@@ -17,7 +17,6 @@ struct AaveV2StrategyData {
   bytes guardianData;
   bytes feesData;
   bytes liquidityMiningData;
-  string description;
 }
 
 contract AaveV2StrategyFactory is BaseStrategyFactory {
@@ -32,8 +31,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -52,8 +50,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -75,8 +72,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -95,8 +91,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -116,8 +111,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -140,8 +134,7 @@ contract AaveV2StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 

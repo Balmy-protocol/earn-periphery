@@ -203,7 +203,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
     internal
     virtual
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     uint256 assets = toWithdraw[0];
     if (assets > 0) {
@@ -228,8 +227,6 @@ abstract contract CompoundV2Connector is BaseConnector, Initializable {
       }
       comp_.safeTransfer(recipient, rewardAmount);
     }
-
-    return _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

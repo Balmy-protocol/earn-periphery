@@ -333,11 +333,8 @@ contract EarnVaultCompanionTest is Test {
     vm.expectCall(
       address(vault), abi.encodeWithSelector(IEarnVault.withdraw.selector, positionId, tokens, toWithdraw, recipient)
     );
-    (uint256[] memory withdrawn, IEarnStrategy.WithdrawalType[] memory types) =
-      companion.withdraw(vault, positionId, tokens, toWithdraw, recipient);
+    (uint256[] memory withdrawn) = companion.withdraw(vault, positionId, tokens, toWithdraw, recipient);
     assertEq(withdrawn, expectedWithdrawn);
-    assertEq(types.length, expectedTypes.length);
-    assertTrue(types[0] == expectedTypes[0]);
   }
 
   function test_claimDelayedWithdraw() public {

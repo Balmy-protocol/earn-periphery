@@ -88,7 +88,6 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
   {
     // In this case, we will try to use the balance of the liquidity mining manager first,
     // and withdraw the rest from the underlying layer
@@ -117,7 +116,6 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
         positionId, strategyId_, manager, underlyingTokens, toWithdrawAsset, toWithdrawUnderlying, recipient
       );
     }
-    return _liquidity_mining_supportedWithdrawals();
   }
 
   function _withdrawUnderlying(

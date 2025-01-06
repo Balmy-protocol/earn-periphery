@@ -47,10 +47,7 @@ abstract contract BaseConnectorDelayedWithdrawalTest is BaseConnectorTest {
       adapters[i] = connector.delayedWithdrawalAdapter(tokens[i]);
     }
 
-    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(0, tokens, toWithdraw, address(1));
-
-    // Check result
-    assertEq(withdrawalTypes.length, tokens.length);
+    connector.withdraw(0, tokens, toWithdraw, address(1));
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();

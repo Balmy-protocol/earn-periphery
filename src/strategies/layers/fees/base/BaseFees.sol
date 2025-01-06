@@ -27,8 +27,7 @@ abstract contract BaseFees {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory);
+    virtual;
   function _fees_underlying_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,
@@ -44,6 +43,12 @@ abstract contract BaseFees {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
+
+  function _fees_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    returns (IEarnStrategy.WithdrawalType[] memory);
 
   // Fees
   function _fees_fees() internal view virtual returns (IEarnStrategy.FeeType[] memory types, uint16[] memory bps);
@@ -64,8 +69,7 @@ abstract contract BaseFees {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory types);
+    virtual;
 
   function _fees_specialWithdraw(
     uint256 positionId,

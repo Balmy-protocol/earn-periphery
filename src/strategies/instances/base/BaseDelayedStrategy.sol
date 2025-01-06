@@ -2,11 +2,7 @@
 pragma solidity >=0.8.22;
 
 import {
-  IEarnStrategy,
-  SpecialWithdrawalCode,
-  IEarnVault,
-  IEarnStrategyRegistry,
-  IERC165
+  IEarnStrategy, SpecialWithdrawalCode, IEarnVault, IERC165
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
@@ -52,11 +48,6 @@ abstract contract BaseDelayedStrategy is
     return _earnVault();
   }
 
-  /// @inheritdoc IEarnStrategy
-  function registry() public view returns (IEarnStrategyRegistry) {
-    return vault().STRATEGY_REGISTRY();
-  }
-
   /// @inheritdoc IERC165
   function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
     return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
@@ -74,11 +65,6 @@ abstract contract BaseDelayedStrategy is
   }
 
   /// @inheritdoc IEarnStrategy
-  function isDepositTokenSupported(address depositToken) external view returns (bool) {
-    return _connector_isDepositTokenSupported(depositToken);
-  }
-
-  /// @inheritdoc IEarnStrategy
   function supportedDepositTokens() external view returns (address[] memory) {
     return _connector_supportedDepositTokens();
   }
@@ -91,11 +77,6 @@ abstract contract BaseDelayedStrategy is
   /// @inheritdoc IEarnStrategy
   function supportedWithdrawals() external view returns (WithdrawalType[] memory) {
     return _liquidity_mining_supportedWithdrawals();
-  }
-
-  /// @inheritdoc IEarnStrategy
-  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external view returns (bool) {
-    return _connector_isSpecialWithdrawalSupported(withdrawalCode);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -150,7 +131,6 @@ abstract contract BaseDelayedStrategy is
   )
     external
     onlyVault
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _liquidity_mining_withdraw(positionId, tokens, toWithdraw, recipient);
   }
@@ -202,7 +182,7 @@ abstract contract BaseDelayedStrategy is
   }
 
   modifier onlyStrategyRegistry() {
-    if (msg.sender != address(registry())) revert OnlyStrategyRegistry();
+    if (msg.sender != address(vault().STRATEGY_REGISTRY())) revert OnlyStrategyRegistry();
     _;
   }
 
@@ -213,7 +193,7 @@ abstract contract BaseDelayedStrategy is
 
   // slither-disable-start naming-convention,dead-code
   function _baseStrategy_registerStrategy(address owner) internal returns (StrategyId) {
-    return registry().registerStrategy(owner);
+    return vault().STRATEGY_REGISTRY().registerStrategy(owner);
   }
 
   ////////////////////////////////////////////////////////
@@ -270,9 +250,8 @@ abstract contract BaseDelayedStrategy is
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
   {
-    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+    _fees_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function _liquidity_mining_underlying_specialWithdraw(
@@ -329,7 +308,6 @@ abstract contract BaseDelayedStrategy is
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }

@@ -7,7 +7,7 @@
     "url": "https://github.com/balmy-protocol"
   },
   "devDependencies": {
-    "@balmy/earn-core": "github:balmy-protocol/earn-core#33385c0ddcf13ad8b035fda3f45c307bdc9e6528",
+    "@balmy/earn-core": "github:balmy-protocol/earn-core#750e659691e3c02160ebf55b0b2eb80b1fc10b42",
     "@balmy/nft-permissions": "github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638",
     "@balmy/call-simulation": "github:balmy-protocol/call-simulation#a510c80c7e81480eb5806422101d199a39662024",
     "@forta/firewall": "github:forta-network/forta-firewall-contracts#ee4fa2f6fe5c3a407843c2928750b6f2b5502ca3",

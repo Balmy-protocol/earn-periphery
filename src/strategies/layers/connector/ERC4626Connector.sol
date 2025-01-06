@@ -176,12 +176,10 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     internal
     virtual
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     // Note: we assume params are consistent and valid because they were validated by the EarnVault
     // slither-disable-next-line unused-return
     ERC4626Vault().withdraw(toWithdraw[0], recipient, address(this));
-    return _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

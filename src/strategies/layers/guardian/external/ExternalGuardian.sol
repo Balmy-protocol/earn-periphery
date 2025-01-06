@@ -85,7 +85,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     }
 
     (tokens, rescued) = _guardian_underlying_maxWithdraw();
-    IEarnStrategy.WithdrawalType[] memory types = _guardian_underlying_withdraw(0, tokens, rescued, address(this));
+    _guardian_underlying_withdraw(0, tokens, rescued, address(this));
+    IEarnStrategy.WithdrawalType[] memory types = _guardian_underlying_supportedWithdrawals();
     if (!_areAllImmediate(types)) {
       revert OnlyImmediateWithdrawalsSupported();
     }
@@ -202,7 +203,6 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     RescueStatus status = rescueConfig.status;
     if (status == RescueStatus.OK) {
@@ -217,8 +217,6 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
       // If we get here, we are waiting for confirmation, so we can't withdraw
       revert InvalidRescueStatus();
     }
-    // Since this implementation doesn't support delayed withdrawals, we will always return immediate withdrawals
-    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
   // slither-disable-end naming-convention,dead-code
 

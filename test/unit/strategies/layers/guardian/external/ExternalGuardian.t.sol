@@ -309,11 +309,7 @@ contract ExternalGuardianTest is Test {
     address recipient = address(30);
     guardian.setStatus(ExternalGuardian.RescueStatus.OK);
 
-    IEarnStrategy.WithdrawalType[] memory types =
-      guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
-    assertEq(types.length, 2);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
 
     // Make sure underlying was called correctly
     ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
@@ -339,12 +335,7 @@ contract ExternalGuardianTest is Test {
     vm.expectCall(address(asset), abi.encodeWithSelector(IERC20.transfer.selector, recipient, 12_345));
     // Expect reward's transfer to not be called
     vm.expectCall(address(reward), abi.encodeWithSelector(IERC20.transfer.selector), 0);
-    IEarnStrategy.WithdrawalType[] memory types =
-      guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
-    assertEq(types.length, 2);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-
+    guardian.withdraw(positionId, CommonUtils.arrayOf(asset, reward), CommonUtils.arrayOf(amount, 0), recipient);
     // Make sure underlying layer was not called
     ExternalGuardianInstance.Withdrawal memory withdrawal = guardian.lastWithdrawal();
     assertEq(withdrawal.positionId, 0);
@@ -484,9 +475,8 @@ contract ExternalGuardianInstance is ExternalGuardian {
     address recipient
   )
     external
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
+    _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function specialWithdraw(
@@ -586,13 +576,8 @@ contract ExternalGuardianInstance is ExternalGuardian {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
   {
     _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
-    types = new IEarnStrategy.WithdrawalType[](tokens.length);
-    for (uint256 i; i < types.length; ++i) {
-      types[i] = _withdrawalType;
-    }
   }
 
   function _guardian_underlying_specialWithdraw(
@@ -647,5 +632,18 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function _guardian_rescueFee() internal pure override returns (uint16) {
     return 12_345;
+  }
+
+  function _guardian_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    types = new IEarnStrategy.WithdrawalType[](_tokens.length);
+    for (uint256 i = 0; i < _tokens.length; i++) {
+      types[i] = _withdrawalType;
+    }
   }
 }

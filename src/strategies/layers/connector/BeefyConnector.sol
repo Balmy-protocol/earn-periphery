@@ -163,7 +163,6 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     uint256 assets = toWithdraw[0];
     IBeefyVault vault = beefyVault();
@@ -181,8 +180,6 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
     }
 
     asset.safeTransfer(recipient, assets);
-
-    return _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

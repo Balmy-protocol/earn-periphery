@@ -16,7 +16,6 @@ struct ERC4626StrategyData {
   bytes guardianData;
   bytes feesData;
   bytes liquidityMiningData;
-  string description;
 }
 
 contract ERC4626StrategyFactory is BaseStrategyFactory {
@@ -31,8 +30,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -51,8 +49,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -74,8 +71,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -94,8 +90,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 
@@ -115,8 +110,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -139,8 +133,7 @@ contract ERC4626StrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData,
-      description_: strategyData.description
+      liquidityMiningData: strategyData.liquidityMiningData
     });
   }
 

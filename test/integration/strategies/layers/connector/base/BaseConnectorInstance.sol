@@ -65,7 +65,6 @@ abstract contract BaseConnectorInstance is BaseConnector {
     address recipient
   )
     external
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }

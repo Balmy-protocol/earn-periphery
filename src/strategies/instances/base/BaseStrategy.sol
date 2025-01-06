@@ -2,11 +2,7 @@
 pragma solidity >=0.8.22;
 
 import {
-  IEarnStrategy,
-  SpecialWithdrawalCode,
-  IEarnVault,
-  IEarnStrategyRegistry,
-  IERC165
+  IEarnStrategy, SpecialWithdrawalCode, IEarnVault, IERC165
 } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
@@ -55,11 +51,6 @@ abstract contract BaseStrategy is
     return _earnVault();
   }
 
-  /// @inheritdoc IEarnStrategy
-  function registry() public view returns (IEarnStrategyRegistry) {
-    return vault().STRATEGY_REGISTRY();
-  }
-
   /// @inheritdoc IERC165
   function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
     return interfaceId == type(IEarnBalmyStrategy).interfaceId || interfaceId == type(IEarnStrategy).interfaceId
@@ -77,11 +68,6 @@ abstract contract BaseStrategy is
   }
 
   /// @inheritdoc IEarnStrategy
-  function isDepositTokenSupported(address depositToken) external view returns (bool) {
-    return _connector_isDepositTokenSupported(depositToken);
-  }
-
-  /// @inheritdoc IEarnStrategy
   function supportedDepositTokens() external view returns (address[] memory) {
     return _connector_supportedDepositTokens();
   }
@@ -94,11 +80,6 @@ abstract contract BaseStrategy is
   /// @inheritdoc IEarnStrategy
   function supportedWithdrawals() external view returns (WithdrawalType[] memory) {
     return _liquidity_mining_supportedWithdrawals();
-  }
-
-  /// @inheritdoc IEarnStrategy
-  function isSpecialWithdrawalSupported(SpecialWithdrawalCode withdrawalCode) external view returns (bool) {
-    return _connector_isSpecialWithdrawalSupported(withdrawalCode);
   }
 
   /// @inheritdoc IEarnStrategy
@@ -153,7 +134,6 @@ abstract contract BaseStrategy is
   )
     external
     onlyVault
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _liquidity_mining_withdraw(positionId, tokens, toWithdraw, recipient);
   }
@@ -205,7 +185,7 @@ abstract contract BaseStrategy is
   }
 
   modifier onlyStrategyRegistry() {
-    if (msg.sender != address(registry())) revert OnlyStrategyRegistry();
+    if (msg.sender != address(vault().STRATEGY_REGISTRY())) revert OnlyStrategyRegistry();
     _;
   }
 
@@ -216,7 +196,7 @@ abstract contract BaseStrategy is
 
   // slither-disable-start naming-convention,dead-code
   function _baseStrategy_registerStrategy(address owner) internal returns (StrategyId) {
-    return registry().registerStrategy(owner);
+    return vault().STRATEGY_REGISTRY().registerStrategy(owner);
   }
 
   ////////////////////////////////////////////////////////
@@ -273,9 +253,8 @@ abstract contract BaseStrategy is
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
   {
-    return _fees_withdraw(positionId, tokens, toWithdraw, recipient);
+    _fees_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function _liquidity_mining_underlying_specialWithdraw(
@@ -332,9 +311,17 @@ abstract contract BaseStrategy is
   )
     internal
     override
+  {
+    _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  function _fees_underlying_supportedWithdrawals()
+    internal
+    view
+    override
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _guardian_withdraw(positionId, tokens, toWithdraw, recipient);
+    return _connector_supportedWithdrawals();
   }
 
   function _fees_underlying_specialWithdraw(
@@ -361,6 +348,15 @@ abstract contract BaseStrategy is
   ////////////////////////////////////////////////////////
   function _guardian_underlying_tokens() internal view override returns (address[] memory tokens) {
     return _connector_allTokens();
+  }
+
+  function _guardian_underlying_supportedWithdrawals()
+    internal
+    view
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _connector_supportedWithdrawals();
   }
 
   function _guardian_underlying_maxWithdraw()
@@ -400,9 +396,8 @@ abstract contract BaseStrategy is
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
-    return _connector_withdraw(positionId, tokens, toWithdraw, recipient);
+    _connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
   function _guardian_underlying_specialWithdraw(

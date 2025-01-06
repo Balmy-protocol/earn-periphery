@@ -53,13 +53,7 @@ abstract contract BaseConnectorImmediateWithdrawalTest is BaseConnectorTest {
     for (uint256 i; i < tokens.length; ++i) {
       recipientBalancesBefore[i] = _balance(tokens[i], recipient);
     }
-    IEarnStrategy.WithdrawalType[] memory withdrawalTypes = connector.withdraw(1, tokens, toWithdraw, recipient);
-
-    // Check result
-    assertEq(withdrawalTypes.length, tokens.length);
-    for (uint256 i; i < withdrawalTypes.length; ++i) {
-      assertTrue(withdrawalTypes[i] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    }
+    connector.withdraw(1, tokens, toWithdraw, recipient);
 
     // Check remaining balances
     (, uint256[] memory balancesAfter) = connector.totalBalances();

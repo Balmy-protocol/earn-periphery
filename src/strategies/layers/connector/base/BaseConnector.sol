@@ -52,8 +52,7 @@ abstract contract BaseConnector {
     address recipient
   )
     internal
-    virtual
-    returns (IEarnStrategy.WithdrawalType[] memory);
+    virtual;
   function _connector_specialWithdraw(
     uint256 positionId,
     SpecialWithdrawalCode withdrawalCode,

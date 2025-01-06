@@ -227,7 +227,6 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     IAaveV3Rewards rewards_ = rewards();
     uint256 assets = toWithdraw[0];
@@ -252,7 +251,6 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
         }
       }
     }
-    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
 
   // slither-disable-next-line naming-convention,dead-code

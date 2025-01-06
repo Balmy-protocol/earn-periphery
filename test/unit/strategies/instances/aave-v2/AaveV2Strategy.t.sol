@@ -3,7 +3,8 @@ pragma solidity >=0.8.22;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IEarnStrategy, IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import {
   AaveV2StrategyFactory,
   AaveV2Strategy,
@@ -44,7 +45,6 @@ contract AaveV2StrategyTest is Test {
   bytes private guardianData = abi.encodePacked("guardianData");
   bytes private feesData = abi.encodePacked("feesData");
   bytes private liquidityMiningData = abi.encodePacked("liquidityMiningData");
-  string private description = "description";
   StrategyId private strategyId = StrategyId.wrap(1);
   AaveV2StrategyFactory private factory;
 
@@ -118,15 +118,7 @@ contract AaveV2StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     AaveV2Strategy clone = factory.cloneStrategy(
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       )
     );
 
@@ -154,15 +146,7 @@ contract AaveV2StrategyTest is Test {
     (AaveV2Strategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       )
     );
 
@@ -190,15 +174,7 @@ contract AaveV2StrategyTest is Test {
     AaveV2Strategy clone = factory.cloneStrategyWithId(
       strategyId,
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       )
     );
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
@@ -226,15 +202,7 @@ contract AaveV2StrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     AaveV2Strategy clone = factory.clone2Strategy(
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -265,15 +233,7 @@ contract AaveV2StrategyTest is Test {
     (AaveV2Strategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -305,15 +265,7 @@ contract AaveV2StrategyTest is Test {
     AaveV2Strategy clone = factory.clone2StrategyWithId(
       strategyId,
       AaveV2StrategyData(
-        vault,
-        globalRegistry,
-        aToken,
-        aaveV2Pool,
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData,
-        description
+        vault, globalRegistry, aToken, aaveV2Pool, creationValidationData, guardianData, feesData, liquidityMiningData
       ),
       salt
     );
@@ -333,7 +285,6 @@ contract AaveV2StrategyTest is Test {
     assertEq(address(clone.pool()), address(aaveV2Pool));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), address(asset));
-    assertEq(clone.description(), description);
   }
 }
 

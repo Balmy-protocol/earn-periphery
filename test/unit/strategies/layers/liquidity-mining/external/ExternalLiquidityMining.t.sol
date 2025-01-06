@@ -209,13 +209,9 @@ contract ExternalLiquidityMiningTest is Test {
       address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector, strategyId, amount)
     );
 
-    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+    liquidityMining.withdraw(
       positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(amount, 0, 0), recipient
     );
-    assertEq(types.length, 3);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Make sure underlying was called correctly
     ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
@@ -255,13 +251,9 @@ contract ExternalLiquidityMiningTest is Test {
     );
     vm.expectCall(address(manager), abi.encodeWithSelector(ILiquidityMiningManagerCore.withdrew.selector), 0);
 
-    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+    liquidityMining.withdraw(
       positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, 0, amount), recipient
     );
-    assertEq(types.length, 3);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Make sure underlying layer was not called
     ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
@@ -307,13 +299,9 @@ contract ExternalLiquidityMiningTest is Test {
       )
     );
 
-    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+    liquidityMining.withdraw(
       positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, amount, 0), recipient
     );
-    assertEq(types.length, 3);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Make sure underlying was called correctly
     ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
@@ -352,13 +340,9 @@ contract ExternalLiquidityMiningTest is Test {
       abi.encode()
     );
 
-    IEarnStrategy.WithdrawalType[] memory types = liquidityMining.withdraw(
+    liquidityMining.withdraw(
       positionId, CommonUtils.arrayOf(asset, reward, lmReward), CommonUtils.arrayOf(0, amount, 0), recipient
     );
-    assertEq(types.length, 3);
-    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
-    assertTrue(types[2] == IEarnStrategy.WithdrawalType.IMMEDIATE);
 
     // Make sure underlying layer was not called
     ExternalLiquidityMiningInstance.Withdrawal memory withdrawal = liquidityMining.lastWithdrawal();
@@ -429,7 +413,6 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     address recipient
   )
     external
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _liquidity_mining_withdraw(positionId, tokens, toWithdraw, recipient);
   }
@@ -558,9 +541,7 @@ contract ExternalLiquidityMiningInstance is ExternalLiquidityMining {
     internal
     virtual
     override
-    returns (IEarnStrategy.WithdrawalType[] memory types)
   {
     _withdrawal = Withdrawal(positionId, tokens, toWithdraw, recipient);
-    return _liquidity_mining_supportedWithdrawals();
   }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import {
@@ -26,17 +26,13 @@ contract CompoundV2Strategy is
   ExternalGuardian,
   RegistryBasedCreationValidation
 {
-  /// @inheritdoc IEarnStrategy
-  string public description;
-
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
     returns (StrategyId strategyId_)
@@ -46,8 +42,7 @@ contract CompoundV2Strategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
+      liquidityMiningData: liquidityMiningData
     });
   }
 
@@ -57,8 +52,7 @@ contract CompoundV2Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
   {
@@ -67,8 +61,7 @@ contract CompoundV2Strategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
+      liquidityMiningData: liquidityMiningData
     });
   }
 
@@ -77,8 +70,7 @@ contract CompoundV2Strategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     public
     initializer
@@ -88,7 +80,6 @@ contract CompoundV2Strategy is
     _guardian_init(guardianData);
     _fees_init(feesData);
     _liquidity_mining_init(liquidityMiningData);
-    description = description_;
   }
 
   function strategyId()

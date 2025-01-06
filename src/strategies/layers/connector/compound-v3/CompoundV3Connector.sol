@@ -194,7 +194,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     internal
     virtual
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     ICERC20 cToken_ = cToken();
     uint256 assets = toWithdraw[0];
@@ -220,8 +219,6 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
         rewardToken.safeTransfer(recipient, rewardAmount);
       }
     }
-
-    return new IEarnStrategy.WithdrawalType[](tokens.length);
   }
 
   // slither-disable-next-line naming-convention,dead-code

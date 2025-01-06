@@ -165,11 +165,9 @@ abstract contract LidoSTETHConnector is BaseConnector, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory withdrawalTypes)
   {
     IERC20(address(_stETH)).safeTransfer(address(_connector_delayedWithdrawalAdapter(_ETH)), toWithdraw[0]);
     _connector_delayedWithdrawalAdapter(_ETH).initiateDelayedWithdrawal(positionId, _ETH, toWithdraw[0]);
-    withdrawalTypes = _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

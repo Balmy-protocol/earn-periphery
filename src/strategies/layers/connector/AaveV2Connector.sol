@@ -164,12 +164,10 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   )
     internal
     override
-    returns (IEarnStrategy.WithdrawalType[] memory)
   {
     uint256 assets = toWithdraw[0];
     // slither-disable-next-line unused-return
     pool().withdraw(address(_asset()), assets, recipient);
-    return _connector_supportedWithdrawals();
   }
 
   // slither-disable-next-line naming-convention,dead-code

@@ -20,27 +20,18 @@ contract LidoSTETHStrategy is
   ExternalFees,
   RegistryBasedCreationValidation
 {
-  /// @inheritdoc IEarnStrategy
-  string public description;
-
   // slither-disable-next-line reentrancy-benign
   function initAndRegister(
     address owner,
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
     returns (StrategyId strategyId_)
   {
     strategyId_ = _baseStrategy_registerStrategy(owner);
-    init({
-      creationValidationData: creationValidationData,
-      feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
-    });
+    init({ creationValidationData: creationValidationData, feesData: feesData, liquidityMiningData: liquidityMiningData });
   }
 
   // slither-disable-next-line reentrancy-benign
@@ -48,26 +39,19 @@ contract LidoSTETHStrategy is
     StrategyId strategyId_,
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     external
   {
     _strategyId = strategyId_;
-    init({
-      creationValidationData: creationValidationData,
-      feesData: feesData,
-      liquidityMiningData: liquidityMiningData,
-      description_: description_
-    });
+    init({ creationValidationData: creationValidationData, feesData: feesData, liquidityMiningData: liquidityMiningData });
   }
 
   // slither-disable-next-line reentrancy-benign
   function init(
     bytes calldata creationValidationData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData,
-    string calldata description_
+    bytes calldata liquidityMiningData
   )
     public
     initializer
@@ -75,7 +59,6 @@ contract LidoSTETHStrategy is
     _creationValidation_init(creationValidationData);
     _fees_init(feesData);
     _liquidity_mining_init(liquidityMiningData);
-    description = description_;
   }
 
   // Immutable params:
@@ -112,5 +95,15 @@ contract LidoSTETHStrategy is
 
   function _earnVault() internal view override returns (IEarnVault) {
     return IEarnVault(_getArgAddress(0));
+  }
+
+  function _fees_underlying_supportedWithdrawals()
+    internal
+    view
+    virtual
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory)
+  {
+    return _connector_supportedWithdrawals();
   }
 }
