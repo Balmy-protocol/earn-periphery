@@ -54,7 +54,7 @@ contract DeployStrategies is BaseDeployStrategies {
     });
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
-    Fees memory tier1Fees = Fees(750, 375, 0, 0);
+    Fees memory tier1Fees = Fees(0, 0, 750, 375);
 
     // USDC
     (, strategyId) = deployAaveV3Strategy({
@@ -93,7 +93,7 @@ contract DeployStrategies is BaseDeployStrategies {
     feeManager.updateFees(strategyId, tier1Fees);
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
-    Fees memory tier2Fees = Fees(500, 250, 0, 0);
+    Fees memory tier2Fees = Fees(0, 0, 500, 250);
     // USDC
     (, strategyId) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -131,7 +131,7 @@ contract DeployStrategies is BaseDeployStrategies {
     feeManager.updateFees(strategyId, tier2Fees);
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
-    Fees memory tier3Fees = Fees(250, 100, 0, 0);
+    Fees memory tier3Fees = Fees(0, 0, 250, 100);
 
     // USDC
     (, strategyId) = deployAaveV3Strategy({
