@@ -31,7 +31,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
 
     // WETH
@@ -43,7 +43,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
 
     // cbBTC
@@ -55,7 +55,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
@@ -70,7 +70,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier1Fees)
+      fees: tier1Fees
     });
 
     // WETH
@@ -82,7 +82,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier1Fees)
+      fees: tier1Fees
     });
 
     // cbBTC
@@ -94,7 +94,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier1Fees)
+      fees: tier1Fees
     });
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
@@ -108,7 +108,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier2Fees)
+      fees: tier2Fees
     });
 
     // WETH
@@ -120,7 +120,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier2Fees)
+      fees: tier2Fees
     });
 
     // cbBTC
@@ -132,7 +132,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier2Fees)
+      fees: tier2Fees
     });
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
@@ -147,7 +147,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier3Fees)
+      fees: tier3Fees
     });
 
     // WETH
@@ -159,7 +159,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier3Fees)
+      fees: tier3Fees
     });
 
     // cbBTC
@@ -171,7 +171,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: abi.encode(tier3Fees)
+      fees: tier3Fees
     });
   }
 }
