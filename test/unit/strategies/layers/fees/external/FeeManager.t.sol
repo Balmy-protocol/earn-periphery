@@ -93,7 +93,7 @@ contract FeeManagerTest is PRBTest {
 
     vm.prank(address(strategy));
     vm.expectRevert(abi.encodeWithSelector(FeeManager.UnauthorizedCaller.selector));
-    feeManager.strategySelfConfigure(abi.encode(address(1), 10, 10));
+    feeManager.strategySelfConfigure(abi.encode(Fees(5, 1, 2, 3)));
   }
 
   function test_canWithdrawFees() public {
