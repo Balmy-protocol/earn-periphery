@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.8;
 
+import { IEarnStrategyRegistry } from "@balmy/earn-core/interfaces/IEarnStrategyRegistry.sol";
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Fees } from "../types/Fees.sol";
 
@@ -40,6 +41,14 @@ interface IFeeManager is IFeeManagerCore {
    * @param fees The new fees
    */
   event StrategyFeesChanged(StrategyId strategy, Fees fees);
+
+  /**
+   * @notice Returns the address of the strategy registry
+   * @return The address of the strategy registry
+   */
+  // slither-disable-start naming-convention
+
+  function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
 
   /**
    * @notice Returns the role in charge of managing fees

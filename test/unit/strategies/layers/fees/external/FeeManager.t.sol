@@ -3,7 +3,14 @@ pragma solidity >=0.8.22;
 
 // solhint-disable no-unused-import
 import { PRBTest } from "@prb/test/PRBTest.sol";
-import { FeeManager, IFeeManager, Fees, StrategyId } from "src/strategies/layers/fees/external/FeeManager.sol";
+import {
+  FeeManager,
+  IFeeManager,
+  Fees,
+  StrategyId,
+  IEarnStrategyRegistry,
+  IEarnStrategy
+} from "src/strategies/layers/fees/external/FeeManager.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAccessControlDefaultAdminRules.sol";
 
@@ -14,6 +21,8 @@ contract FeeManagerTest is PRBTest {
   address private superAdmin = address(1);
   address private manageFeeAdmin = address(2);
   address private withdrawFeeAdmin = address(3);
+  IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(4));
+  IEarnStrategy private strategy = IEarnStrategy(address(5));
   Fees private defaultFees = Fees(400, 300, 200, 100);
   FeeManager private feeManager;
 
@@ -21,7 +30,7 @@ contract FeeManagerTest is PRBTest {
     vm.expectEmit();
     emit DefaultFeesChanged(defaultFees);
     feeManager = new FeeManager(
-      superAdmin, CommonUtils.arrayOf(manageFeeAdmin), CommonUtils.arrayOf(withdrawFeeAdmin), defaultFees
+      registry, superAdmin, CommonUtils.arrayOf(manageFeeAdmin), CommonUtils.arrayOf(withdrawFeeAdmin), defaultFees
     );
   }
 
@@ -32,6 +41,7 @@ contract FeeManagerTest is PRBTest {
   }
 
   function test_constructor() public {
+    assertEq(address(feeManager.STRATEGY_REGISTRY()), address(registry));
     assertTrue(feeManager.hasRole(feeManager.MANAGE_FEES_ROLE(), manageFeeAdmin));
     assertTrue(feeManager.hasRole(feeManager.WITHDRAW_FEES_ROLE(), withdrawFeeAdmin));
 
@@ -46,11 +56,44 @@ contract FeeManagerTest is PRBTest {
   function test_constructor_RevertWhen_FeeGreaterThanMaximum() public {
     vm.expectRevert(abi.encodeWithSelector(IFeeManager.FeesGreaterThanMaximum.selector));
     feeManager = new FeeManager(
+      registry,
       superAdmin,
       CommonUtils.arrayOf(manageFeeAdmin),
       CommonUtils.arrayOf(withdrawFeeAdmin),
       Fees(10_000, 300, 200, 100)
     );
+  }
+
+  function test_strategySelfConfigure_emptyBytes() public {
+    // Nothing happens
+    feeManager.strategySelfConfigure("");
+  }
+
+  function test_strategySelfConfigure() public {
+    StrategyId strategyId = StrategyId.wrap(1);
+    Fees memory newFees = Fees(5, 1, 2, 3);
+
+    vm.mockCall(
+      address(registry), abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector), abi.encode(strategyId)
+    );
+
+    vm.expectEmit();
+    emit StrategyFeesChanged(strategyId, newFees);
+    vm.prank(address(strategy));
+    feeManager.strategySelfConfigure(abi.encode(newFees));
+    assertTrue(feeManager.getFees(strategyId).equals(newFees));
+  }
+
+  function test_strategySelfConfigure_revertWhen_callerHasNoId() public {
+    vm.mockCall(
+      address(registry),
+      abi.encodeWithSelector(IEarnStrategyRegistry.assignedId.selector),
+      abi.encode(StrategyId.wrap(0))
+    );
+
+    vm.prank(address(strategy));
+    vm.expectRevert(abi.encodeWithSelector(FeeManager.UnauthorizedCaller.selector));
+    feeManager.strategySelfConfigure(abi.encode(address(1), 10, 10));
   }
 
   function test_canWithdrawFees() public {
