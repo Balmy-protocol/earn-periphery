@@ -87,6 +87,7 @@ contract DeployManagers is BaseDeployPeriphery {
       abi.encodePacked(
         type(FeeManager).creationCode,
         abi.encode(
+          strategyRegistry,
           admin,
           initialAdmins,
           initialAdmins,
