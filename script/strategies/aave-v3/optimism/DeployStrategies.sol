@@ -28,7 +28,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -38,7 +38,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -48,7 +48,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -58,7 +58,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -68,7 +68,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -78,7 +78,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -88,7 +88,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -98,7 +98,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -108,7 +108,7 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      feesData: ""
+      fees: DEFAULT_FEES
     });
   }
 }
