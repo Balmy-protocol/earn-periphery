@@ -84,7 +84,7 @@ contract DeployManagers is BaseDeployPeriphery {
     address feeManager = deployContract(
       "V1_FEE_MANAGER",
       abi.encodePacked(
-        type(FeeManager).creationCode, abi.encode(admin, initialAdmins, initialAdmins, Fees(0, 0, 500, 1000))
+        type(FeeManager).creationCode, abi.encode(admin, initialAdmins, initialAdmins, Fees(0, 0, 1000, 500))
       )
     );
     address guardianManager = deployContract(
