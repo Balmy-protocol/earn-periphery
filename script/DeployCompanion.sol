@@ -14,7 +14,7 @@ contract DeployCompanion is BaseDeployPeriphery {
   }
 
   function deployCompanion() public returns (address) {
-    address firewallRouter = getDeployedAddress("V1_FIREWALL_ROUTER");
+    address firewallRouter = getDeployedAddress("V1_FROUTER");
 
     address[] memory initialAdmins = new address[](1);
     initialAdmins[0] = admin;
