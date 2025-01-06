@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import { BaseDeployPeriphery } from "../../BaseDeployPeriphery.sol";
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import {
@@ -51,7 +50,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory feesData = "";
     bytes memory liquidityMiningData = "";
-    string memory symbol = ERC20(aToken.UNDERLYING_ASSET_ADDRESS()).symbol();
     (strategy, strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
       admin,
       AaveV3StrategyData(
@@ -63,13 +61,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         creationValidationData,
         guardianData,
         feesData,
-        liquidityMiningData,
-        string.concat(
-          "Earn returns with one of DeFi's most reliable lending markets. When you deposit ",
-          symbol,
-          // solhint-disable-next-line max-line-length
-          " into Aave, your funds automatically generate interest by being lent to trusted borrowers - offering better returns than traditional savings. The protocol has handled over $100 billion in loans with a spotless security record, while keeping your funds available to withdraw at any time."
-        )
+        liquidityMiningData
       )
     );
 

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployCore } from "@balmy/earn-core-script/BaseDeployCore.sol";
+import { BaseDeploy } from "@balmy/earn-core-script/BaseDeploy.sol";
 
-contract BaseDeployPeriphery is BaseDeployCore {
+contract BaseDeployPeriphery is BaseDeploy {
   address internal signer = vm.envAddress("SIGNER");
 
   // solhint-disable-next-line var-name-mixedcase
-  bytes32 internal SIGNER_GROUP = keccak256("signer_group");
+  bytes32 internal DEFAULT_SIGNER_GROUP = keccak256("default_signer_group");
   // solhint-disable-next-line var-name-mixedcase
-  bytes32 internal TOS_GROUP = keccak256("guardian_tos");
+  bytes32 internal BALMY_GUARDIAN_TOS_GROUP = keccak256("balmy_guardian_guardian_tos");
 }
