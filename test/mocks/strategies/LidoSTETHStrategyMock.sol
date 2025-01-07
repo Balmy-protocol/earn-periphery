@@ -59,7 +59,7 @@ contract LidoSTETHStrategyMock is IEarnBalmyStrategy, LidoSTETHConnector {
   }
 
   /// @inheritdoc IEarnStrategy
-  function maxDeposit(address depositToken) external view returns (uint256) {
+  function maxDeposit(address depositToken) external pure returns (uint256) {
     return _connector_maxDeposit(depositToken);
   }
 
