@@ -2,7 +2,11 @@
 pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { MorphoConnector, IGlobalEarnRegistry } from "src/strategies/layers/connector/morpho/MorphoConnector.sol";
+import {
+  MorphoConnector,
+  IGlobalEarnRegistry,
+  IEarnStrategy
+} from "src/strategies/layers/connector/morpho/MorphoConnector.sol";
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { BaseConnectorInstance } from "../base/BaseConnectorTest.t.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "../base/BaseConnectorImmediateWithdrawalTest.t.sol";
@@ -64,6 +68,66 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
     // We just make sure nothing reverts
     _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
+  }
+
+  function testFork_allTokens_withRewards() public {
+    _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
+
+    address[] memory tokens = connector.allTokens();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+  }
+
+  function testFork_supportedWithdrawals_withRewards() public {
+    _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
+
+    IEarnStrategy.WithdrawalType[] memory types = connector.supportedWithdrawals();
+    assertEq(types.length, 2);
+    assertTrue(types[0] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+    assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
+  }
+
+  function testFork_totalBalances_withRewards() public {
+    uint256 totalRewards = 8640e10;
+    uint256 initialTimestamp = block.timestamp;
+    _sendAndConfigureRewards(_MORPHO_TOKEN, totalRewards, 1 days);
+
+    (address[] memory tokens, uint256[] memory balances) = connector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, CommonUtils.arrayOf(0, 0));
+
+    vm.warp(initialTimestamp + 0.5 days);
+
+    (tokens, balances) = connector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, CommonUtils.arrayOf(0, totalRewards / 2));
+
+    vm.warp(initialTimestamp + 1 days);
+
+    (tokens, balances) = connector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, CommonUtils.arrayOf(0, totalRewards));
+  }
+
+  function testFork_maxWithdraw_withRewards() public {
+    uint256 totalRewards = 8640e10;
+    uint256 initialTimestamp = block.timestamp;
+    _sendAndConfigureRewards(_MORPHO_TOKEN, totalRewards, 1 days);
+
+    (address[] memory tokens, uint256[] memory withdrawable) = connector.maxWithdraw();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(withdrawable, CommonUtils.arrayOf(0, 0));
+
+    vm.warp(initialTimestamp + 0.5 days);
+
+    (tokens, withdrawable) = connector.maxWithdraw();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(withdrawable, CommonUtils.arrayOf(0, totalRewards / 2));
+
+    vm.warp(initialTimestamp + 1 days);
+
+    (tokens, withdrawable) = connector.maxWithdraw();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(withdrawable, CommonUtils.arrayOf(0, totalRewards));
   }
 
   function _sendAndConfigureRewards(address token, uint256 amount, uint256 duration) internal {
