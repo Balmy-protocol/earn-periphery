@@ -72,6 +72,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     address[] memory rewardsTokens = _rewardTokens;
     tokens = new address[](1 + rewardsTokens.length);
@@ -81,6 +82,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_supportedWithdrawals()
     internal
     view
@@ -90,6 +92,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     types = new IEarnStrategy.WithdrawalType[](_rewardTokens.length + 1);
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_totalBalances()
     internal
     view
@@ -99,6 +102,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     return _buildArraysWithRewards({ assetAmount: _connector_erc4626_balance() });
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_maxWithdraw()
     internal
     view
@@ -115,6 +119,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     return rewardsMem.emittedBeforeLastUpdate + emittedSinceLastUpdate;
   }
 
+  // slither-disable-next-line dead-code
   function _emittedRewards(address rewardToken) private view returns (uint256) {
     return _emittedRewards(rewards[rewardToken]);
   }
@@ -123,6 +128,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     return globalRegistry().getAddressOrFail(MORPHO_REWARDS_MANAGER);
   }
 
+  // slither-disable-next-line dead-code
   function _buildArraysWithRewards(uint256 assetAmount)
     private
     view
