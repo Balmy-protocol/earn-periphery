@@ -28,7 +28,7 @@ contract DeployStrategies is BaseDeployStrategies {
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
+      signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES
@@ -40,7 +40,7 @@ contract DeployStrategies is BaseDeployStrategies {
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
+      signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES
@@ -52,7 +52,7 @@ contract DeployStrategies is BaseDeployStrategies {
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
+      signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES
