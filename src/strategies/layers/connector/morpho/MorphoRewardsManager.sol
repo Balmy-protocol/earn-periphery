@@ -54,6 +54,7 @@ contract MorphoRewardsManager is AccessControlDefaultAdminRules {
     onlyRole(MANAGE_CONFIGURATION_ROLE)
   {
     for (uint256 i = 0; i < configurations.length; ++i) {
+      // slither-disable-next-line calls-loop
       configurations[i].connector.configureRewards(configurations[i].tokens, duration);
     }
   }
@@ -68,6 +69,7 @@ contract MorphoRewardsManager is AccessControlDefaultAdminRules {
   {
     for (uint256 i = 0; i < allClaims.length; ++i) {
       address[] memory tokens = _claimTokens(allClaims[i]);
+      // slither-disable-next-line calls-loop
       allClaims[i].connector.configureRewards(tokens, duration);
     }
   }
@@ -76,6 +78,7 @@ contract MorphoRewardsManager is AccessControlDefaultAdminRules {
     tokens = new address[](claims.claims.length);
     for (uint256 i = 0; i < claims.claims.length; ++i) {
       Claim memory claim_ = claims.claims[i];
+      // slither-disable-next-line unused-return,calls-loop
       claims.rewardsDistributor.claim(address(claims.connector), claim_.rewardToken, claim_.claimable, claim_.proof);
       tokens[i] = claim_.rewardToken;
     }
