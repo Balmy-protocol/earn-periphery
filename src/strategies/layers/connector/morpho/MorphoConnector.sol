@@ -5,7 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
-import { ERC4626Connector, IEarnStrategy } from "../ERC4626Connector.sol";
+import { ERC4626Connector, IEarnStrategy, StrategyId } from "../ERC4626Connector.sol";
 
 /**
  * @notice Some farms like Aave v3 generate rewards continuously over time. But other farms (like Morpho) do the
@@ -140,6 +140,51 @@ abstract contract MorphoConnector is ERC4626Connector {
     // Note: we should technically re-size the array params but we know the ERC4626 connector doesn't need it, so we
     //       won't. This will help us reduce contract size
     super._connector_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_migrateToNewStrategy(
+    IEarnStrategy newStrategy,
+    bytes calldata migrationData
+  )
+    internal
+    override
+    returns (bytes memory)
+  {
+    // Migrate underlying token
+    bytes memory underlyingData = super._connector_migrateToNewStrategy(newStrategy, migrationData);
+
+    // Migrate rewards
+    address[] memory rewardTokens = _rewardTokens;
+    Rewards[] memory allRewards = new Rewards[](rewardTokens.length);
+    for (uint256 i = 0; i < rewardTokens.length; ++i) {
+      address rewardToken = rewardTokens[i];
+
+      // Collect rewards config
+      allRewards[i] = rewards[rewardToken];
+
+      // Transfer reward tokens
+      rewardToken.transfer({ recipient: address(newStrategy), amount: rewardToken.balanceOf(address(this)) });
+    }
+    return abi.encode(underlyingData, rewardTokens, allRewards);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_strategyRegistered(StrategyId, IEarnStrategy, bytes calldata migrationData) internal override {
+    if (migrationData.length == 0) {
+      return;
+    }
+
+    // Note: we ignore the underlying data because we know the current ERC4626 connector
+    //       doesn't need it. This will help us reduce contract size
+    (, address[] memory rewardTokens, Rewards[] memory allRewards) =
+      abi.decode(migrationData, (bytes, address[], Rewards[]));
+
+    // Configure rewards
+    _rewardTokens = rewardTokens;
+    for (uint256 i = 0; i < rewardTokens.length; ++i) {
+      rewards[rewardTokens[i]] = allRewards[i];
+    }
   }
 
   // slither-disable-next-line timestamp
