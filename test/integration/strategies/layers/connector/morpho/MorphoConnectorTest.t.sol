@@ -5,7 +5,8 @@ import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.so
 import {
   MorphoConnector,
   IGlobalEarnRegistry,
-  IEarnStrategy
+  IEarnStrategy,
+  StrategyId
 } from "src/strategies/layers/connector/morpho/MorphoConnector.sol";
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { BaseConnectorInstance } from "../base/BaseConnectorTest.t.sol";
@@ -163,6 +164,49 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     assertEq(balances.length, 2);
     assertGte(balances[0], assetsDeposited / 2);
     assertEq(balances[1], totalRewards * 3 / 4);
+  }
+
+  function testFork_migration_withRewards() public {
+    // Add rewards
+    uint256 totalRewards = 8640e10;
+    _sendAndConfigureRewards(_MORPHO_TOKEN, totalRewards, 1 days);
+
+    // Add asset
+    address depositToken = _GAUNTLET_DAI.asset();
+    _give(depositToken, address(this), 10e10);
+    IERC20(depositToken).approve(address(connector), type(uint256).max);
+    uint256 assetsDeposited = connector.deposit(depositToken, 10e10);
+
+    vm.warp(block.timestamp + 0.5 days);
+
+    // Check balances before migration
+    (, uint256[] memory oldBalances) = connector.totalBalances();
+    assertGte(oldBalances[0], assetsDeposited);
+    assertEq(oldBalances[1], totalRewards / 2);
+
+    // Migrate
+    MorphoConnectorInstance newConnector = new MorphoConnectorInstance(_GAUNTLET_DAI, registry);
+    bytes memory migrationData = connector.migrateToNewStrategy(IEarnStrategy(address(newConnector)), "");
+    newConnector.strategyRegistered(StrategyId.wrap(1), IEarnStrategy(address(connector)), migrationData);
+
+    // Make sure balances were migrated correctly
+    (address[] memory tokens, uint256[] memory balances) = newConnector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, oldBalances);
+
+    // Make sure full amount of rewards were migrated
+    assertEq(IERC20(_MORPHO_TOKEN).balanceOf(address(newConnector)), totalRewards);
+
+    // Make sure rewards configs were migrated correctly
+    (uint88 emissionPerSecond, uint32 deadline, uint104 emittedBeforeLastUpdate, uint32 lastUpdated) =
+      MorphoConnector(address(connector)).rewards(_MORPHO_TOKEN);
+    (uint88 newEmissionPerSecond, uint32 newDeadline, uint104 newEmittedBeforeLastUpdate, uint32 newLastUpdated) =
+      newConnector.rewards(_MORPHO_TOKEN);
+
+    assertEq(newEmissionPerSecond, emissionPerSecond);
+    assertEq(newDeadline, deadline);
+    assertEq(newEmittedBeforeLastUpdate, emittedBeforeLastUpdate);
+    assertEq(newLastUpdated, lastUpdated);
   }
 
   function _sendAndConfigureRewards(address token, uint256 amount, uint256 duration) internal {
