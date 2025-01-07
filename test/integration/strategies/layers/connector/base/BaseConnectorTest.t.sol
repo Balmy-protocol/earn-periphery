@@ -23,6 +23,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
 
   function setUp() public {
     _configureFork();
+    _setUp();
     connector = _buildNewConnector();
     vm.makePersistent(address(connector));
   }
@@ -153,7 +154,7 @@ abstract contract BaseConnectorTest is PRBTest, StdUtils, StdCheats {
     }
   }
 
-  function testFork_strategyRegistered() public {
+  function testFork_strategyRegistered_emptyMigrationData() public {
     // Note: we just make sure it can be called without it reverting
     connector.strategyRegistered(StrategyId.wrap(1), IEarnStrategy(address(0)), "");
   }

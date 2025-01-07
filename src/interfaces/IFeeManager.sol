@@ -46,8 +46,7 @@ interface IFeeManager is IFeeManagerCore {
    * @notice Returns the address of the strategy registry
    * @return The address of the strategy registry
    */
-  // slither-disable-start naming-convention
-
+  // slither-disable-next-line naming-convention
   function STRATEGY_REGISTRY() external view returns (IEarnStrategyRegistry);
 
   /**
