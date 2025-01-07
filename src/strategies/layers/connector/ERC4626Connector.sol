@@ -37,7 +37,7 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   }
 
   // slither-disable-next-line naming-convention,dead-code
-  function _connector_allTokens() internal view override returns (address[] memory tokens) {
+  function _connector_allTokens() internal view virtual override returns (address[] memory tokens) {
     tokens = new address[](1);
     tokens[0] = _connector_asset();
   }
@@ -80,11 +80,10 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    IERC4626 vault = ERC4626Vault();
     tokens = new address[](1);
     tokens[0] = _connector_asset();
     balances = new uint256[](1);
-    balances[0] = vault.previewRedeem(vault.balanceOf(address(this)));
+    balances[0] = _connector_erc4626_balance();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -111,7 +110,7 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     tokens = new address[](1);
     tokens[0] = _connector_asset();
     withdrawable = new uint256[](1);
-    withdrawable[0] = ERC4626Vault().maxWithdraw(address(this));
+    withdrawable[0] = _connector_erc4626_maxWithdraw();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -234,4 +233,14 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     override
   // solhint-disable-next-line no-empty-blocks
   { }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_erc4626_balance() internal view returns (uint256) {
+    return ERC4626Vault().previewRedeem(ERC4626Vault().balanceOf(address(this)));
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_erc4626_maxWithdraw() internal view returns (uint256) {
+    return ERC4626Vault().maxWithdraw(address(this));
+  }
 }

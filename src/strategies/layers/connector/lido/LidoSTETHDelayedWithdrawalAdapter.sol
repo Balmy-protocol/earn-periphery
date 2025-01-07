@@ -149,7 +149,7 @@ contract LidoSTETHDelayedWithdrawalAdapter is IDelayedWithdrawalAdapter {
     }
   }
 
-  // slither-disable-start assembly
+  // slither-disable-next-line assembly
   function withdraw(
     uint256 positionId,
     address token,
