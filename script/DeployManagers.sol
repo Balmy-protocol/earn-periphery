@@ -53,7 +53,7 @@ contract DeployManagers is BaseDeployPeriphery {
     initialNonceSpenders[0] = companion;
     initialNonceSpenders[1] = vault;
     address[] memory initialManagerSigners = new address[](1);
-    initialManagerSigners[0] = signer;
+    initialManagerSigners[0] = admin;
 
     SignatureBasedWhitelistManager.InitialSigner[] memory initialSigners =
       new SignatureBasedWhitelistManager.InitialSigner[](1);
