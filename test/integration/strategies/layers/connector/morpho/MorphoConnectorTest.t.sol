@@ -130,6 +130,41 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     assertEq(withdrawable, CommonUtils.arrayOf(0, totalRewards));
   }
 
+  function testFork_withdraw_withRewards() public {
+    uint256 totalRewards = 8640e10;
+    uint256 initialTimestamp = block.timestamp + 0;
+    address depositToken = _GAUNTLET_DAI.asset();
+    _sendAndConfigureRewards(_MORPHO_TOKEN, totalRewards, 1 days);
+
+    _give(depositToken, address(this), 10e10);
+    IERC20(depositToken).approve(address(connector), type(uint256).max);
+    uint256 assetsDeposited = connector.deposit(depositToken, 10e10);
+
+    vm.warp(initialTimestamp + 0.5 days);
+
+    connector.withdraw(
+      0,
+      CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN),
+      CommonUtils.arrayOf(assetsDeposited / 2, totalRewards / 4),
+      address(this)
+    );
+
+    assertEq(IERC20(depositToken).balanceOf(address(this)), assetsDeposited / 2);
+    assertEq(IERC20(_MORPHO_TOKEN).balanceOf(address(this)), totalRewards / 4);
+
+    (, uint256[] memory balances) = connector.totalBalances();
+    assertEq(balances.length, 2);
+    assertGte(balances[0], assetsDeposited / 2);
+    assertEq(balances[1], totalRewards / 4);
+
+    vm.warp(initialTimestamp + 1 days);
+
+    (, balances) = connector.totalBalances();
+    assertEq(balances.length, 2);
+    assertGte(balances[0], assetsDeposited / 2);
+    assertEq(balances[1], totalRewards * 3 / 4);
+  }
+
   function _sendAndConfigureRewards(address token, uint256 amount, uint256 duration) internal {
     _give(token, address(connector), amount);
     MorphoConnectorInstance(address(connector)).configureRewards(CommonUtils.arrayOf(token), duration);

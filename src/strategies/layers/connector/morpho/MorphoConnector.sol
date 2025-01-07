@@ -112,6 +112,34 @@ abstract contract MorphoConnector is ERC4626Connector {
     return _buildArraysWithRewards({ assetAmount: _connector_erc4626_maxWithdraw() });
   }
 
+  function _connector_withdraw(
+    uint256 positionId,
+    address[] memory tokens,
+    uint256[] memory toWithdraw,
+    address recipient
+  )
+    internal
+    override
+  {
+    // Withdraw rewards
+    for (uint256 i = 1; i < tokens.length; ++i) {
+      uint256 amountToWithdraw = toWithdraw[i];
+      if (amountToWithdraw > 0) {
+        address rewardToken = _rewardTokens[i - 1];
+        Rewards storage rewardsStorage = rewards[rewardToken];
+        uint256 emitted = _emittedRewards(rewardsStorage);
+        rewardsStorage.emittedBeforeLastUpdate = (emitted - amountToWithdraw).toUint104();
+        rewardsStorage.lastUpdated = uint32(block.timestamp);
+        rewardToken.transfer({ recipient: recipient, amount: amountToWithdraw });
+      }
+    }
+
+    // Withdraw underlying token
+    // Note: we should technically re-size the array params but we know the ERC4626 connector doesn't need it, so we
+    //       won't. This will help us reduce contract size
+    super._connector_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
   function _emittedRewards(Rewards memory rewardsMem) private view returns (uint256) {
     uint256 emittedSinceLastUpdate = rewardsMem.lastUpdated < rewardsMem.deadline
       ? rewardsMem.emissionPerSecond * (Math.min(block.timestamp, rewardsMem.deadline) - rewardsMem.lastUpdated)
