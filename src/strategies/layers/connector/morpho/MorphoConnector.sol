@@ -112,6 +112,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     return _buildArraysWithRewards({ assetAmount: _connector_erc4626_maxWithdraw() });
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_withdraw(
     uint256 positionId,
     address[] memory tokens,
@@ -130,6 +131,7 @@ abstract contract MorphoConnector is ERC4626Connector {
         uint256 emitted = _emittedRewards(rewardsStorage);
         rewardsStorage.emittedBeforeLastUpdate = (emitted - amountToWithdraw).toUint104();
         rewardsStorage.lastUpdated = uint32(block.timestamp);
+        // slither-disable-next-line reentrancy-no-eth
         rewardToken.transfer({ recipient: recipient, amount: amountToWithdraw });
       }
     }
@@ -140,6 +142,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     super._connector_withdraw(positionId, tokens, toWithdraw, recipient);
   }
 
+  // slither-disable-next-line timestamp
   function _emittedRewards(Rewards memory rewardsMem) private view returns (uint256) {
     uint256 emittedSinceLastUpdate = rewardsMem.lastUpdated < rewardsMem.deadline
       ? rewardsMem.emissionPerSecond * (Math.min(block.timestamp, rewardsMem.deadline) - rewardsMem.lastUpdated)
