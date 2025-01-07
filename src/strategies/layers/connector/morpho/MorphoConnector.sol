@@ -5,7 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
-import { ERC4626Connector } from "../ERC4626Connector.sol";
+import { ERC4626Connector, IEarnStrategy } from "../ERC4626Connector.sol";
 
 /**
  * @notice Some farms like Aave v3 generate rewards continuously over time. But other farms (like Morpho) do the
@@ -72,6 +72,46 @@ abstract contract MorphoConnector is ERC4626Connector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_allTokens() internal view override returns (address[] memory tokens) {
+    address[] memory rewardsTokens = _rewardTokens;
+    tokens = new address[](1 + rewardsTokens.length);
+    tokens[0] = _connector_asset();
+    for (uint256 i = 0; i < rewardsTokens.length; ++i) {
+      tokens[i + 1] = rewardsTokens[i];
+    }
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_supportedWithdrawals()
+    internal
+    view
+    override
+    returns (IEarnStrategy.WithdrawalType[] memory types)
+  {
+    types = new IEarnStrategy.WithdrawalType[](_rewardTokens.length + 1);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_totalBalances()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory balances)
+  {
+    return _buildArraysWithRewards({ assetAmount: _connector_erc4626_balance() });
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_maxWithdraw()
+    internal
+    view
+    override
+    returns (address[] memory tokens, uint256[] memory withdrawable)
+  {
+    return _buildArraysWithRewards({ assetAmount: _connector_erc4626_maxWithdraw() });
+  }
+
   function _emittedRewards(Rewards memory rewardsMem) private view returns (uint256) {
     uint256 emittedSinceLastUpdate = rewardsMem.lastUpdated < rewardsMem.deadline
       ? rewardsMem.emissionPerSecond * (Math.min(block.timestamp, rewardsMem.deadline) - rewardsMem.lastUpdated)
@@ -79,7 +119,30 @@ abstract contract MorphoConnector is ERC4626Connector {
     return rewardsMem.emittedBeforeLastUpdate + emittedSinceLastUpdate;
   }
 
+  // slither-disable-next-line dead-code
+  function _emittedRewards(address rewardToken) private view returns (uint256) {
+    return _emittedRewards(rewards[rewardToken]);
+  }
+
   function _getRewardsManager() private view returns (address) {
     return globalRegistry().getAddressOrFail(MORPHO_REWARDS_MANAGER);
+  }
+
+  // slither-disable-next-line dead-code
+  function _buildArraysWithRewards(uint256 assetAmount)
+    private
+    view
+    returns (address[] memory tokens, uint256[] memory amounts)
+  {
+    address[] memory rewardsTokens = _rewardTokens;
+    tokens = new address[](rewardsTokens.length + 1);
+    amounts = new uint256[](tokens.length);
+    tokens[0] = _connector_asset();
+    amounts[0] = assetAmount;
+    for (uint256 i = 0; i < rewardsTokens.length; ++i) {
+      uint256 index = i + 1;
+      tokens[index] = rewardsTokens[i];
+      amounts[index] = _emittedRewards(rewardsTokens[i]);
+    }
   }
 }
