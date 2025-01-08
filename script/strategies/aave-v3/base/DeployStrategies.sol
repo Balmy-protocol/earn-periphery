@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IAToken, StrategyId } from "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies, IAToken, StrategyId, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
+import { console2 } from "forge-std/console2.sol";
 import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
@@ -20,10 +21,10 @@ contract DeployStrategies is BaseDeployStrategies {
     address[] memory judges = new address[](1);
     judges[0] = getMsig();
 
-    StrategyId strategyId;
+    IEarnBalmyStrategy strategy;
     // Tier 0 = default fees
     // USDC
-    deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
@@ -33,7 +34,7 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: DEFAULT_FEES
     });
-
+    console2.log("strategy tier 0 - usdc", address(strategy));
     // WETH
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
@@ -45,9 +46,9 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: DEFAULT_FEES
     });
-
+    console2.log("strategy tier 0 - weth", address(strategy));
     // cbBTC
-    deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
@@ -57,12 +58,12 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: DEFAULT_FEES
     });
-
+    console2.log("strategy tier 0 - cbbtc", address(strategy));
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
     Fees memory tier1Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 750, rescueFee: 375 });
 
     // USDC
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
@@ -72,9 +73,10 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier1Fees
     });
+    console2.log("strategy tier 1 - usdc", address(strategy));
 
     // WETH
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
@@ -84,9 +86,9 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier1Fees
     });
-
+    console2.log("strategy tier 1 - weth", address(strategy));
     // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
@@ -96,11 +98,12 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier1Fees
     });
+    console2.log("strategy tier 1 - cbbtc", address(strategy));
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
     Fees memory tier2Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 500, rescueFee: 250 });
     // USDC
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
@@ -110,9 +113,10 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier2Fees
     });
+    console2.log("strategy tier 2 - usdc", address(strategy));
 
     // WETH
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
@@ -122,24 +126,12 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier2Fees
     });
-
-    // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges,
-      fees: tier2Fees
-    });
-
+    console2.log("strategy tier 2 - weth", address(strategy));
     // Tier 3 = 2.5% performance fee + 1% rescue fee
     Fees memory tier3Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 250, rescueFee: 100 });
 
     // USDC
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB),
@@ -149,9 +141,9 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier3Fees
     });
-
+    console2.log("strategy tier 3 - usdc", address(strategy));
     // WETH
-    (, strategyId) = deployAaveV3Strategy({
+    (strategy,) = deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xD4a0e0b9149BCee3C920d2E00b5dE09138fd8bb7),
@@ -161,17 +153,6 @@ contract DeployStrategies is BaseDeployStrategies {
       judges: judges,
       fees: tier3Fees
     });
-
-    // cbBTC
-    (, strategyId) = deployAaveV3Strategy({
-      aaveV3Pool: aaveV3Pool,
-      aaveV3Rewards: aaveV3Rewards,
-      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      signerGroup: DEFAULT_SIGNER_GROUP,
-      guardians: guardians,
-      judges: judges,
-      fees: tier3Fees
-    });
+    console2.log("strategy tier 3 - weth", address(strategy));
   }
 }
