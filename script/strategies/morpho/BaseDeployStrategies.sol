@@ -6,13 +6,11 @@ import { BaseDeployPeriphery } from "../../BaseDeployPeriphery.sol";
 import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
 import {
-  AaveV3StrategyFactory,
-  AaveV3Strategy,
-  IAaveV3Pool,
-  IAaveV3Rewards,
-  IAToken,
-  AaveV3StrategyData
-} from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
+  MorphoStrategyFactory,
+  MorphoStrategy,
+  IERC4626,
+  MorphoStrategyData
+} from "src/strategies/instances/morpho/MorphoStrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
 import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
@@ -21,10 +19,8 @@ import { console2 } from "forge-std/console2.sol";
 import { Fees } from "src/types/Fees.sol";
 
 contract BaseDeployStrategies is BaseDeployPeriphery {
-  function deployAaveV3Strategy(
-    address aaveV3Pool,
-    address aaveV3Rewards,
-    IAToken aToken,
+  function deployMorphoStrategy(
+    IERC4626 mToken,
     bytes32 tosGroup,
     bytes32 signerGroup,
     address[] memory guardians,
@@ -35,14 +31,14 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V1_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
+    address implementation = deployContract("V1_S_MORPHO", abi.encodePacked(type(MorphoStrategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
-    AaveV3StrategyFactory aaveV3StrategyFactory = AaveV3StrategyFactory(
+    MorphoStrategyFactory morphoStrategyFactory = MorphoStrategyFactory(
       deployContract(
-        "V1_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
+        "V1_F_MORPHO", abi.encodePacked(type(MorphoStrategyFactory).creationCode, abi.encode(implementation))
       )
     );
-    console2.log("Factory deployed: ", address(aaveV3StrategyFactory));
+    console2.log("Factory deployed: ", address(morphoStrategyFactory));
     address vault = getDeployedAddress("V1_VAULT");
     console2.log("Vault deployed: ", vault);
     address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
@@ -59,27 +55,19 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory liquidityMiningData = "";
     bytes memory feesData = fees.equals(DEFAULT_FEES) ? bytes("") : abi.encode(fees);
-    bytes32 salt = keccak256(abi.encode("V1_S_AAVEV3", guard));
+    bytes32 salt = keccak256(abi.encode("V1_S_MORPHO", guard));
 
-    address computedAddress = aaveV3StrategyFactory.addressOfClone2(
-      IEarnVault(vault),
-      IGlobalEarnRegistry(globalRegistry),
-      aToken,
-      IAaveV3Pool(aaveV3Pool),
-      IAaveV3Rewards(aaveV3Rewards),
-      salt
-    );
+    address computedAddress =
+      morphoStrategyFactory.addressOfClone2(IEarnVault(vault), IGlobalEarnRegistry(globalRegistry), mToken, salt);
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
     } else {
-      (strategy, strategyId) = aaveV3StrategyFactory.clone2StrategyAndRegister(
+      (strategy, strategyId) = morphoStrategyFactory.clone2StrategyAndRegister(
         admin,
-        AaveV3StrategyData(
+        MorphoStrategyData(
           IEarnVault(vault),
           IGlobalEarnRegistry(globalRegistry),
-          aToken,
-          IAaveV3Pool(aaveV3Pool),
-          IAaveV3Rewards(aaveV3Rewards),
+          mToken,
           creationValidationData,
           guardianData,
           feesData,
@@ -87,7 +75,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         ),
         salt
       );
-
       console2.log("Strategy:", address(strategy));
       console2.log("Strategy ID:", StrategyId.unwrap(strategyId));
     }
