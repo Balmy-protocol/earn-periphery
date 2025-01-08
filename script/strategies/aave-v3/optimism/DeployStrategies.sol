@@ -2,11 +2,13 @@
 pragma solidity ^0.8.13;
 
 import { BaseDeployStrategies, IAToken, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
+import { DeployPeriphery } from "script/DeployPeriphery.sol";
 import { console2 } from "forge-std/console2.sol";
 
-contract DeployStrategies is BaseDeployStrategies {
-  function run() external virtual {
+contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
+  function run() external override(DeployPeriphery) {
     vm.startBroadcast();
+    deployPeriphery();
     deployAaveV3Strategies();
     vm.stopBroadcast();
   }

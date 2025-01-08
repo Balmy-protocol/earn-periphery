@@ -137,10 +137,10 @@ contract DeployManagers is BaseDeployPeriphery {
       contractAddress: validationManagersRegistry
     });
     // Only for base we have to comment this, because global registry was deployed and deployer has no role to add it
-    /*config[5] = GlobalEarnRegistry.InitialConfig({
+    config[5] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("MORPHO_REWARDS_MANAGER"),
       contractAddress: morphoRewardsManager
-    });*/
+    });
 
     address globalRegistry = deployContract(
       "V1_GLOBAL_REGISTRY", abi.encodePacked(type(GlobalEarnRegistry).creationCode, abi.encode(config, admin))
