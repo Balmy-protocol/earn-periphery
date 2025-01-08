@@ -136,7 +136,6 @@ contract DeployManagers is BaseDeployPeriphery {
       id: keccak256("VALIDATION_MANAGERS_REGISTRY"),
       contractAddress: validationManagersRegistry
     });
-    // Only for base we have to comment this, because global registry was deployed and deployer has no role to add it
     config[5] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("MORPHO_REWARDS_MANAGER"),
       contractAddress: morphoRewardsManager
