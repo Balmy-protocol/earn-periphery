@@ -29,7 +29,8 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes32 signerGroup,
     address[] memory guardians,
     address[] memory judges,
-    Fees memory fees
+    Fees memory fees,
+    bytes32 guard
   )
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
@@ -58,22 +59,38 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory liquidityMiningData = "";
     bytes memory feesData = fees.equals(DEFAULT_FEES) ? bytes("") : abi.encode(fees);
-    (strategy, strategyId) = aaveV3StrategyFactory.cloneStrategyAndRegister(
-      admin,
-      AaveV3StrategyData(
-        IEarnVault(vault),
-        IGlobalEarnRegistry(globalRegistry),
-        aToken,
-        IAaveV3Pool(aaveV3Pool),
-        IAaveV3Rewards(aaveV3Rewards),
-        creationValidationData,
-        guardianData,
-        feesData,
-        liquidityMiningData
-      )
-    );
+    bytes32 salt = keccak256(abi.encode("V1_S_AAVEV3", guard));
 
-    console2.log("Strategy:", address(strategy));
-    console2.log("Strategy ID:", StrategyId.unwrap(strategyId));
+    address computedAddress = aaveV3StrategyFactory.addressOfClone2(
+      IEarnVault(vault),
+      IGlobalEarnRegistry(globalRegistry),
+      aToken,
+      IAaveV3Pool(aaveV3Pool),
+      IAaveV3Rewards(aaveV3Rewards),
+      salt
+    );
+    console2.log("Computed address: ", computedAddress);
+    if (computedAddress.code.length > 0) {
+      console2.log("Strategy already deployed", computedAddress);
+    } else {
+      (strategy, strategyId) = aaveV3StrategyFactory.clone2StrategyAndRegister(
+        admin,
+        AaveV3StrategyData(
+          IEarnVault(vault),
+          IGlobalEarnRegistry(globalRegistry),
+          aToken,
+          IAaveV3Pool(aaveV3Pool),
+          IAaveV3Rewards(aaveV3Rewards),
+          creationValidationData,
+          guardianData,
+          feesData,
+          liquidityMiningData
+        ),
+        salt
+      );
+
+      console2.log("Strategy:", address(strategy));
+      console2.log("Strategy ID:", StrategyId.unwrap(strategyId));
+    }
   }
 }

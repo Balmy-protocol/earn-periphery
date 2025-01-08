@@ -7,11 +7,11 @@ import { console2 } from "forge-std/console2.sol";
 contract DeployStrategies is BaseDeployStrategies {
   function run() external virtual {
     vm.startBroadcast();
-    deployStrategies();
+    deployAaveV3Strategies();
     vm.stopBroadcast();
   }
 
-  function deployStrategies() internal {
+  function deployAaveV3Strategies() internal {
     address aaveV3Pool = 0x794a61358D6845594F94dc1DB02A252b5b4814aD;
     address aaveV3Rewards = 0x929EC64c34a17401F460460D4B9390518E5B473e;
 
@@ -32,7 +32,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - weth", address(strategy));
 
@@ -45,7 +46,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - usdc", address(strategy));
 
@@ -58,7 +60,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - wbtc", address(strategy));
 
@@ -71,7 +74,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - usdt", address(strategy));
 
@@ -84,7 +88,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - op", address(strategy));
 
@@ -97,7 +102,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - susd", address(strategy));
 
@@ -110,7 +116,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - usdcn", address(strategy));
 
@@ -123,7 +130,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - dai", address(strategy));
 
@@ -136,7 +144,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
   }
 }

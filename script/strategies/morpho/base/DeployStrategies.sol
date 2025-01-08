@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IERC4626, StrategyId, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies, IERC4626, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
 import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external virtual {
     vm.startBroadcast();
-    deployStrategies();
+    deployMorphoStrategies();
     vm.stopBroadcast();
   }
 
-  function deployStrategies() internal {
+  function deployMorphoStrategies() internal {
     address[] memory guardians = new address[](1);
     guardians[0] = 0x653c69a2dE94BeC3953C76c64763A1f1438207c6;
 
@@ -29,7 +29,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - moonwell flagship eth", address(strategy));
 
@@ -40,7 +41,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - gauntlet usdc prime", address(strategy));
 
@@ -54,7 +56,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier1Fees
+      fees: tier1Fees,
+      guard: "v1-t1"
     });
     console2.log("strategy tier 1 - moonwell flagship eth", address(strategy));
 
@@ -65,7 +68,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier1Fees
+      fees: tier1Fees,
+      guard: "v1-t1"
     });
     console2.log("strategy tier 1 - gauntlet usdc prime", address(strategy));
 
@@ -79,7 +83,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier2Fees
+      fees: tier2Fees,
+      guard: "v1-t2"
     });
     console2.log("strategy tier 2 - moonwell flagship eth", address(strategy));
 
@@ -90,7 +95,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier2Fees
+      fees: tier2Fees,
+      guard: "v1-t2"
     });
     console2.log("strategy tier 2 - gauntlet usdc prime", address(strategy));
 
@@ -104,7 +110,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier3Fees
+      fees: tier3Fees,
+      guard: "v1-t3"
     });
     console2.log("strategy tier 3 - moonwell flagship eth", address(strategy));
 
@@ -115,7 +122,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier3Fees
+      fees: tier3Fees,
+      guard: "v1-t3"
     });
     console2.log("strategy tier 3 - gauntlet usdc prime", address(strategy));
   }

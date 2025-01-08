@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IAToken, StrategyId, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies, IAToken, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
 import { console2 } from "forge-std/console2.sol";
 import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 
 contract DeployStrategies is BaseDeployStrategies {
   function run() external virtual {
     vm.startBroadcast();
-    deployStrategies();
+    deployAaveV3Strategies();
     vm.stopBroadcast();
   }
 
-  function deployStrategies() internal {
+  function deployAaveV3Strategies() internal {
     address aaveV3Pool = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5;
     address aaveV3Rewards = 0xf9cc4F0D883F1a1eb2c253bdb46c254Ca51E1F44;
     address[] memory guardians = new address[](1);
@@ -32,7 +32,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - usdc", address(strategy));
     // WETH
@@ -44,7 +45,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - weth", address(strategy));
     // cbBTC
@@ -56,7 +58,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
-      fees: DEFAULT_FEES
+      fees: DEFAULT_FEES,
+      guard: "v1-t0"
     });
     console2.log("strategy tier 0 - cbbtc", address(strategy));
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
@@ -71,7 +74,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier1Fees
+      fees: tier1Fees,
+      guard: "v1-t1"
     });
     console2.log("strategy tier 1 - usdc", address(strategy));
 
@@ -84,7 +88,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier1Fees
+      fees: tier1Fees,
+      guard: "v1-t1"
     });
     console2.log("strategy tier 1 - weth", address(strategy));
     // cbBTC
@@ -96,7 +101,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier1Fees
+      fees: tier1Fees,
+      guard: "v1-t1"
     });
     console2.log("strategy tier 1 - cbbtc", address(strategy));
 
@@ -111,7 +117,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier2Fees
+      fees: tier2Fees,
+      guard: "v1-t2"
     });
     console2.log("strategy tier 2 - usdc", address(strategy));
 
@@ -124,7 +131,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier2Fees
+      fees: tier2Fees,
+      guard: "v1-t2"
     });
     console2.log("strategy tier 2 - weth", address(strategy));
     // Tier 3 = 2.5% performance fee + 1% rescue fee
@@ -139,7 +147,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier3Fees
+      fees: tier3Fees,
+      guard: "v1-t3"
     });
     console2.log("strategy tier 3 - usdc", address(strategy));
     // WETH
@@ -151,7 +160,8 @@ contract DeployStrategies is BaseDeployStrategies {
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
-      fees: tier3Fees
+      fees: tier3Fees,
+      guard: "v1-t3"
     });
     console2.log("strategy tier 3 - weth", address(strategy));
   }

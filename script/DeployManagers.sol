@@ -10,6 +10,7 @@ import { GuardianManager } from "src/strategies/layers/guardian/external/Guardia
 import { LiquidityMiningManager } from "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
 import { DelayedWithdrawalManager } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
 import { TOSManager } from "src/strategies/layers/creation-validation/external/TOSManager.sol";
+import { MorphoRewardsManager } from "src/strategies/layers/connector/morpho/MorphoRewardsManager.sol";
 import { GlobalValidationManagersRegistry } from
   "src/strategies/layers/creation-validation/external/GlobalValidationManagersRegistry.sol";
 import { SignatureBasedWhitelistManager } from
@@ -114,7 +115,12 @@ contract DeployManagers is BaseDeployPeriphery {
     );
     console2.log("Liquidity mining manager:", liquidityMiningManager);
 
-    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](5);
+    address morphoRewardsManager = deployContract(
+      "V1_RM_MORPHO", abi.encodePacked(type(MorphoRewardsManager).creationCode, abi.encode(admin, initialAdmins))
+    );
+    console2.log("Rewards manager deployed: ", morphoRewardsManager);
+
+    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](6);
     config[0] = GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: feeManager });
     config[1] =
       GlobalEarnRegistry.InitialConfig({ id: keccak256("GUARDIAN_MANAGER"), contractAddress: guardianManager });
@@ -130,6 +136,12 @@ contract DeployManagers is BaseDeployPeriphery {
       id: keccak256("VALIDATION_MANAGERS_REGISTRY"),
       contractAddress: validationManagersRegistry
     });
+    // Only for base we have to comment this, because global registry was deployed and deployer has no role to add it
+    /*config[5] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("MORPHO_REWARDS_MANAGER"),
+      contractAddress: morphoRewardsManager
+    });*/
+
     address globalRegistry = deployContract(
       "V1_GLOBAL_REGISTRY", abi.encodePacked(type(GlobalEarnRegistry).creationCode, abi.encode(config, admin))
     );
