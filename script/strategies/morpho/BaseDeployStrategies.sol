@@ -59,7 +59,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
 
     address computedAddress =
       morphoStrategyFactory.addressOfClone2(IEarnVault(vault), IGlobalEarnRegistry(globalRegistry), mToken, salt);
-    console2.log("Computed address: ", computedAddress);
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
     } else {

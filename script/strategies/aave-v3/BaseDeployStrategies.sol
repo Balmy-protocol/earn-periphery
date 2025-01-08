@@ -69,7 +69,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
       IAaveV3Rewards(aaveV3Rewards),
       salt
     );
-    console2.log("Computed address: ", computedAddress);
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
     } else {
