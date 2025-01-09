@@ -2,7 +2,7 @@
 pragma solidity >=0.8.22;
 
 import { IERC4626, IERC20 } from "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import { IEarnStrategy, StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { MorphoConnector } from "../../layers/connector/morpho/MorphoConnector.sol";
