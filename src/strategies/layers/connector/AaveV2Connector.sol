@@ -123,21 +123,23 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     override
     returns (uint256 assetsDeposited)
   {
+    if (takeFromCaller) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
+    }
     IAToken aToken_ = aToken();
     if (depositToken == _connector_asset()) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 balanceBefore = aToken_.balanceOf(address(this));
       pool().deposit(depositToken, depositAmount, address(this), 0);
       uint256 balanceAfter = aToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
     } else if (depositToken == address(aToken_)) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);

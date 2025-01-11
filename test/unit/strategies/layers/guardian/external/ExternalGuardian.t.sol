@@ -145,6 +145,7 @@ contract ExternalGuardianTest is Test {
     ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, balance);
+    assertEq(deposit.takeFromCaller, false);
     (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
     assertEq(feeBps, 0);
     assertEq(feeRecipient, address(0));
@@ -288,6 +289,7 @@ contract ExternalGuardianTest is Test {
     ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
     assertEq(deposit.token, asset);
     assertEq(deposit.amount, amount);
+    assertEq(deposit.takeFromCaller, true);
     assertEq(deposited, amount);
   }
 
@@ -417,6 +419,7 @@ contract ExternalGuardianInstance is ExternalGuardian {
   struct Deposit {
     address token;
     uint256 amount;
+    bool takeFromCaller;
   }
 
   struct SpecialWithdrawal {
@@ -558,13 +561,14 @@ contract ExternalGuardianInstance is ExternalGuardian {
 
   function _guardian_underlying_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     override
     returns (uint256 assetsDeposited)
   {
-    _deposit = Deposit(depositToken, depositAmount);
+    _deposit = Deposit(depositToken, depositAmount, takeFromCaller);
     return depositAmount;
   }
 

@@ -379,13 +379,15 @@ abstract contract BaseStrategy is
 
   function _guardian_underlying_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     override
     returns (uint256 assetsDeposited)
   {
-    return _connector_deposit(depositToken, depositAmount);
+    return
+      _connector_deposit({ depositToken: depositToken, depositAmount: depositAmount, takeFromCaller: takeFromCaller });
   }
 
   function _guardian_underlying_withdraw(

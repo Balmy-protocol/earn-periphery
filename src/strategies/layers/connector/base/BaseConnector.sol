@@ -34,7 +34,8 @@ abstract contract BaseConnector {
   function _connector_delayedWithdrawalAdapter(address token) internal view virtual returns (IDelayedWithdrawalAdapter);
   function _connector_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     virtual

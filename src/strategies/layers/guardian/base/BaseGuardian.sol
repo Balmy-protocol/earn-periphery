@@ -24,7 +24,8 @@ abstract contract BaseGuardian {
     returns (address[] memory tokens, uint256[] memory balances);
   function _guardian_underlying_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     virtual
