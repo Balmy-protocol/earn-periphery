@@ -126,22 +126,24 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     virtual
     override
     returns (uint256 assetsDeposited)
   {
+    if (takeFromCaller) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
+    }
     IERC4626 vault = ERC4626Vault();
     if (depositToken == _connector_asset()) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 shares = vault.deposit(depositAmount, address(this));
       // Note: there might be slippage or a deposit fee, so we will re-calculate the amount of assets deposited
       //       based on the amount of shares minted
       return vault.previewRedeem(shares);
     } else if (depositToken == address(vault)) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return vault.previewRedeem(depositAmount);
     } else {
       revert InvalidDepositToken(depositToken);
@@ -236,7 +238,8 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_erc4626_balance() internal view returns (uint256) {
-    return ERC4626Vault().previewRedeem(ERC4626Vault().balanceOf(address(this)));
+    IERC4626 vault = ERC4626Vault();
+    return vault.previewRedeem(vault.balanceOf(address(this)));
   }
 
   // slither-disable-next-line naming-convention,dead-code

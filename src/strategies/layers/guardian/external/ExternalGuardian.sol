@@ -110,7 +110,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
 
     address[] memory tokens = _guardian_underlying_tokens();
     uint256 assetBalance = tokens[0].balanceOf(address(this));
-    _guardian_underlying_deposit(tokens[0], assetBalance);
+    // Since funds are already on the contract, there is no need to take them from the caller
+    _guardian_underlying_deposit({ depositToken: tokens[0], depositAmount: assetBalance, takeFromCaller: false });
 
     rescueConfig = RescueConfig({ feeBps: 0, feeRecipient: address(0), status: RescueStatus.OK });
 
@@ -190,7 +191,8 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     if (rescueConfig.status != RescueStatus.OK) {
       revert InvalidRescueStatus();
     }
-    return _guardian_underlying_deposit(depositToken, depositAmount);
+    return
+      _guardian_underlying_deposit({ depositToken: depositToken, depositAmount: depositAmount, takeFromCaller: true });
   }
 
   // slither-disable-start naming-convention,dead-code
