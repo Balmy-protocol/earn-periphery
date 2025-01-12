@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IAToken, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
-import { console2 } from "forge-std/console2.sol";
+import { BaseDeployStrategies, IAToken } from "../BaseDeployStrategies.sol";
 import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 import { DeployPeriphery } from "script/DeployPeriphery.sol";
 

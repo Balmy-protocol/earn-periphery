@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import { BaseDeployStrategies, IERC4626, IEarnBalmyStrategy } from "../BaseDeployStrategies.sol";
+import { BaseDeployStrategies, IERC4626 } from "../BaseDeployStrategies.sol";
 import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 import { DeployPeriphery } from "script/DeployPeriphery.sol";
-import { console2 } from "forge-std/console2.sol";
 
 contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
