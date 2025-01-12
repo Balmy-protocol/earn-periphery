@@ -10,6 +10,7 @@ import { IEarnVault } from "@balmy/earn-core/interfaces/IEarnVault.sol";
  *         address in order to call it. We could have its id, or we might have a position id instead. This contract
  *         aims to simplify this process by exposing a single function that will perform all the necessary steps.
  */
+// slither-disable-next-line missing-inheritance
 contract StrategyRouter {
   error StrategyNotFoundByStrategyId(IEarnStrategyRegistry registry, StrategyId strategyId);
   error StrategyNotFoundByPositionId(IEarnVault vault, uint256 positionId);
@@ -39,6 +40,7 @@ contract StrategyRouter {
     payable
     returns (bytes memory result)
   {
+    // slither-disable-next-line unused-return
     (, IEarnStrategy strategy) = vault.positionsStrategy(positionId);
     if (address(strategy) == address(0)) {
       revert StrategyNotFoundByPositionId(vault, positionId);
