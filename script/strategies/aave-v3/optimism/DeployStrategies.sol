@@ -24,10 +24,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     address[] memory judges = new address[](1);
     judges[0] = getMsig();
 
-    IEarnBalmyStrategy strategy;
-
     // WETH
-    (strategy,) = deployAaveV3Strategy({
+    deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
       aToken: IAToken(0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8),
@@ -36,11 +34,11 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - weth"
     });
-    console2.log("strategy tier 0 - weth", address(strategy));
 
-    // USDC
+    // Bridged USDC
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
@@ -50,9 +48,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - bridged usdc"
     });
-    console2.log("strategy tier 0 - usdc", address(strategy));
 
     // WBTC
     deployAaveV3Strategy({
@@ -64,9 +62,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - wbtc"
     });
-    console2.log("strategy tier 0 - wbtc", address(strategy));
 
     // USDT
     deployAaveV3Strategy({
@@ -78,9 +76,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - usdt"
     });
-    console2.log("strategy tier 0 - usdt", address(strategy));
 
     // OP
     deployAaveV3Strategy({
@@ -92,9 +90,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - op"
     });
-    console2.log("strategy tier 0 - op", address(strategy));
 
     // SUSD
     deployAaveV3Strategy({
@@ -106,11 +104,11 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - susd"
     });
-    console2.log("strategy tier 0 - susd", address(strategy));
 
-    // USDCn
+    // USDC
     deployAaveV3Strategy({
       aaveV3Pool: aaveV3Pool,
       aaveV3Rewards: aaveV3Rewards,
@@ -120,9 +118,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - usdc"
     });
-    console2.log("strategy tier 0 - usdcn", address(strategy));
 
     // DAI
     deployAaveV3Strategy({
@@ -134,9 +132,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - dai"
     });
-    console2.log("strategy tier 0 - dai", address(strategy));
 
     // LUSD
     deployAaveV3Strategy({
@@ -148,7 +146,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0"
+      guard: "v1-t0",
+      description: "strategy tier 0 - lusd"
     });
   }
 }
