@@ -14,8 +14,9 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   }
 
   function deployMorphoStrategies() internal {
-    address[] memory guardians = new address[](1);
+    address[] memory guardians = new address[](2);
     guardians[0] = 0x653c69a2dE94BeC3953C76c64763A1f1438207c6;
+    guardians[1] = getMsig();
 
     address[] memory judges = new address[](1);
     judges[0] = getMsig();
