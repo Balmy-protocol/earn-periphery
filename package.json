@@ -7,10 +7,10 @@
     "url": "https://github.com/balmy-protocol"
   },
   "devDependencies": {
-    "@balmy/earn-core": "github:balmy-protocol/earn-core#750e659691e3c02160ebf55b0b2eb80b1fc10b42",
+    "@balmy/earn-core": "github:balmy-protocol/earn-core#69590f2b285ea1196fe7c72e433a84cecb428a09",
     "@balmy/nft-permissions": "github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638",
     "@balmy/call-simulation": "github:balmy-protocol/call-simulation#a510c80c7e81480eb5806422101d199a39662024",
-    "@forta/firewall": "github:forta-network/forta-firewall-contracts#212600ba36ba37a225e24d11083f1efd8579c2ba",
+    "@forta/firewall": "github:forta-network/forta-firewall-contracts#81a970149dffdb95b0d0e0a67ad23b1db6539390",
     "@openzeppelin": "github:OpenZeppelin/openzeppelin-contracts#bcdfa848a6abb37216df861573d9576636e77824",
     "@prb/test": "github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19",
     "ds-test": "github:dapphub/ds-test",
