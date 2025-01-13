@@ -40,9 +40,9 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
       )
     );
     console2.log("Factory deployed: ", address(morphoStrategyFactory));
-    address vault = getDeployedAddress("V1_VAULT");
+    address vault = getDeployedAddress("V2_VAULT");
     console2.log("Vault deployed: ", vault);
-    address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
+    address globalRegistry = getDeployedAddress("V2_GLOBAL_REGISTRY");
     console2.log("Global registry deployed: ", globalRegistry);
 
     bytes memory registryData = "";

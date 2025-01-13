@@ -26,9 +26,9 @@ contract DeployManagers is BaseDeployPeriphery {
   }
 
   function deployManagers() public {
-    address vault = getDeployedAddress("V1_VAULT");
-    address strategyRegistry = getDeployedAddress("V1_STRATEGY_REGISTRY");
-    address companion = getDeployedAddress("V1_COMPANION");
+    address vault = getDeployedAddress("V2_VAULT");
+    address strategyRegistry = getDeployedAddress("V2_STRATEGY_REGISTRY");
+    address companion = getDeployedAddress("V2_COMPANION");
 
     address[] memory initialAdmins = new address[](1);
     initialAdmins[0] = admin;
@@ -40,7 +40,7 @@ contract DeployManagers is BaseDeployPeriphery {
       group: BALMY_GUARDIAN_TOS_GROUP
     });
     address tosManager = deployContract(
-      "V1_TOS_MANAGER",
+      "V2_TOS_MANAGER",
       abi.encodePacked(
         type(TOSManager).creationCode,
         abi.encode(strategyRegistry, admin, initialAdmins, initialToS, new TOSManager.InitialGroup[](0))
@@ -60,7 +60,7 @@ contract DeployManagers is BaseDeployPeriphery {
       new SignatureBasedWhitelistManager.InitialSigner[](1);
     initialSigners[0] = SignatureBasedWhitelistManager.InitialSigner({ signer: signer, group: DEFAULT_SIGNER_GROUP });
     address signatureBasedWhitelistManager = deployContract(
-      "V1_SIGNATURE",
+      "V2_SIGNATURE",
       abi.encodePacked(
         type(SignatureBasedWhitelistManager).creationCode,
         abi.encode(
@@ -79,12 +79,12 @@ contract DeployManagers is BaseDeployPeriphery {
     managers[0] = ICreationValidationManagerCore(tosManager);
     managers[1] = ICreationValidationManagerCore(signatureBasedWhitelistManager);
     address validationManagersRegistry = deployContract(
-      "V1_VALIDATION_MANAGERS_REGISTRY",
+      "V2_VALIDATION_MANAGERS_REGISTRY",
       abi.encodePacked(type(GlobalValidationManagersRegistry).creationCode, abi.encode(managers, admin))
     );
     console2.log("Validation managers registry:", validationManagersRegistry);
     address feeManager = deployContract(
-      "V1_FEE_MANAGER",
+      "V2_FEE_MANAGER",
       abi.encodePacked(
         type(FeeManager).creationCode,
         abi.encode(
@@ -98,7 +98,7 @@ contract DeployManagers is BaseDeployPeriphery {
     );
     console2.log("Fee manager:", feeManager);
     address guardianManager = deployContract(
-      "V1_GUARDIAN_MANAGER",
+      "V2_GUARDIAN_MANAGER",
       abi.encodePacked(
         type(GuardianManager).creationCode,
         abi.encode(strategyRegistry, admin, new address[](0), initialAdmins, initialAdmins, initialAdmins)
@@ -110,7 +110,7 @@ contract DeployManagers is BaseDeployPeriphery {
     );
     console2.log("Delayed withdrawal manager:", delayedWithdrawalManager);
     address liquidityMiningManager = deployContract(
-      "V1_LIQUIDITY_MINING_MANAGER",
+      "V2_LIQUIDITY_MINING_MANAGER",
       abi.encodePacked(type(LiquidityMiningManager).creationCode, abi.encode(strategyRegistry, admin, initialAdmins))
     );
     console2.log("Liquidity mining manager:", liquidityMiningManager);
@@ -142,7 +142,7 @@ contract DeployManagers is BaseDeployPeriphery {
     });
 
     address globalRegistry = deployContract(
-      "V1_GLOBAL_REGISTRY", abi.encodePacked(type(GlobalEarnRegistry).creationCode, abi.encode(config, admin))
+      "V2_GLOBAL_REGISTRY", abi.encodePacked(type(GlobalEarnRegistry).creationCode, abi.encode(config, admin))
     );
     console2.log("Global registry:", globalRegistry);
   }
