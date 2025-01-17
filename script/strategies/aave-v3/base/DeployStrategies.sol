@@ -136,6 +136,19 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guard: "v1-t2",
       description: "strategy tier 2 - weth"
     });
+    // cbBTC
+    deployAaveV3Strategy({
+      aaveV3Pool: aaveV3Pool,
+      aaveV3Rewards: aaveV3Rewards,
+      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
+      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      signerGroup: DEFAULT_SIGNER_GROUP,
+      guardians: guardians,
+      judges: judges,
+      fees: tier2Fees,
+      guard: "v1-t2",
+      description: "strategy tier 2 - cbbtc"
+    });
     // Tier 3 = 2.5% performance fee + 1% rescue fee
     Fees memory tier3Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 250, rescueFee: 100 });
 
@@ -164,6 +177,19 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       fees: tier3Fees,
       guard: "v1-t3",
       description: "strategy tier 3 - weth"
+    });
+    // cbBTC
+    deployAaveV3Strategy({
+      aaveV3Pool: aaveV3Pool,
+      aaveV3Rewards: aaveV3Rewards,
+      aToken: IAToken(0xBdb9300b7CDE636d9cD4AFF00f6F009fFBBc8EE6),
+      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      signerGroup: DEFAULT_SIGNER_GROUP,
+      guardians: guardians,
+      judges: judges,
+      fees: tier3Fees,
+      guard: "v1-t3",
+      description: "strategy tier 3 - cbbtc"
     });
   }
 }
