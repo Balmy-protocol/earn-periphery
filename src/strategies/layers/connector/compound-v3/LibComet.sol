@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ICERC20 } from "./ICERC20.sol";
 import { ICometRewards } from "./ICometRewards.sol";
 
@@ -66,8 +67,20 @@ library LibComet {
     view
     returns (ICometRewards.RewardConfig memory)
   {
-    // TODO: handle different versions of the rewards contract
-    return rewards.rewardConfig(address(comet));
+    (bytes memory result) = Address.functionStaticCall(
+      address(rewards), abi.encodeWithSelector(ICometRewards.rewardConfig.selector, address(comet))
+    );
+    if (result.length == 96) {
+      // Some versions of the rewards contract don't have the multiplier field, so we need to handle that here
+      ICometRewards.LegacyRewardConfig memory config = abi.decode(result, (ICometRewards.LegacyRewardConfig));
+      return ICometRewards.RewardConfig({
+        token: config.token,
+        rescaleFactor: config.rescaleFactor,
+        shouldUpscale: config.shouldUpscale,
+        multiplier: 1e18
+      });
+    }
+    return abi.decode(result, (ICometRewards.RewardConfig));
   }
 
   function _getRewardAccrued(

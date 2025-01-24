@@ -10,6 +10,12 @@ interface ICometRewards {
     uint256 multiplier;
   }
 
+  struct LegacyRewardConfig {
+    address token;
+    uint64 rescaleFactor;
+    bool shouldUpscale;
+  }
+
   struct RewardOwed {
     address token;
     uint256 owed;
