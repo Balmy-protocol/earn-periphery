@@ -5,9 +5,9 @@ import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { ICERC20 } from "./ICERC20.sol";
 import { ICometRewards } from "./ICometRewards.sol";
 
-/// @notice Comet (Compound V3) doesn't have a way to calculate rewards owed without modifying the storage. So we are
+/// @notice Comet (Compound V3) doesn't have a way to calculate rewards owed without modifying the storage, so we are
 ///         now building a library provides this functionality. This library interacts with both Comet and Rewards
-///         contract and then attempts to replicate their logic, but without modifying the storage.
+///         contracts and then attempts to replicate their logic, but without modifying the storage.
 
 library LibComet {
   error InvalidUInt64();
@@ -98,6 +98,7 @@ library LibComet {
     if (config.shouldUpscale) {
       accrued *= config.rescaleFactor;
     } else {
+      // slither-disable-next-line divide-before-multiply
       accrued /= config.rescaleFactor;
     }
     return accrued * config.multiplier / FACTOR_SCALE;
@@ -124,6 +125,7 @@ library LibComet {
     _updateBasePrincipal(globalData, basic);
   }
 
+  // slither-disable-next-line timestamp
   function _accrueInternal(GlobalData memory globalData) internal view {
     uint256 timeElapsed = block.timestamp - globalData.lastAccrualTime;
     if (timeElapsed > 0) {
@@ -163,6 +165,7 @@ library LibComet {
     return n * baseScale / baseWei;
   }
 
+  // slither-disable-next-line timestamp
   function _safe64(uint256 n) private pure returns (uint64) {
     if (n > type(uint64).max) revert InvalidUInt64();
     return uint64(n);
