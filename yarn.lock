@@ -34,17 +34,17 @@
   version "0.0.2"
   resolved "https://codeload.github.com/balmy-protocol/call-simulation/tar.gz/a510c80c7e81480eb5806422101d199a39662024"
 
-"@balmy/earn-core@github:balmy-protocol/earn-core#750e659691e3c02160ebf55b0b2eb80b1fc10b42":
+"@balmy/earn-core@github:balmy-protocol/earn-core#69590f2b285ea1196fe7c72e433a84cecb428a09":
   version "0.0.0"
-  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/750e659691e3c02160ebf55b0b2eb80b1fc10b42"
+  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/69590f2b285ea1196fe7c72e433a84cecb428a09"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
   resolved "https://codeload.github.com/balmy-protocol/nft-permissions/tar.gz/1e75f88d0da6e93f2afbd1069a8c37553f448638"
 
-"@forta/firewall@github:forta-network/forta-firewall-contracts#212600ba36ba37a225e24d11083f1efd8579c2ba":
+"@forta/firewall@github:forta-network/forta-firewall-contracts#81a970149dffdb95b0d0e0a67ad23b1db6539390":
   version "1.0.0"
-  resolved "https://codeload.github.com/forta-network/forta-firewall-contracts/tar.gz/212600ba36ba37a225e24d11083f1efd8579c2ba"
+  resolved "https://codeload.github.com/forta-network/forta-firewall-contracts/tar.gz/81a970149dffdb95b0d0e0a67ad23b1db6539390"
   dependencies:
     axios "^1.7.2"
     dotenv "^16.4.5"

@@ -122,21 +122,23 @@ abstract contract BeefyConnector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     override
     returns (uint256 assetsDeposited)
   {
+    if (takeFromCaller) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
+    }
     IBeefyVault vault = beefyVault();
     if (depositToken == _connector_asset()) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 balance = vault.balanceOf(address(this));
       vault.deposit(depositAmount);
       uint256 sharesDeposited = vault.balanceOf(address(this)) - balance;
       return _convertSharesToAssets(vault, sharesDeposited, Math.Rounding.Floor);
     } else if (depositToken == address(vault)) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return _convertSharesToAssets(vault, depositAmount, Math.Rounding.Floor);
     } else {
       revert InvalidDepositToken(depositToken);

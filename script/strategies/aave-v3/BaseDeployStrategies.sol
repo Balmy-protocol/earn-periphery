@@ -30,22 +30,23 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     address[] memory guardians,
     address[] memory judges,
     Fees memory fees,
-    bytes32 guard
+    bytes32 guard,
+    string memory description
   )
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V1_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
+    address implementation = deployContract("V2_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
     AaveV3StrategyFactory aaveV3StrategyFactory = AaveV3StrategyFactory(
       deployContract(
-        "V1_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
+        "V2_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
       )
     );
     console2.log("Factory deployed: ", address(aaveV3StrategyFactory));
-    address vault = getDeployedAddress("V1_VAULT");
+    address vault = getDeployedAddress("V2_VAULT");
     console2.log("Vault deployed: ", vault);
-    address globalRegistry = getDeployedAddress("V1_GLOBAL_REGISTRY");
+    address globalRegistry = getDeployedAddress("V2_GLOBAL_REGISTRY");
     console2.log("Global registry deployed: ", globalRegistry);
 
     bytes memory registryData = "";
@@ -88,8 +89,8 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         salt
       );
 
-      console2.log("Strategy:", address(strategy));
-      console2.log("Strategy ID:", StrategyId.unwrap(strategyId));
+      console2.log(string.concat(description, ":"), address(strategy));
+      console2.log(string.concat(description, " id:"), StrategyId.unwrap(strategyId));
     }
   }
 }

@@ -150,22 +150,24 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_deposit(
     address depositToken,
-    uint256 depositAmount
+    uint256 depositAmount,
+    bool takeFromCaller
   )
     internal
     virtual
     override
     returns (uint256 assetsDeposited)
   {
+    if (takeFromCaller) {
+      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
+    }
     ICERC20 cToken_ = cToken();
     if (depositToken == _connector_asset()) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       uint256 balanceBefore = cToken_.balanceOf(address(this));
       cToken_.supply(depositToken, depositAmount);
       uint256 balanceAfter = cToken_.balanceOf(address(this));
       return balanceAfter - balanceBefore;
     } else if (depositToken == address(cToken_)) {
-      IERC20(depositToken).safeTransferFrom(msg.sender, address(this), depositAmount);
       return depositAmount;
     } else {
       revert InvalidDepositToken(depositToken);

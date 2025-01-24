@@ -14,10 +14,10 @@ contract DeployCompanion is BaseDeployPeriphery {
   }
 
   function deployCompanion() public returns (address) {
-    address firewallRouter = getDeployedAddress("V1_FROUTER");
+    address firewallRouter = getDeployedAddress("V2_FROUTER");
 
     address companion = deployContract(
-      "V1_COMPANION",
+      "V2_COMPANION",
       abi.encodePacked(
         type(FirewalledEarnVaultCompanion).creationCode,
         abi.encode(
