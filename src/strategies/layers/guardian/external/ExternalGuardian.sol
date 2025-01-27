@@ -98,9 +98,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
    * @dev This function can only be called by accounts that have the permission to do so
    */
   function cancelRescue() external {
-    if (rescueConfig.status != RescueStatus.RESCUE_NEEDS_CONFIRMATION) {
-      revert InvalidRescueStatus();
-    }
+    _assertRescueStatus(RescueStatus.RESCUE_NEEDS_CONFIRMATION);
 
     StrategyId strategyId_ = strategyId();
     IGuardianManagerCore manager = _getGuardianManager();
@@ -139,9 +137,10 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     manager.rescueConfirmed(strategyId_);
     address[] memory tokens = _guardian_underlying_tokens();
     for (uint256 i = 0; i < tokens.length; ++i) {
-      uint256 balance = tokens[i].balanceOf(address(this));
+      address token = tokens[i];
+      uint256 balance = token.balanceOf(address(this));
       uint256 fee = balance.mulDiv(rescueConfig_.feeBps, 10_000, Math.Rounding.Floor);
-      tokens[i].transfer(rescueConfig_.feeRecipient, fee);
+      token.transfer(rescueConfig_.feeRecipient, fee);
     }
   }
 
@@ -188,9 +187,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     override
     returns (uint256 assetsDeposited)
   {
-    if (rescueConfig.status != RescueStatus.OK) {
-      revert InvalidRescueStatus();
-    }
+    _assertOkRescueStatus();
     return
       _guardian_underlying_deposit({ depositToken: depositToken, depositAmount: depositAmount, takeFromCaller: true });
   }
@@ -241,9 +238,7 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
   {
     // Note: even though the contract might have reward balance, special withdrawals are very particular and depend on
     //       the underlying implementation. So we won't use this balance in this case
-    if (rescueConfig.status != RescueStatus.OK) {
-      revert InvalidRescueStatus();
-    }
+    _assertOkRescueStatus();
     return _guardian_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
@@ -256,15 +251,23 @@ abstract contract ExternalGuardian is BaseGuardian, Initializable {
     override
     returns (bytes memory)
   {
-    if (rescueConfig.status != RescueStatus.OK) {
-      revert InvalidRescueStatus();
-    }
+    _assertOkRescueStatus();
     return _guardian_underlying_migrateToNewStrategy(newStrategy, migrationData);
   }
 
   // slither-disable-next-line dead-code
   function _getGuardianManager() private view returns (IGuardianManagerCore) {
     return IGuardianManagerCore(globalRegistry().getAddressOrFail(GUARDIAN_MANAGER));
+  }
+
+  function _assertOkRescueStatus() private view {
+    _assertRescueStatus(RescueStatus.OK);
+  }
+
+  function _assertRescueStatus(RescueStatus status) private view {
+    if (rescueConfig.status != status) {
+      revert InvalidRescueStatus();
+    }
   }
 
   function _areAllImmediate(IEarnStrategy.WithdrawalType[] memory types) private pure returns (bool) {

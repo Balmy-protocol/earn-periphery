@@ -106,7 +106,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
       // If performance fees are enabled, then we'll need to initialize the performance data
       address[] memory tokens = _fees_underlying_tokens();
       for (uint256 i; i < tokens.length; ++i) {
-        _performanceData[tokens[i]] = PerformanceData({ lastBalance: 0, isSet: true, performanceFees: 0 });
+        _storePerformanceData({ token: tokens[i], lastBalance: 0, performanceFees: 0, isSet: true });
       }
     }
     feeManager.strategySelfConfigure(data);
@@ -118,22 +118,10 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     types = new IEarnStrategy.FeeType[](4);
     bps = new uint16[](4);
     uint256 count = 0;
-    if (fees.depositFee > 0) {
-      types[count] = IEarnStrategy.FeeType.DEPOSIT;
-      bps[count++] = fees.depositFee;
-    }
-    if (fees.withdrawFee > 0) {
-      types[count] = IEarnStrategy.FeeType.WITHDRAW;
-      bps[count++] = fees.withdrawFee;
-    }
-    if (fees.performanceFee > 0) {
-      types[count] = IEarnStrategy.FeeType.PERFORMANCE;
-      bps[count++] = fees.performanceFee;
-    }
-    if (fees.rescueFee > 0) {
-      types[count] = IEarnStrategy.FeeType.RESCUE;
-      bps[count++] = fees.rescueFee;
-    }
+    count = addFeeToArrays(types, bps, fees.depositFee, IEarnStrategy.FeeType.DEPOSIT, count);
+    count = addFeeToArrays(types, bps, fees.withdrawFee, IEarnStrategy.FeeType.WITHDRAW, count);
+    count = addFeeToArrays(types, bps, fees.rescueFee, IEarnStrategy.FeeType.RESCUE, count);
+    count = addFeeToArrays(types, bps, fees.performanceFee, IEarnStrategy.FeeType.PERFORMANCE, count);
 
     // solhint-disable-next-line no-inline-assembly
     assembly {
@@ -147,7 +135,8 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     Fees memory fees = _getFees();
     (tokens, balances) = _fees_underlying_totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
-      balances[i] -= _calculateFees(tokens[i], balances[i], fees.performanceFee);
+      uint256 balance = balances[i];
+      balances[i] = balance - _calculateFees(tokens[i], balance, fees.performanceFee);
     }
   }
 
@@ -164,21 +153,23 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     if (fees.performanceFee == 0) {
       // If performance fee is 0, we will need to clear the last balance. Otherwise, once it's turned on again,
       // we won't be able to understand difference between balance changes and yield
-      address asset = _fees_underlying_asset();
-      _clearBalanceIfSet(asset);
+      _clearBalanceIfSet(_fees_underlying_asset());
       return _fees_underlying_deposit(depositToken, depositAmount);
     }
 
     // Note: we are only updating fees for the asset, since it's the only token whose balance will change
     (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
-    uint256 performanceFees = _calculateFees(tokens[0], currentBalances[0], fees.performanceFee);
+    address asset = tokens[0];
+    uint256 currentBalanceAsset = currentBalances[0];
+    uint256 performanceFees = _calculateFees(asset, currentBalanceAsset, fees.performanceFee);
 
     assetsDeposited = _fees_underlying_deposit(depositToken, depositAmount);
 
-    _performanceData[tokens[0]] = PerformanceData({
+    _storePerformanceData({
+      token: asset,
       // Note: there might be a small wei difference here, but we can ignore it since it should be negligible
-      lastBalance: (currentBalances[0] + assetsDeposited).toUint128(),
-      performanceFees: performanceFees.toUint120(),
+      lastBalance: (currentBalanceAsset + assetsDeposited),
+      performanceFees: performanceFees,
       isSet: true
     });
   }
@@ -195,22 +186,23 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   {
     Fees memory fees = _getFees();
     if (fees.performanceFee == 0) {
-      for (uint256 i; i < tokens.length; ++i) {
-        _clearBalanceIfSet(tokens[i]);
-      }
+      _clearAllBalancesIfSet(tokens);
       _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
     }
 
     (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
     for (uint256 i; i < tokens.length; ++i) {
+      uint256 amountToWithdraw = toWithdraw[i];
       // If there is nothing being withdrawn, we can skip fee update, since balance didn't change
-      if (toWithdraw[i] == 0) continue;
-
-      uint256 performanceFees = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
-      _performanceData[tokens[i]] = PerformanceData({
+      if (amountToWithdraw == 0) continue;
+      address token = tokens[i];
+      uint256 currentBalance = currentBalances[i];
+      uint256 performanceFees = _calculateFees(token, currentBalance, fees.performanceFee);
+      _storePerformanceData({
+        token: token,
         // Note: there might be a small wei difference here, but we can ignore it an avoid adding it as part of the fee
-        lastBalance: (currentBalances[i] - toWithdraw[i]).toUint128(),
-        performanceFees: performanceFees.toUint120(),
+        lastBalance: (currentBalance - amountToWithdraw),
+        performanceFees: performanceFees,
         isSet: true
       });
     }
@@ -238,10 +230,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     Fees memory fees = _getFees();
     if (fees.performanceFee == 0) {
       address[] memory allTokens = _fees_underlying_tokens();
-      for (uint256 i; i < allTokens.length; ++i) {
-        _clearBalanceIfSet(allTokens[i]);
-      }
-
+      _clearAllBalancesIfSet(allTokens);
       return _fees_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
     }
 
@@ -251,10 +240,13 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
       _fees_underlying_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
 
     for (uint256 i; i < tokens.length; ++i) {
-      _performanceData[tokens[i]] = PerformanceData({
+      address token = tokens[i];
+      uint256 currentBalance = currentBalances[i];
+      _storePerformanceData({
+        token: token,
         // Note: there might be a small wei difference here, but we can ignore it an avoid adding it as part of the fee
-        lastBalance: (currentBalances[i] - balanceChanges[i]).toUint128(),
-        performanceFees: _calculateFees(tokens[i], currentBalances[i], fees.performanceFee).toUint120(),
+        lastBalance: (currentBalance - balanceChanges[i]),
+        performanceFees: _calculateFees(token, currentBalance, fees.performanceFee),
         isSet: true
       });
     }
@@ -266,11 +258,22 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   }
 
   // slither-disable-next-line dead-code
+  function _clearAllBalancesIfSet(address[] memory tokens) private {
+    for (uint256 i; i < tokens.length; ++i) {
+      _clearBalanceIfSet(tokens[i]);
+    }
+  }
+
+  // slither-disable-next-line dead-code
   function _clearBalanceIfSet(address token) private {
     PerformanceData memory tokenPerfData = _performanceData[token];
     if (tokenPerfData.isSet) {
-      _performanceData[token] =
-        PerformanceData({ lastBalance: 0, isSet: false, performanceFees: tokenPerfData.performanceFees });
+      _storePerformanceData({
+        token: token,
+        lastBalance: 0,
+        performanceFees: tokenPerfData.performanceFees,
+        isSet: false
+      });
     }
   }
 
@@ -310,22 +313,57 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     private
   {
     for (uint256 i = 0; i < tokens.length; ++i) {
+      address token = tokens[i];
+      uint256 currentBalance = currentBalances[i];
       uint256 amountToWithdraw = withdrawAmounts[i];
       if (amountToWithdraw > 0) {
-        uint256 collected = _calculateFees(tokens[i], currentBalances[i], fees.performanceFee);
+        uint256 collected = _calculateFees(token, currentBalance, fees.performanceFee);
         if (amountToWithdraw > collected) {
           revert NotEnoughFees();
         }
 
-        _performanceData[tokens[i]] = fees.performanceFee > 0
-          ? PerformanceData({
+        if (fees.performanceFee > 0) {
+          _storePerformanceData({
+            token: token,
             // Note: there might be a small wei difference here, but we can ignore it since it should be negligible
-            lastBalance: (currentBalances[i] - amountToWithdraw).toUint128(),
-            performanceFees: (collected - amountToWithdraw).toUint120(),
+            lastBalance: (currentBalance - amountToWithdraw),
+            performanceFees: (collected - amountToWithdraw),
             isSet: true
-          })
-          : PerformanceData({ lastBalance: 0, performanceFees: (collected - amountToWithdraw).toUint120(), isSet: false });
+          });
+        } else {
+          _storePerformanceData({
+            token: token,
+            lastBalance: 0,
+            performanceFees: (collected - amountToWithdraw),
+            isSet: false
+          });
+        }
       }
     }
+  }
+
+  function _storePerformanceData(address token, uint256 lastBalance, uint256 performanceFees, bool isSet) private {
+    _performanceData[token] = PerformanceData({
+      lastBalance: lastBalance.toUint128(),
+      performanceFees: performanceFees.toUint120(),
+      isSet: isSet
+    });
+  }
+
+  function addFeeToArrays(
+    IEarnStrategy.FeeType[] memory types,
+    uint16[] memory bps,
+    uint16 fee,
+    IEarnStrategy.FeeType feeType,
+    uint256 count
+  )
+    internal
+    pure
+    returns (uint256)
+  {
+    if (fee == 0) return count;
+    types[count] = feeType;
+    bps[count++] = fee;
+    return count;
   }
 }

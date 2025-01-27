@@ -26,9 +26,7 @@ abstract contract RegistryBasedCreationValidation is BaseCreationValidation, Ini
     IValidationManagersRegistryCore registry = _getRegistry();
     ICreationValidationManagerCore[] memory managers = registry.strategySelfConfigure(registryData);
 
-    if (managersData.length != managers.length) {
-      revert InvalidData();
-    }
+    _assertValidData(managersData, managers);
 
     for (uint256 i = 0; i < managers.length; ++i) {
       managers[i].strategySelfConfigure(managersData[i]);
@@ -42,9 +40,7 @@ abstract contract RegistryBasedCreationValidation is BaseCreationValidation, Ini
     IValidationManagersRegistryCore registry = _getRegistry();
     ICreationValidationManagerCore[] memory managers = registry.getManagers(strategyId_);
 
-    if (dataArray.length != managers.length) {
-      revert InvalidData();
-    }
+    _assertValidData(dataArray, managers);
 
     for (uint256 i = 0; i < managers.length; ++i) {
       managers[i].validatePositionCreation(strategyId_, toValidate, msg.sender, dataArray[i]);
@@ -59,5 +55,11 @@ abstract contract RegistryBasedCreationValidation is BaseCreationValidation, Ini
   // slither-disable-next-line dead-code
   function _getRegistry() private view returns (IValidationManagersRegistryCore) {
     return IValidationManagersRegistryCore(globalRegistry().getAddressOrFail(VALIDATION_MANAGERS_REGISTRY));
+  }
+
+  function _assertValidData(bytes[] memory dataArray, ICreationValidationManagerCore[] memory managers) private pure {
+    if (dataArray.length != managers.length) {
+      revert InvalidData();
+    }
   }
 }
