@@ -27,16 +27,17 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     address[] memory judges,
     Fees memory fees,
     bytes32 guard,
-    string memory description
+    string memory description,
+    address[] memory rewardTokens
   )
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V2_S_MORPHO", abi.encodePacked(type(MorphoStrategy).creationCode));
+    address implementation = deployContract("V3_S_MORPHO", abi.encodePacked(type(MorphoStrategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
     MorphoStrategyFactory morphoStrategyFactory = MorphoStrategyFactory(
       deployContract(
-        "V2_F_MORPHO", abi.encodePacked(type(MorphoStrategyFactory).creationCode, abi.encode(implementation))
+        "V3_F_MORPHO", abi.encodePacked(type(MorphoStrategyFactory).creationCode, abi.encode(implementation))
       )
     );
     console2.log("Factory deployed: ", address(morphoStrategyFactory));
@@ -72,7 +73,8 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
           creationValidationData,
           guardianData,
           feesData,
-          liquidityMiningData
+          liquidityMiningData,
+          rewardTokens
         ),
         salt
       );

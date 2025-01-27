@@ -16,6 +16,7 @@ struct MorphoStrategyData {
   bytes guardianData;
   bytes feesData;
   bytes liquidityMiningData;
+  address[] rewardTokens;
 }
 
 contract MorphoStrategyFactory is BaseStrategyFactory {
@@ -30,7 +31,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
   }
 
@@ -49,7 +51,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -71,7 +74,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
   }
 
@@ -90,7 +94,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
   }
 
@@ -110,7 +115,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
     // slither-disable-next-line reentrancy-events
     emit StrategyCloned(clone, strategyId);
@@ -133,7 +139,8 @@ contract MorphoStrategyFactory is BaseStrategyFactory {
       creationValidationData: strategyData.creationValidationData,
       guardianData: strategyData.guardianData,
       feesData: strategyData.feesData,
-      liquidityMiningData: strategyData.liquidityMiningData
+      liquidityMiningData: strategyData.liquidityMiningData,
+      rewardTokens: strategyData.rewardTokens
     });
   }
 
