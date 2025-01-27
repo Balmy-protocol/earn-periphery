@@ -181,7 +181,7 @@ abstract contract BaseStrategy is
     onlyStrategyRegistry
   {
     _strategyId = strategyId_;
-    _connector_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
+    _fees_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
   }
 
   modifier onlyStrategyRegistry() {
@@ -341,6 +341,17 @@ abstract contract BaseStrategy is
     )
   {
     return _guardian_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+  }
+
+  function _fees_underlying_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    override
+  {
+    _connector_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
   }
 
   ////////////////////////////////////////////////////////

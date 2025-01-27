@@ -178,7 +178,7 @@ abstract contract BaseDelayedStrategy is
     onlyStrategyRegistry
   {
     _strategyId = strategyId_;
-    _connector_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
+    _fees_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
   }
 
   modifier onlyStrategyRegistry() {
@@ -340,6 +340,17 @@ abstract contract BaseDelayedStrategy is
     returns (IEarnStrategy.WithdrawalType[] memory)
   {
     return _connector_supportedWithdrawals();
+  }
+
+  function _fees_underlying_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    override
+  {
+    _connector_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
   }
 
   ////////////////////////////////////////////////////////
