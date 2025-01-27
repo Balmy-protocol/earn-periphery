@@ -243,7 +243,8 @@ contract ExternalFeesTest is Test {
 
   function test_totalBalances() public {
     _setFee(500); // 5%
-    fees.init(""); // Initialize so that performance data is set
+    fees.strategyRegistered(StrategyId.wrap(1), IEarnStrategy(address(0)), ""); // Register so that performance data is
+      // set
 
     // Deposit 50k
     fees.deposit(asset, 50_000);
@@ -267,7 +268,8 @@ contract ExternalFeesTest is Test {
     uint256 positionId = 1;
     address recipient = address(0);
     address[] memory allTokens = CommonUtils.arrayOf(asset, token);
-    fees.init(""); // Initialize so that performance data is set
+    fees.strategyRegistered(StrategyId.wrap(1), IEarnStrategy(address(0)), ""); // Register so that performance data is
+      // set
 
     // Deposit 50k
     fees.deposit(asset, 50_000);
@@ -531,6 +533,16 @@ contract ExternalFeesInstance is ExternalFees {
     return _fees_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
   }
 
+  function strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    external
+  {
+    return _fees_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
+  }
+
   function globalRegistry() public view override returns (IGlobalEarnRegistry) {
     return _registry;
   }
@@ -638,4 +650,13 @@ contract ExternalFeesInstance is ExternalFees {
       types[i] = _types[_tokens[i]];
     }
   }
+
+  function _fees_underlying_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    override
+  { }
 }

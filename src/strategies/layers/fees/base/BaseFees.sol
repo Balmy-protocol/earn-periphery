@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.22;
 
-import { IEarnStrategy, SpecialWithdrawalCode } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { IEarnStrategy, SpecialWithdrawalCode, StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
 abstract contract BaseFees {
   // slither-disable-start naming-convention
@@ -50,6 +50,14 @@ abstract contract BaseFees {
     virtual
     returns (IEarnStrategy.WithdrawalType[] memory);
 
+  function _fees_underlying_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    virtual;
+
   // Fees
   function _fees_fees() internal view virtual returns (IEarnStrategy.FeeType[] memory types, uint16[] memory bps);
   function _fees_totalBalances() internal view virtual returns (address[] memory tokens, uint256[] memory balances);
@@ -86,5 +94,12 @@ abstract contract BaseFees {
       uint256[] memory actualWithdrawnAmounts,
       bytes memory result
     );
+  function _fees_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    virtual;
   // slither-disable-end naming-convention
 }

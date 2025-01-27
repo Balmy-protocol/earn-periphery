@@ -101,14 +101,6 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
   // slither-disable-next-line naming-convention,dead-code
   function _fees_init(bytes calldata data) internal onlyInitializing {
     IFeeManagerCore feeManager = _getFeeManager();
-    Fees memory fees = feeManager.getFees(strategyId());
-    if (fees.performanceFee > 0) {
-      // If performance fees are enabled, then we'll need to initialize the performance data
-      address[] memory tokens = _fees_underlying_tokens();
-      for (uint256 i; i < tokens.length; ++i) {
-        _storePerformanceData({ token: tokens[i], lastBalance: 0, performanceFees: 0, isSet: true });
-      }
-    }
     feeManager.strategySelfConfigure(data);
   }
 
@@ -250,6 +242,27 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
         isSet: true
       });
     }
+  }
+
+  function _fees_strategyRegistered(
+    StrategyId strategyId_,
+    IEarnStrategy oldStrategy,
+    bytes calldata migrationResultData
+  )
+    internal
+    override
+  {
+    // Note: when a strategy is registered, we will calculate the current balance and store it. The thing is that any
+    // performance fees that were held by a previous strategy would be lost. We don't migrate this data because of the
+    // contract size constraint, so the fees should be claimed before the migration is executed
+    Fees memory fees = _getFees();
+    if (fees.performanceFee > 0) {
+      (address[] memory tokens, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
+      for (uint256 i; i < tokens.length; ++i) {
+        _storePerformanceData({ token: tokens[i], lastBalance: currentBalances[i], performanceFees: 0, isSet: true });
+      }
+    }
+    _fees_underlying_strategyRegistered(strategyId_, oldStrategy, migrationResultData);
   }
 
   // slither-disable-next-line dead-code
