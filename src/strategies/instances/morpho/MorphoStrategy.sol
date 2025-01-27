@@ -28,7 +28,8 @@ contract MorphoStrategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData
+    bytes calldata liquidityMiningData,
+    address[] memory rewardTokens
   )
     external
     returns (StrategyId strategyId_)
@@ -38,7 +39,8 @@ contract MorphoStrategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData
+      liquidityMiningData: liquidityMiningData,
+      rewardTokens: rewardTokens
     });
   }
 
@@ -48,7 +50,8 @@ contract MorphoStrategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData
+    bytes calldata liquidityMiningData,
+    address[] memory rewardTokens
   )
     external
   {
@@ -57,7 +60,8 @@ contract MorphoStrategy is
       creationValidationData: creationValidationData,
       guardianData: guardianData,
       feesData: feesData,
-      liquidityMiningData: liquidityMiningData
+      liquidityMiningData: liquidityMiningData,
+      rewardTokens: rewardTokens
     });
   }
 
@@ -66,12 +70,13 @@ contract MorphoStrategy is
     bytes calldata creationValidationData,
     bytes calldata guardianData,
     bytes calldata feesData,
-    bytes calldata liquidityMiningData
+    bytes calldata liquidityMiningData,
+    address[] memory rewardTokens
   )
     public
     initializer
   {
-    _connector_init();
+    _connector_init(rewardTokens);
     _creationValidation_init(creationValidationData);
     _guardian_init(guardianData);
     _fees_init(feesData);

@@ -21,6 +21,13 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     address[] memory judges = new address[](1);
     judges[0] = getMsig();
 
+    address[] memory moonwellRewardTokens = new address[](2);
+    moonwellRewardTokens[0] = 0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842; // $MORPHO
+    moonwellRewardTokens[1] = 0xA88594D404727625A9437C3f886C7643872296AE; // $WELL
+
+    address[] memory gauntletRewardTokens = new address[](1);
+    gauntletRewardTokens[0] = 0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842; // $MORPHO
+
     // Tier 0 = default fees
 
     // Moonwell Flagship ETH
@@ -32,7 +39,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: DEFAULT_FEES,
       guard: "v1-t0",
-      description: "strategy tier 0 - moonwell flagship eth"
+      description: "strategy tier 0 - moonwell flagship eth",
+      rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
@@ -44,7 +52,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: DEFAULT_FEES,
       guard: "v1-t0",
-      description: "strategy tier 0 - gauntlet usdc prime"
+      description: "strategy tier 0 - gauntlet usdc prime",
+      rewardTokens: gauntletRewardTokens
     });
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
@@ -59,7 +68,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier1Fees,
       guard: "v1-t1",
-      description: "strategy tier 1 - moonwell flagship eth"
+      description: "strategy tier 1 - moonwell flagship eth",
+      rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
@@ -71,7 +81,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier1Fees,
       guard: "v1-t1",
-      description: "strategy tier 1 - gauntlet usdc prime"
+      description: "strategy tier 1 - gauntlet usdc prime",
+      rewardTokens: gauntletRewardTokens
     });
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
@@ -86,7 +97,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier2Fees,
       guard: "v1-t2",
-      description: "strategy tier 2 - moonwell flagship eth"
+      description: "strategy tier 2 - moonwell flagship eth",
+      rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
@@ -98,7 +110,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier2Fees,
       guard: "v1-t2",
-      description: "strategy tier 2 - gauntlet usdc prime"
+      description: "strategy tier 2 - gauntlet usdc prime",
+      rewardTokens: gauntletRewardTokens
     });
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
@@ -113,7 +126,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier3Fees,
       guard: "v1-t3",
-      description: "strategy tier 3 - moonwell flagship eth"
+      description: "strategy tier 3 - moonwell flagship eth",
+      rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
@@ -125,7 +139,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       fees: tier3Fees,
       guard: "v1-t3",
-      description: "strategy tier 3 - gauntlet usdc prime"
+      description: "strategy tier 3 - gauntlet usdc prime",
+      rewardTokens: gauntletRewardTokens
     });
   }
 }

@@ -73,6 +73,12 @@ abstract contract MorphoConnector is ERC4626Connector {
   }
 
   // slither-disable-next-line naming-convention,dead-code
+  function _connector_init(address[] memory rewardTokens) internal {
+    super._connector_init();
+    _rewardTokens = rewardTokens;
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view override returns (address[] memory tokens) {
     address[] memory rewardsTokens = _rewardTokens;
     tokens = new address[](1 + rewardsTokens.length);
@@ -217,8 +223,9 @@ abstract contract MorphoConnector is ERC4626Connector {
     amounts[0] = assetAmount;
     for (uint256 i = 0; i < rewardsTokens.length; ++i) {
       uint256 index = i + 1;
-      tokens[index] = rewardsTokens[i];
-      amounts[index] = _emittedRewards(rewardsTokens[i]);
+      address rewardToken = rewardsTokens[i];
+      tokens[index] = rewardToken;
+      amounts[index] = _emittedRewards(rewardToken);
     }
   }
 }

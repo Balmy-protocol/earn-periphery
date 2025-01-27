@@ -34,6 +34,7 @@ contract MorphoStrategyTest is Test {
   IERC4626 private erc4626Vault = IERC4626(address(5));
   address private asset = address(6);
   IFeeManagerCore private feeManager = IFeeManagerCore(address(7));
+  address[] private rewardTokens = [address(8), address(9)];
   IValidationManagersRegistryCore private validationManagerRegistry = IValidationManagersRegistryCore(address(9));
   IGuardianManagerCore private guardianManager = IGuardianManagerCore(address(10));
   ILiquidityMiningManagerCore private liquidityMiningManager = ILiquidityMiningManagerCore(address(11));
@@ -77,6 +78,11 @@ contract MorphoStrategyTest is Test {
       ""
     );
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewards.selector),
+      abi.encode(new address[](0))
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
       abi.encode(liquidityMiningManager)
@@ -115,7 +121,7 @@ contract MorphoStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(address(0)), StrategyIdConstants.NO_STRATEGY);
     MorphoStrategy clone = factory.cloneStrategy(
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       )
     );
 
@@ -143,7 +149,7 @@ contract MorphoStrategyTest is Test {
     (MorphoStrategy clone, StrategyId strategyId_) = factory.cloneStrategyAndRegister(
       owner,
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       )
     );
 
@@ -171,7 +177,7 @@ contract MorphoStrategyTest is Test {
     MorphoStrategy clone = factory.cloneStrategyWithId(
       strategyId,
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       )
     );
 
@@ -200,7 +206,7 @@ contract MorphoStrategyTest is Test {
     emit BaseStrategyFactory.StrategyCloned(IEarnBalmyStrategy(cloneAddress), StrategyIdConstants.NO_STRATEGY);
     MorphoStrategy clone = factory.clone2Strategy(
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       ),
       salt
     );
@@ -231,7 +237,7 @@ contract MorphoStrategyTest is Test {
     (MorphoStrategy clone, StrategyId strategyId_) = factory.clone2StrategyAndRegister(
       owner,
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       ),
       salt
     );
@@ -263,7 +269,7 @@ contract MorphoStrategyTest is Test {
     MorphoStrategy clone = factory.clone2StrategyWithId(
       strategyId,
       MorphoStrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
       ),
       salt
     );
@@ -281,6 +287,12 @@ contract MorphoStrategyTest is Test {
     assertEq(address(clone.ERC4626Vault()), address(erc4626Vault));
     assertEq(address(clone.globalRegistry()), address(globalRegistry));
     assertEq(clone.asset(), asset);
+    address[] memory tokens = clone.allTokens();
+    assertEq(tokens.length, rewardTokens.length + 1);
+    assertEq(tokens[0], asset);
+    for (uint256 i = 0; i < rewardTokens.length; ++i) {
+      assertEq(tokens[i + 1], rewardTokens[i]);
+    }
   }
 }
 
