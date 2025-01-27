@@ -78,6 +78,11 @@ contract MorphoStrategyTest is Test {
       ""
     );
     vm.mockCall(
+      address(liquidityMiningManager),
+      abi.encodeWithSelector(ILiquidityMiningManagerCore.rewards.selector),
+      abi.encode(new address[](0))
+    );
+    vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
       abi.encode(liquidityMiningManager)
