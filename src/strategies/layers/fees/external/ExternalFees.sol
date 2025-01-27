@@ -244,6 +244,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     }
   }
 
+  // slither-disable-next-line dead-code
   function _fees_strategyRegistered(
     StrategyId strategyId_,
     IEarnStrategy oldStrategy,
