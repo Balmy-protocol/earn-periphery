@@ -72,6 +72,7 @@ abstract contract MorphoConnector is ERC4626Connector {
     }
   }
 
+  // slither-disable-next-line naming-convention,dead-code
   function _connector_init(address[] memory rewardTokens) internal {
     super._connector_init();
     _rewardTokens = rewardTokens;
