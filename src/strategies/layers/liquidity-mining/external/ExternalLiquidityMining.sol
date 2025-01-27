@@ -98,11 +98,12 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     uint256 toWithdrawAsset = toWithdraw[0];
     bool shouldWithdrawUnderlying = toWithdrawAsset > 0;
     for (uint256 i = 1; i < tokens.length; ++i) {
+      address token = tokens[i];
       uint256 toWithdrawToken = toWithdraw[i];
-      uint256 balance = manager.rewardAmount(strategyId_, tokens[i]);
+      uint256 balance = manager.rewardAmount(strategyId_, token);
       uint256 toTransfer = Math.min(balance, toWithdrawToken);
       if (toTransfer > 0) {
-        manager.claim(strategyId_, tokens[i], toTransfer, recipient);
+        manager.claim(strategyId_, token, toTransfer, recipient);
       }
       if (i < underlyingTokens.length) {
         toWithdrawUnderlying[i] = toWithdrawToken - toTransfer;
@@ -229,8 +230,9 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
     StrategyId strategyId_ = strategyId();
     ILiquidityMiningManagerCore manager = _getLiquidityMiningManager();
     address[] memory rewardsTokens = manager.rewards(strategyId_);
-    tokens = new address[](underlyingTokens.length + rewardsTokens.length);
-    amounts = new uint256[](underlyingTokens.length + rewardsTokens.length);
+    uint256 amountOfTokens = underlyingTokens.length + rewardsTokens.length;
+    tokens = new address[](amountOfTokens);
+    amounts = new uint256[](amountOfTokens);
     for (uint256 i; i < underlyingTokens.length; ++i) {
       tokens[i] = underlyingTokens[i];
       amounts[i] = underlyingAmounts[i];
@@ -247,7 +249,7 @@ abstract contract ExternalLiquidityMining is BaseLiquidityMining, Initializable 
         amounts[tokensIndex++] = rewardAmount;
       }
     }
-    if (tokensIndex < tokens.length) {
+    if (tokensIndex < amountOfTokens) {
       // solhint-disable-next-line no-inline-assembly
       assembly {
         mstore(tokens, tokensIndex)
