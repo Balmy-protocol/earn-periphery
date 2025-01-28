@@ -4,12 +4,7 @@ pragma solidity >=0.8.22;
 import { StrategyId, IEarnVault } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 import { Clone } from "../base/Clone.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
-import {
-  CompoundV3Connector,
-  IERC20,
-  ICERC20,
-  ICometRewards
-} from "../../layers/connector/compound-v3/CompoundV3Connector.sol";
+import { CompoundV3Connector, ICERC20, ICometRewards } from "../../layers/connector/compound-v3/CompoundV3Connector.sol";
 import { ExternalFees } from "../../layers/fees/external/ExternalFees.sol";
 import { ExternalGuardian } from "../../layers/guardian/external/ExternalGuardian.sol";
 import { RegistryBasedCreationValidation } from

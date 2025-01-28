@@ -25,6 +25,7 @@ interface ICERC20 is IERC20 {
     uint8 _reserved;
   }
 
+  function baseToken() external view returns (address);
   function baseScale() external view returns (uint256);
   function totalsBasic() external view returns (TotalsBasic memory);
   function baseMinForRewards() external view returns (uint256);

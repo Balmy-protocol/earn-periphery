@@ -6,12 +6,11 @@ import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/Strategy
 import { IEarnBalmyStrategy } from "../../../interfaces/IEarnBalmyStrategy.sol";
 import { IGlobalEarnRegistry } from "../../../interfaces/IGlobalEarnRegistry.sol";
 import { BaseStrategyFactory } from "../base/BaseStrategyFactory.sol";
-import { CompoundV3Strategy, IGlobalEarnRegistry, ICERC20, ICometRewards, IERC20 } from "./CompoundV3Strategy.sol";
+import { CompoundV3Strategy, IGlobalEarnRegistry, ICERC20, ICometRewards } from "./CompoundV3Strategy.sol";
 
 struct CompoundV3StrategyData {
   IEarnVault earnVault;
   IGlobalEarnRegistry globalRegistry;
-  address asset;
   ICERC20 cToken;
   ICometRewards cometRewards;
   bytes creationValidationData;
@@ -142,7 +141,6 @@ contract CompoundV3StrategyFactory is BaseStrategyFactory {
   function addressOfClone2(
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
-    address asset,
     ICERC20 cToken,
     ICometRewards cometRewards,
     bytes32 salt
@@ -151,31 +149,27 @@ contract CompoundV3StrategyFactory is BaseStrategyFactory {
     view
     returns (address clone)
   {
-    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, asset, cToken, cometRewards);
+    bytes memory immutableData = _calculateImmutableData(earnVault, globalRegistry, cToken, cometRewards);
     return _addressOfClone2(immutableData, salt);
   }
 
-  function _calculateImmutableData(CompoundV3StrategyData calldata strategyData) internal pure returns (bytes memory) {
+  function _calculateImmutableData(CompoundV3StrategyData calldata strategyData) internal view returns (bytes memory) {
     return _calculateImmutableData(
-      strategyData.earnVault,
-      strategyData.globalRegistry,
-      strategyData.asset,
-      strategyData.cToken,
-      strategyData.cometRewards
+      strategyData.earnVault, strategyData.globalRegistry, strategyData.cToken, strategyData.cometRewards
     );
   }
 
   function _calculateImmutableData(
     IEarnVault earnVault,
     IGlobalEarnRegistry globalRegistry,
-    address asset,
     ICERC20 cToken,
     ICometRewards cometRewards
   )
     internal
-    pure
+    view
     returns (bytes memory)
   {
+    address asset = cToken.baseToken();
     return abi.encodePacked(earnVault, globalRegistry, asset, cToken, cometRewards);
   }
 }

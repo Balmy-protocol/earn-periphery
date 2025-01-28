@@ -21,7 +21,6 @@ import { Fees } from "src/types/Fees.sol";
 
 contract BaseDeployStrategies is BaseDeployPeriphery {
   function deployCompoundV3Strategy(
-    address asset,
     ICERC20 cToken,
     address cometRewards,
     bytes32 tosGroup,
@@ -62,7 +61,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes32 salt = keccak256(abi.encode("V1_S_COMPV3", guard));
 
     address computedAddress = compoundV3StrategyFactory.addressOfClone2(
-      IEarnVault(vault), IGlobalEarnRegistry(globalRegistry), asset, cToken, ICometRewards(cometRewards), salt
+      IEarnVault(vault), IGlobalEarnRegistry(globalRegistry), cToken, ICometRewards(cometRewards), salt
     );
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
@@ -72,7 +71,6 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         CompoundV3StrategyData(
           IEarnVault(vault),
           IGlobalEarnRegistry(globalRegistry),
-          asset,
           cToken,
           ICometRewards(cometRewards),
           creationValidationData,
