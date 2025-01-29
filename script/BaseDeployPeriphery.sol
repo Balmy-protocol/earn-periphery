@@ -6,6 +6,7 @@ import { Fees } from "src/types/Fees.sol";
 
 contract BaseDeployPeriphery is BaseDeploy {
   address internal signer = vm.envAddress("SIGNER");
+  address internal relayer = vm.envAddress("RELAYER");
 
   // solhint-disable-next-line var-name-mixedcase
   bytes32 internal DEFAULT_SIGNER_GROUP = keccak256("default_signer_group");

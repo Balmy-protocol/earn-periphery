@@ -115,8 +115,13 @@ contract DeployManagers is BaseDeployPeriphery {
     );
     console2.log("Liquidity mining manager:", liquidityMiningManager);
 
+    address[] memory initialMorphoRewardsAdmins = new address[](2);
+    initialMorphoRewardsAdmins[0] = admin;
+    initialMorphoRewardsAdmins[1] = relayer;
+
     address morphoRewardsManager = deployContract(
-      "V1_RM_MORPHO", abi.encodePacked(type(MorphoRewardsManager).creationCode, abi.encode(admin, initialAdmins))
+      "V1_RM_MORPHO",
+      abi.encodePacked(type(MorphoRewardsManager).creationCode, abi.encode(admin, initialMorphoRewardsAdmins))
     );
     console2.log("Rewards manager deployed: ", morphoRewardsManager);
 
