@@ -44,10 +44,14 @@ contract MorphoRewardsManagerTest is Test {
     bytes32[] memory proof = new bytes32[](0);
 
     MorphoRewardsManager.Claim[] memory claims = new MorphoRewardsManager.Claim[](1);
-    claims[0] = MorphoRewardsManager.Claim({ rewardToken: rewardToken, claimable: claimable, proof: proof });
+    claims[0] = MorphoRewardsManager.Claim({
+      rewardsDistributor: rewardsDistributor,
+      rewardToken: rewardToken,
+      claimable: claimable,
+      proof: proof
+    });
     MorphoRewardsManager.Claims[] memory allClaims = new MorphoRewardsManager.Claims[](1);
-    allClaims[0] =
-      MorphoRewardsManager.Claims({ connector: connector, rewardsDistributor: rewardsDistributor, claims: claims });
+    allClaims[0] = MorphoRewardsManager.Claims({ connector: connector, claims: claims });
 
     vm.expectCall(
       address(rewardsDistributor),
@@ -96,10 +100,14 @@ contract MorphoRewardsManagerTest is Test {
     bytes32[] memory proof = new bytes32[](0);
 
     MorphoRewardsManager.Claim[] memory claims = new MorphoRewardsManager.Claim[](1);
-    claims[0] = MorphoRewardsManager.Claim({ rewardToken: rewardToken, claimable: claimable, proof: proof });
+    claims[0] = MorphoRewardsManager.Claim({
+      rewardsDistributor: rewardsDistributor,
+      rewardToken: rewardToken,
+      claimable: claimable,
+      proof: proof
+    });
     MorphoRewardsManager.Claims[] memory allClaims = new MorphoRewardsManager.Claims[](1);
-    allClaims[0] =
-      MorphoRewardsManager.Claims({ connector: connector, rewardsDistributor: rewardsDistributor, claims: claims });
+    allClaims[0] = MorphoRewardsManager.Claims({ connector: connector, claims: claims });
 
     vm.expectCall(
       address(rewardsDistributor),
