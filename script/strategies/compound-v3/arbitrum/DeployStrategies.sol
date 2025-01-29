@@ -6,8 +6,8 @@ import { DeployPeriphery } from "script/DeployPeriphery.sol";
 
 contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
-    address[] memory guardians;
-    address[] memory judges;
+    address[] memory guardians = new address[](2);
+    address[] memory judges = new address[](1);
 
     address msig = getMsig();
     guardians[0] = 0x653c69a2dE94BeC3953C76c64763A1f1438207c6;
@@ -16,11 +16,11 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
 
     vm.startBroadcast();
     deployPeriphery();
-    deployCompoundV3Strategies(guardians, judges);
+    _deployCompoundV3Strategies(guardians, judges);
     vm.stopBroadcast();
   }
 
-  function deployCompoundV3Strategies(address[] memory guardians, address[] memory judges) internal {
+  function _deployCompoundV3Strategies(address[] memory guardians, address[] memory judges) internal {
     address cometRewards = 0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae;
 
     // USDC
