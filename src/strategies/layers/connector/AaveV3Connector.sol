@@ -50,7 +50,7 @@ abstract contract AaveV3Connector is BaseConnector, Initializable {
   function pool() public view virtual returns (IAaveV3Pool);
   /// @notice Returns the aToken's address
   function aToken() public view virtual returns (IAToken);
-  /// @notice Returns the rewards contractt's address
+  /// @notice Returns the rewards contract's address
   function rewards() public view virtual returns (IAaveV3Rewards);
   function _asset() internal view virtual returns (IERC20);
 
