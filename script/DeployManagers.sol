@@ -120,7 +120,7 @@ contract DeployManagers is BaseDeployPeriphery {
     initialMorphoRewardsAdmins[1] = relayer;
 
     address morphoRewardsManager = deployContract(
-      "V1_RM_MORPHO",
+      "V2_RM_MORPHO",
       abi.encodePacked(type(MorphoRewardsManager).creationCode, abi.encode(admin, initialMorphoRewardsAdmins))
     );
     console2.log("Rewards manager deployed: ", morphoRewardsManager);

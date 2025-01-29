@@ -13,12 +13,12 @@ import { MorphoConnector } from "./MorphoConnector.sol";
  */
 contract MorphoRewardsManager is AccessControlDefaultAdminRules {
   struct Claims {
-    IUniversalRewardsDistributor rewardsDistributor;
     MorphoConnector connector;
     Claim[] claims;
   }
 
   struct Claim {
+    IUniversalRewardsDistributor rewardsDistributor;
     address rewardToken;
     uint256 claimable;
     bytes32[] proof;
@@ -79,7 +79,7 @@ contract MorphoRewardsManager is AccessControlDefaultAdminRules {
     for (uint256 i = 0; i < claims.claims.length; ++i) {
       Claim memory claim_ = claims.claims[i];
       // slither-disable-next-line unused-return,calls-loop
-      claims.rewardsDistributor.claim(address(claims.connector), claim_.rewardToken, claim_.claimable, claim_.proof);
+      claim_.rewardsDistributor.claim(address(claims.connector), claim_.rewardToken, claim_.claimable, claim_.proof);
       tokens[i] = claim_.rewardToken;
     }
   }
