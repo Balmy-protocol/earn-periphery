@@ -100,7 +100,9 @@ contract CompoundV3Strategy is
   function globalRegistry()
     public
     view
-    override(ExternalLiquidityMining, ExternalFees, ExternalGuardian, RegistryBasedCreationValidation)
+    override(
+      ExternalLiquidityMining, ExternalFees, ExternalGuardian, RegistryBasedCreationValidation, CompoundV3Connector
+    )
     returns (IGlobalEarnRegistry)
   {
     return IGlobalEarnRegistry(_getArgAddress(20));

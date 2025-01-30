@@ -13,24 +13,19 @@ import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable
 import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SpecialWithdrawal } from "@balmy/earn-core/types/SpecialWithdrawals.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
+import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
+import { CometRewardsTracker } from "./CometRewardsTracker.sol";
+import { ICometRewards } from "./ICometRewards.sol";
+import { LibComet } from "./LibComet.sol";
 import { ICERC20 } from "./ICERC20.sol";
-
-interface ICometRewards {
-  struct RewardConfig {
-    address token;
-    uint64 rescaleFactor;
-    bool shouldUpscale;
-  }
-
-  function rewardConfig(address) external view returns (RewardConfig memory);
-  function claim(address comet, address src, bool shouldAccrue) external;
-  function claimTo(address comet, address src, address to, bool shouldAccrue) external;
-}
 
 abstract contract CompoundV3Connector is BaseConnector, Initializable {
   using SafeERC20 for IERC20;
   using Math for uint256;
   using Token for address;
+
+  /// @notice The id for the Comet Rewards Tracker
+  bytes32 public constant COMET_REWARDS_TRACKER = keccak256("COMET_REWARDS_TRACKER");
 
   /// @notice Returns the cToken's address
   function cToken() public view virtual returns (ICERC20);
@@ -38,6 +33,9 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
   function cometRewards() public view virtual returns (ICometRewards);
 
   function _asset() internal view virtual returns (address);
+
+  /// @notice The address of the global registry
+  function globalRegistry() public view virtual returns (IGlobalEarnRegistry);
 
   /// @notice Performs a max approve to the cToken, so that we can deposit without any worries
   function maxApproveCToken() public {
@@ -57,12 +55,14 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
 
   // slither-disable-next-line naming-convention,dead-code
   function _connector_allTokens() internal view virtual override returns (address[] memory tokens) {
-    address rewardToken = address(cometRewards().rewardConfig(address(cToken())).token);
-    tokens = new address[](rewardToken == address(0) ? 1 : 2);
-    tokens[0] = _connector_asset();
-    if (rewardToken != address(0)) {
+    address rewardToken = LibComet.getRewardsConfig(cometRewards(), cToken()).token;
+    if (rewardToken == address(0)) {
+      tokens = new address[](1);
+    } else {
+      tokens = new address[](2);
       tokens[1] = rewardToken;
     }
+    tokens[0] = _connector_asset();
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -128,12 +128,20 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     override
     returns (address[] memory tokens, uint256[] memory balances)
   {
-    tokens = _connector_allTokens();
-    balances = new uint256[](tokens.length);
-    balances[0] = cToken().balanceOf(address(this));
-    if (tokens.length > 1) {
-      balances[1] = IERC20(tokens[1]).balanceOf(address(this)); // TODO: calculate unclaimed rewards
+    ICERC20 cToken_ = cToken();
+    (address rewardToken, uint256 rewardAmount) =
+      _getRewardsTracker().getRewardsOwed(cometRewards(), cToken_, address(this));
+    if (rewardToken == address(0)) {
+      tokens = new address[](1);
+      balances = new uint256[](1);
+    } else {
+      tokens = new address[](2);
+      balances = new uint256[](2);
+      tokens[1] = rewardToken;
+      balances[1] = IERC20(rewardToken).balanceOf(address(this)) + rewardAmount;
     }
+    tokens[0] = _connector_asset();
+    balances[0] = cToken_.balanceOf(address(this));
   }
 
   // slither-disable-next-line naming-convention,dead-code
@@ -266,10 +274,12 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     // Claim and transfer rewards
     ICometRewards cometRewards_ = cometRewards();
     uint256 rewardBalance = 0;
-    address rewardToken = cometRewards_.rewardConfig(address(cToken_)).token;
+    (address rewardToken, uint256 rewardAmount) =
+      _getRewardsTracker().getRewardsOwed(cometRewards_, cToken_, address(this));
     if (rewardToken != address(0)) {
-      // TODO: check if there is something to claim
-      cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
+      if (rewardAmount > 0) {
+        cometRewards_.claimTo(address(cToken_), address(this), address(this), true);
+      }
       rewardBalance = IERC20(rewardToken).balanceOf(address(this));
       IERC20(rewardToken).safeTransfer(address(newStrategy), rewardBalance);
     }
@@ -288,4 +298,8 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     virtual
     override
   { }
+
+  function _getRewardsTracker() private view returns (CometRewardsTracker) {
+    return CometRewardsTracker(globalRegistry().getAddressOrFail(COMET_REWARDS_TRACKER));
+  }
 }
