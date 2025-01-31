@@ -17,7 +17,7 @@ import { IAccessControl } from "@openzeppelin/contracts/access/extensions/IAcces
 import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract TosManagerTest is Test {
-  event TOSUpdated(bytes32 group, bytes tos);
+  event TOSUpdated(bytes32 group, string tos);
   event StrategyAssignedToGroup(StrategyId strategyId, bytes32 group);
 
   bytes32 private constant GROUP_1 = keccak256("group1");

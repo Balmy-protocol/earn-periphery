@@ -40,7 +40,7 @@ contract DeployManagers is BaseDeployPeriphery {
       group: BALMY_GUARDIAN_TOS_GROUP
     });
     address tosManager = deployContract(
-      "V2_TOS_MANAGER",
+      "V3_TOS_MANAGER",
       abi.encodePacked(
         type(TOSManager).creationCode,
         abi.encode(strategyRegistry, admin, initialAdmins, initialToS, new TOSManager.InitialGroup[](0))

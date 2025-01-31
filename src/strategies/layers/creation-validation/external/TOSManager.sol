@@ -117,6 +117,6 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
     bytes memory tosBytes = bytes(tos);
     bytes32 tosHash = tosBytes.length == 0 ? bytes32(0) : tosBytes.toEthSignedMessageHash();
     getGroupTOSHash[group] = tosHash;
-    emit TOSUpdated(group, tosBytes);
+    emit TOSUpdated(group, tos);
   }
 }
