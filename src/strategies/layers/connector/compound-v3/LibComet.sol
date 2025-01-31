@@ -47,7 +47,7 @@ library LibComet {
     view
     returns (address rewardToken, uint256 rewardAmount)
   {
-    ICometRewards.RewardConfig memory config = _getRewardsConfig(rewards, comet);
+    ICometRewards.RewardConfig memory config = getRewardsConfig(rewards, comet);
     if (config.token == address(0)) {
       return (address(0), 0);
     }
@@ -59,11 +59,11 @@ library LibComet {
     return (config.token, owed);
   }
 
-  function _getRewardsConfig(
+  function getRewardsConfig(
     ICometRewards rewards,
     ICERC20 comet
   )
-    private
+    internal
     view
     returns (ICometRewards.RewardConfig memory)
   {

@@ -5,15 +5,27 @@ import {
   CompoundV3Connector,
   IERC20,
   ICERC20,
-  ICometRewards
+  ICometRewards,
+  IGlobalEarnRegistry
 } from "src/strategies/layers/connector/compound-v3/CompoundV3Connector.sol";
+import { CometRewardsTracker } from "src/strategies/layers/connector/compound-v3/CometRewardsTracker.sol";
+import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { BaseConnectorInstance } from "../base/BaseConnectorInstance.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "../base/BaseConnectorImmediateWithdrawalTest.t.sol";
 import { BaseConnectorFarmTokenTest } from "../base/BaseConnectorFarmTokenTest.t.sol";
 
 abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
-  // solhint-disable-next-line no-empty-blocks
-  function _setUp() internal override { }
+  IGlobalEarnRegistry private registry;
+
+  function _setUp() internal override {
+    CometRewardsTracker cometRewardsTracker = new CometRewardsTracker();
+    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](1);
+    config[0] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("COMET_REWARDS_TRACKER"),
+      contractAddress: address(cometRewardsTracker)
+    });
+    registry = new GlobalEarnRegistry(config, address(this));
+  }
 
   function _asset() internal view virtual returns (address);
   function _cometRewards() internal view virtual returns (ICometRewards);
@@ -29,7 +41,7 @@ abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTes
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
-    return new CompoundV3ConnectorInstance(_cToken(), _asset(), _cometRewards());
+    return new CompoundV3ConnectorInstance(_cToken(), _asset(), _cometRewards(), registry);
   }
 
   function _farmToken() internal view virtual override returns (address) {
@@ -67,17 +79,30 @@ abstract contract CompoundV3ConnectorTest is BaseConnectorImmediateWithdrawalTes
 
 contract CompoundV3ConnectorInstance is BaseConnectorInstance, CompoundV3Connector {
   ICERC20 internal immutable _cToken;
+  IGlobalEarnRegistry internal immutable _registry;
   address internal immutable __asset;
   ICometRewards internal immutable _cometRewards;
 
-  constructor(ICERC20 __cToken, address ___asset, ICometRewards __cometRewards) initializer {
+  constructor(
+    ICERC20 __cToken,
+    address ___asset,
+    ICometRewards __cometRewards,
+    IGlobalEarnRegistry __registry
+  )
+    initializer
+  {
     _cToken = __cToken;
     __asset = ___asset;
+    _registry = __registry;
     _cometRewards = __cometRewards;
     _connector_init();
   }
 
   receive() external payable { }
+
+  function globalRegistry() public view override returns (IGlobalEarnRegistry) {
+    return _registry;
+  }
 
   function cometRewards() public view override returns (ICometRewards) {
     return _cometRewards;
