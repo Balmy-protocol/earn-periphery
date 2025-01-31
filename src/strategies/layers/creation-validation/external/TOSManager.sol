@@ -13,7 +13,7 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   using MessageHashUtils for bytes;
 
   struct InitialToS {
-    bytes tos;
+    string tos;
     bytes32 group;
   }
 
@@ -82,7 +82,7 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
   }
 
   /// @inheritdoc ITOSManager
-  function updateTOS(bytes32 group, bytes calldata tos) external onlyRole(MANAGE_TOS_ROLE) {
+  function updateTOS(bytes32 group, string calldata tos) external onlyRole(MANAGE_TOS_ROLE) {
     _assignToS(group, tos);
   }
 
@@ -113,9 +113,10 @@ contract TOSManager is ITOSManager, AccessControlDefaultAdminRules {
     emit StrategyAssignedToGroup(strategyId, group);
   }
 
-  function _assignToS(bytes32 group, bytes memory tos) internal {
-    bytes32 tosHash = tos.length == 0 ? bytes32(0) : tos.toEthSignedMessageHash();
+  function _assignToS(bytes32 group, string memory tos) internal {
+    bytes memory tosBytes = bytes(tos);
+    bytes32 tosHash = tosBytes.length == 0 ? bytes32(0) : tosBytes.toEthSignedMessageHash();
     getGroupTOSHash[group] = tosHash;
-    emit TOSUpdated(group, tos);
+    emit TOSUpdated(group, tosBytes);
   }
 }

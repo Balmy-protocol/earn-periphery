@@ -25,7 +25,7 @@ contract TosManagerTest is Test {
   address private superAdmin = address(1);
   address private manageTosAdmin = address(2);
   IEarnStrategyRegistry private registry = IEarnStrategyRegistry(address(3));
-  bytes private initialTOS = "initial tos";
+  string private initialTOS = "initial tos";
   StrategyId private initialStrategyId = StrategyId.wrap(1000);
   TOSManager private tosManager;
   VmSafe.Wallet private alice = vm.createWallet("alice");

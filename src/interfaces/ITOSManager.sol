@@ -43,7 +43,7 @@ interface ITOSManager is ICreationValidationManagerCore {
   function getGroupTOSHash(bytes32 group) external view returns (bytes32);
 
   /// @notice Updates the TOS for a specific group
-  function updateTOS(bytes32 group, bytes calldata tos) external;
+  function updateTOS(bytes32 group, string calldata tos) external;
 
   /**
    * @notice Assigns a strategy to a group
