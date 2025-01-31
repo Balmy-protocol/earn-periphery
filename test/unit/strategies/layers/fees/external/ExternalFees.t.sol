@@ -658,5 +658,6 @@ contract ExternalFeesInstance is ExternalFees {
   )
     internal
     override
+  // solhint-disable-next-line no-empty-blocks
   { }
 }
