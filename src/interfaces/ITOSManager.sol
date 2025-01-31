@@ -11,7 +11,7 @@ import { ICreationValidationManagerCore } from "./ICreationValidationManager.sol
  */
 interface ITOSManager is ICreationValidationManagerCore {
   /// @notice Emitted when the TOS is updated for a group
-  event TOSUpdated(bytes32 group, bytes tos);
+  event TOSUpdated(bytes32 group, string tos);
 
   /// @notice Emitted when a strategy is assigned to a group
   event StrategyAssignedToGroup(StrategyId strategyId, bytes32 group);
@@ -43,7 +43,7 @@ interface ITOSManager is ICreationValidationManagerCore {
   function getGroupTOSHash(bytes32 group) external view returns (bytes32);
 
   /// @notice Updates the TOS for a specific group
-  function updateTOS(bytes32 group, bytes calldata tos) external;
+  function updateTOS(bytes32 group, string calldata tos) external;
 
   /**
    * @notice Assigns a strategy to a group
