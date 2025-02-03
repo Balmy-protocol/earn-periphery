@@ -15,7 +15,7 @@ import { GlobalValidationManagersRegistry } from
   "src/strategies/layers/creation-validation/external/GlobalValidationManagersRegistry.sol";
 import { SignatureBasedWhitelistManager } from
   "src/strategies/layers/creation-validation/external/SignatureBasedWhitelistManager.sol";
-
+import { CometRewardsTracker } from "src/strategies/layers/connector/compound-v3/CometRewardsTracker.sol";
 import { console2 } from "forge-std/console2.sol";
 
 contract DeployManagers is BaseDeployPeriphery {
@@ -125,7 +125,11 @@ contract DeployManagers is BaseDeployPeriphery {
     );
     console2.log("Rewards manager deployed: ", morphoRewardsManager);
 
-    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](6);
+    address cometRewardsTracker =
+      deployContract("V1_COMET_REWARDS_TRACKER", abi.encodePacked(type(CometRewardsTracker).creationCode));
+    console2.log("Comet rewards tracker deployed: ", cometRewardsTracker);
+
+    GlobalEarnRegistry.InitialConfig[] memory config = new GlobalEarnRegistry.InitialConfig[](7);
     config[0] = GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: feeManager });
     config[1] =
       GlobalEarnRegistry.InitialConfig({ id: keccak256("GUARDIAN_MANAGER"), contractAddress: guardianManager });
@@ -145,6 +149,8 @@ contract DeployManagers is BaseDeployPeriphery {
       id: keccak256("MORPHO_REWARDS_MANAGER"),
       contractAddress: morphoRewardsManager
     });
+    config[6] =
+      GlobalEarnRegistry.InitialConfig({ id: keccak256("COMET_REWARDS_TRACKER"), contractAddress: cometRewardsTracker });
 
     address globalRegistry = deployContract(
       "V2_GLOBAL_REGISTRY", abi.encodePacked(type(GlobalEarnRegistry).creationCode, abi.encode(config, admin))
