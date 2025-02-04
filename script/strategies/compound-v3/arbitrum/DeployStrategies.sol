@@ -6,60 +6,65 @@ import { DeployPeriphery } from "script/DeployPeriphery.sol";
 
 contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
-    address[] memory guardians = new address[](2);
     address[] memory judges = new address[](1);
-
-    address msig = getMsig();
-    guardians[0] = 0x653c69a2dE94BeC3953C76c64763A1f1438207c6;
-    guardians[1] = msig;
-    judges[0] = msig;
+    judges[0] = getMsig();
 
     vm.startBroadcast();
     deployPeriphery();
-    _deployCompoundV3Strategies(guardians, judges);
+    _deployCompoundV3Strategies(getGuardianArrayWithMsig(BALMY_GUARDIAN), judges, BALMY_GUARDIAN_TOS_GROUP, "");
+    _deployCompoundV3Strategies(
+      getGuardianArrayWithMsig(HYPERNATIVE_GUARDIAN), judges, HYPERNATIVE_GUARDIAN_TOS_GROUP, "hypernative"
+    );
     vm.stopBroadcast();
   }
 
-  function _deployCompoundV3Strategies(address[] memory guardians, address[] memory judges) internal {
+  function _deployCompoundV3Strategies(
+    address[] memory guardians,
+    address[] memory judges,
+    bytes32 tosGroup,
+    string memory guard
+  )
+    internal
+  {
     address cometRewards = 0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae;
 
     // USDC
     deployCompoundV3Strategy({
       cometRewards: cometRewards,
       cToken: ICERC20(0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - usdc"
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - ", guard)
     });
 
     // USDT
     deployCompoundV3Strategy({
       cometRewards: cometRewards,
       cToken: ICERC20(0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - usdt"
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - ", guard)
     });
 
     // WETH
     deployCompoundV3Strategy({
       cometRewards: cometRewards,
       cToken: ICERC20(0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - weth"
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - ", guard)
     });
   }
 }
