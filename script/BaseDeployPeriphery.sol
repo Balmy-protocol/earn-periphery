@@ -28,10 +28,12 @@ contract BaseDeployPeriphery is BaseDeploy {
     rescueFee: type(uint16).max
   });
 
-  function getGuardianArrayWithMsig(address guardian) internal view returns (address[] memory guardians) {
-    guardians = new address[](2);
+  function _getGuardiansArray(address guardian, bool addMsig) internal view returns (address[] memory guardians) {
+    guardians = new address[](1 + (addMsig ? 1 : 0));
     guardians[0] = guardian;
-    guardians[1] = getMsig();
+    if (addMsig) {
+      guardians[1] = getMsig();
+    }
     return guardians;
   }
 }

@@ -11,10 +11,18 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
 
     vm.startBroadcast();
     deployPeriphery();
-    _deployCompoundV3Strategies(getGuardianArrayWithMsig(BALMY_GUARDIAN), judges, BALMY_GUARDIAN_TOS_GROUP, "");
-    _deployCompoundV3Strategies(
-      getGuardianArrayWithMsig(HYPERNATIVE_GUARDIAN), judges, HYPERNATIVE_GUARDIAN_TOS_GROUP, "hypernative"
-    );
+    _deployCompoundV3Strategies({
+      guardians: _getGuardiansArray(BALMY_GUARDIAN, true),
+      judges: judges,
+      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      guard: ""
+    });
+    _deployCompoundV3Strategies({
+      guardians: _getGuardiansArray(HYPERNATIVE_GUARDIAN, false),
+      judges: judges,
+      tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
+      guard: "hypernative"
+    });
     vm.stopBroadcast();
   }
 

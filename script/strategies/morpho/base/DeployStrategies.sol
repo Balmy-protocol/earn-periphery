@@ -15,10 +15,18 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     deployPeriphery();
     // Warning: Morpho Factory was updated, so this will deploy the strategies with the new factory
     // TODO: Remove this when the new factory is deployed
-    _deployMorphoStrategies(getGuardianArrayWithMsig(BALMY_GUARDIAN), judges, BALMY_GUARDIAN_TOS_GROUP, "");
-    _deployMorphoStrategies(
-      getGuardianArrayWithMsig(HYPERNATIVE_GUARDIAN), judges, HYPERNATIVE_GUARDIAN_TOS_GROUP, "hypernative"
-    );
+    // _deployMorphoStrategies({
+    //   guardians: _getGuardiansArray(BALMY_GUARDIAN, true),
+    //   judges: judges,
+    //   tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+    //   guard: ""
+    // });
+    _deployMorphoStrategies({
+      guardians: _getGuardiansArray(HYPERNATIVE_GUARDIAN, false),
+      judges: judges,
+      tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
+      guard: "hypernative"
+    });
     vm.stopBroadcast();
   }
 
