@@ -7,20 +7,37 @@ import { DeployPeriphery } from "script/DeployPeriphery.sol";
 
 contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
+    address[] memory judges = new address[](1);
+    address msig = getMsig();
+    judges[0] = msig;
+
     vm.startBroadcast();
     deployPeriphery();
-    deployMorphoStrategies();
+    // Warning: Morpho Factory was updated, so this will deploy the strategies with the new factory
+    // TODO: Remove this when the new factory is deployed
+    // _deployMorphoStrategies({
+    //   guardians: _getGuardiansArray(BALMY_GUARDIAN, true),
+    //   judges: judges,
+    //   tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+    //   guard: ""
+    // });
+    _deployMorphoStrategies({
+      guardians: _getGuardiansArray(HYPERNATIVE_GUARDIAN, false),
+      judges: judges,
+      tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
+      guard: "hypernative"
+    });
     vm.stopBroadcast();
   }
 
-  function deployMorphoStrategies() internal {
-    address[] memory guardians = new address[](2);
-    guardians[0] = 0x653c69a2dE94BeC3953C76c64763A1f1438207c6;
-    guardians[1] = getMsig();
-
-    address[] memory judges = new address[](1);
-    judges[0] = getMsig();
-
+  function _deployMorphoStrategies(
+    address[] memory guardians,
+    address[] memory judges,
+    bytes32 tosGroup,
+    string memory guard
+  )
+    internal
+  {
     address[] memory moonwellRewardTokens = new address[](2);
     moonwellRewardTokens[0] = 0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842; // $MORPHO
     moonwellRewardTokens[1] = 0xA88594D404727625A9437C3f886C7643872296AE; // $WELL
@@ -33,26 +50,26 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     // Moonwell Flagship ETH
     deployMorphoStrategy({
       mToken: IERC4626(0xa0E430870c4604CcfC7B38Ca7845B1FF653D0ff1),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - moonwell flagship eth",
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
     deployMorphoStrategy({
       mToken: IERC4626(0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: bytes32(0),
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - gauntlet usdc prime",
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
 
@@ -62,26 +79,26 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     // Moonwell Flagship ETH
     deployMorphoStrategy({
       mToken: IERC4626(0xa0E430870c4604CcfC7B38Ca7845B1FF653D0ff1),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: "v1-t1",
-      description: "strategy tier 1 - moonwell flagship eth",
+      guard: bytes32(bytes(string.concat("v1-t1", guard))),
+      description: string.concat("strategy tier 1 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
     deployMorphoStrategy({
       mToken: IERC4626(0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: "v1-t1",
-      description: "strategy tier 1 - gauntlet usdc prime",
+      guard: bytes32(bytes(string.concat("v1-t1", guard))),
+      description: string.concat("strategy tier 1 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
 
@@ -91,26 +108,26 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     // Moonwell Flagship ETH
     deployMorphoStrategy({
       mToken: IERC4626(0xa0E430870c4604CcfC7B38Ca7845B1FF653D0ff1),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: "v1-t2",
-      description: "strategy tier 2 - moonwell flagship eth",
+      guard: bytes32(bytes(string.concat("v1-t2", guard))),
+      description: string.concat("strategy tier 2 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
     deployMorphoStrategy({
       mToken: IERC4626(0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: "v1-t2",
-      description: "strategy tier 2 - gauntlet usdc prime",
+      guard: bytes32(bytes(string.concat("v1-t2", guard))),
+      description: string.concat("strategy tier 2 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
 
@@ -120,26 +137,26 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     // Moonwell Flagship ETH
     deployMorphoStrategy({
       mToken: IERC4626(0xa0E430870c4604CcfC7B38Ca7845B1FF653D0ff1),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: "v1-t3",
-      description: "strategy tier 3 - moonwell flagship eth",
+      guard: bytes32(bytes(string.concat("v1-t3", guard))),
+      description: string.concat("strategy tier 3 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
 
     // Gauntlet USDC Prime
     deployMorphoStrategy({
       mToken: IERC4626(0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61),
-      tosGroup: BALMY_GUARDIAN_TOS_GROUP,
+      tosGroup: tosGroup,
       signerGroup: DEFAULT_SIGNER_GROUP,
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: "v1-t3",
-      description: "strategy tier 3 - gauntlet usdc prime",
+      guard: bytes32(bytes(string.concat("v1-t3", guard))),
+      description: string.concat("strategy tier 3 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
   }

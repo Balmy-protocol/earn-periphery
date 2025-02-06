@@ -64,7 +64,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
       IEarnVault(vault), IGlobalEarnRegistry(globalRegistry), cToken, ICometRewards(cometRewards), salt
     );
     if (computedAddress.code.length > 0) {
-      console2.log("Strategy already deployed", computedAddress);
+      console2.log("\u001b[93m\u2718 Strategy already deployed at:", computedAddress, "\u001b[0m");
     } else {
       (strategy, strategyId) = compoundV3StrategyFactory.clone2StrategyAndRegister(
         admin,
@@ -80,9 +80,8 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
         ),
         salt
       );
-
-      console2.log(string.concat(description, ":"), address(strategy));
-      console2.log(string.concat(description, " id:"), StrategyId.unwrap(strategyId));
+      console2.log("\u001b[92m\u2714", string.concat(description, ":"), address(strategy), "\u001b[0m");
+      console2.log("\u001b[92m\u2714", string.concat(description, " id:"), StrategyId.unwrap(strategyId), "\u001b[0m");
     }
   }
 }

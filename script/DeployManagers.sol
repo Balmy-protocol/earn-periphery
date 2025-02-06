@@ -33,11 +33,16 @@ contract DeployManagers is BaseDeployPeriphery {
     address[] memory initialAdmins = new address[](1);
     initialAdmins[0] = admin;
 
-    TOSManager.InitialToS[] memory initialToS = new TOSManager.InitialToS[](1);
+    TOSManager.InitialToS[] memory initialToS = new TOSManager.InitialToS[](2);
     initialToS[0] = TOSManager.InitialToS({
       // solhint-disable-next-line max-line-length
       tos: "By selecting a Guardian, you acknowledge and accept the terms and conditions outlined in our Earn service's Terms of Use available at https://app.balmy.xyz/terms_of_use.pdf, including those related to the accuracy of data provided by third-party oracles and the actions taken by the Guardian in response to potential threats. \n\nPlease note:\n\n- Balmy does not guarantee the accuracy, completeness, or reliability of information from third-party yield providers.\n- Balmy and Balmy's Guardian operates on a best-effort basis to protect your funds in the event of a hack, and actions taken by the Guardian may impact the performance of your investment.\n- Rescue fees may apply if funds are saved.\n- Timing and decisions regarding redepositing or relocating funds are made in good faith, and Balmy is not liable for any financial losses resulting from these actions.\n\nBy signing this I acknowledge and agree to the above terms and conditions.",
       group: BALMY_GUARDIAN_TOS_GROUP
+    });
+    initialToS[1] = TOSManager.InitialToS({
+      // solhint-disable-next-line max-line-length
+      tos: "By selecting Hypernative as Guardian, you acknowledge and accept the terms and conditions outlined Earn service's Terms of Use, available at https://app.balmy.xyz/terms_of_use.pdf. These terms cover the accuracy of data from third-party oracles and the actions taken by the Guardian in response to potential threats. \n\nDisclaimer \n\n- Hypernative offers best-in-class security but cannot guarantee 100% protection. \n\n- Nor Hypernative or Balmy are liable for losses resulting from exploits or malicious attacks. \n\n- A maximum of 5% Rescue Fee may apply if your funds are successfully shielded from an exploit. \n\n- Please review our full disclaimers and the Terms of Use for further details.",
+      group: HYPERNATIVE_GUARDIAN_TOS_GROUP
     });
     address tosManager = deployContract(
       "V3_TOS_MANAGER",
