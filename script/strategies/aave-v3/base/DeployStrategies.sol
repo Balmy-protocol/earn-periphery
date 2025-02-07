@@ -76,8 +76,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: "v1-t0",
-      description: "strategy tier 0 - cbbtc"
+      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      description: string.concat("strategy tier 0 - cbbtc - ", guard)
     });
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
     Fees memory tier1Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 750, rescueFee: 375 });
