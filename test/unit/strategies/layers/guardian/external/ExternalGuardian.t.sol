@@ -152,6 +152,32 @@ contract ExternalGuardianTest is Test {
     assertTrue(status == ExternalGuardian.RescueStatus.OK);
   }
 
+  function test_cancelRescue_noBalance() public {
+    uint256 balance = 0;
+    guardian.setStatus(ExternalGuardian.RescueStatus.RESCUE_NEEDS_CONFIRMATION);
+
+    vm.mockCall(
+      address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(balance)
+    );
+    vm.mockCall(address(reward), abi.encodeWithSelector(IERC20.balanceOf.selector, address(guardian)), abi.encode(0));
+    vm.mockCall(
+      address(manager),
+      abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector, strategyId, address(this)),
+      abi.encode(true)
+    );
+    vm.expectCall(address(manager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector, strategyId));
+    guardian.cancelRescue();
+
+    ExternalGuardianInstance.Deposit memory deposit = guardian.lastDeposit();
+    assertEq(deposit.token, address(0));
+    assertEq(deposit.amount, 0);
+    assertEq(deposit.takeFromCaller, false);
+    (uint16 feeBps, address feeRecipient, ExternalGuardian.RescueStatus status) = guardian.rescueConfig();
+    assertEq(feeBps, 0);
+    assertEq(feeRecipient, address(0));
+    assertTrue(status == ExternalGuardian.RescueStatus.OK);
+  }
+
   function test_cancelRescue_revertWhen_noNeedForConfirmation() public {
     guardian.setStatus(ExternalGuardian.RescueStatus.OK);
 
