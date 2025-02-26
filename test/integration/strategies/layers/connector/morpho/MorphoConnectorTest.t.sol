@@ -211,7 +211,7 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
 
   function testFork_specialWithdraw_withRewards() public {
     _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
-     address recipient = address(1);
+    address recipient = address(1);
     uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
     uint256 amountToWithdraw = _amountToWithdrawFarmToken();
     uint256[] memory toWithdraw = new uint256[](1);

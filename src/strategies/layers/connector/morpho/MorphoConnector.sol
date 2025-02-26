@@ -166,7 +166,8 @@ abstract contract MorphoConnector is ERC4626Connector {
     )
   {
     uint256[] memory superBalanceChanges;
-    (superBalanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) = super._connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+    (superBalanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+      super._connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
     balanceChanges = new uint256[](_rewardTokens.length + 1);
     balanceChanges[0] = superBalanceChanges[0];
   }
