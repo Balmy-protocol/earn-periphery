@@ -5,7 +5,7 @@ import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 import { IGlobalEarnRegistry } from "src/interfaces/IGlobalEarnRegistry.sol";
-import { ERC4626Connector, IEarnStrategy, StrategyId } from "../ERC4626Connector.sol";
+import { ERC4626Connector, IEarnStrategy, StrategyId, SpecialWithdrawalCode } from "../ERC4626Connector.sol";
 
 /**
  * @notice Some farms like Aave v3 generate rewards continuously over time. But other farms (like Morpho) do the
@@ -146,6 +146,30 @@ abstract contract MorphoConnector is ERC4626Connector {
     // Note: we should technically re-size the array params but we know the ERC4626 connector doesn't need it, so we
     //       won't. This will help us reduce contract size
     super._connector_withdraw(positionId, tokens, toWithdraw, recipient);
+  }
+
+  // slither-disable-next-line naming-convention,dead-code
+  function _connector_specialWithdraw(
+    uint256 positionId,
+    SpecialWithdrawalCode withdrawalCode,
+    uint256[] calldata toWithdraw,
+    bytes calldata withdrawData,
+    address recipient
+  )
+    internal
+    override
+    returns (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    )
+  {
+    uint256[] memory superBalanceChanges;
+    (superBalanceChanges, actualWithdrawnTokens, actualWithdrawnAmounts, result) =
+      super._connector_specialWithdraw(positionId, withdrawalCode, toWithdraw, withdrawData, recipient);
+    balanceChanges = new uint256[](_rewardTokens.length + 1);
+    balanceChanges[0] = superBalanceChanges[0];
   }
 
   // slither-disable-next-line naming-convention,dead-code

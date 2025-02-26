@@ -175,6 +175,7 @@ abstract contract ERC4626Connector is BaseConnector, Initializable {
     address recipient
   )
     internal
+    virtual
     override
     returns (
       uint256[] memory balanceChanges,
