@@ -11,7 +11,7 @@ import {
 import { GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { BaseConnectorInstance } from "../base/BaseConnectorTest.t.sol";
 import { BaseConnectorImmediateWithdrawalTest } from "../base/BaseConnectorImmediateWithdrawalTest.t.sol";
-import { BaseConnectorFarmTokenTest } from "../base/BaseConnectorFarmTokenTest.t.sol";
+import { BaseConnectorFarmTokenTest, SpecialWithdrawal } from "../base/BaseConnectorFarmTokenTest.t.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 
 contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnectorFarmTokenTest {
@@ -207,6 +207,46 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     assertEq(newDeadline, deadline);
     assertEq(newEmittedBeforeLastUpdate, emittedBeforeLastUpdate);
     assertEq(newLastUpdated, lastUpdated);
+  }
+
+  function testFork_specialWithdraw_withRewards() public {
+    _sendAndConfigureRewards(_MORPHO_TOKEN, 8640e10, 1 days);
+     address recipient = address(1);
+    uint256 originalConnectorBalance = _connectorBalanceOfFarmToken();
+    uint256 amountToWithdraw = _amountToWithdrawFarmToken();
+    uint256[] memory toWithdraw = new uint256[](1);
+    toWithdraw[0] = amountToWithdraw;
+    _setBalance(_farmToken(), recipient, 0);
+    _setBalance(_farmToken(), address(connector), originalConnectorBalance);
+
+    (, uint256[] memory balancesBefore) = connector.totalBalances();
+
+    (
+      uint256[] memory balanceChanges,
+      address[] memory actualWithdrawnTokens,
+      uint256[] memory actualWithdrawnAmounts,
+      bytes memory result
+    ) = connector.specialWithdraw(1, SpecialWithdrawal.WITHDRAW_ASSET_FARM_TOKEN_BY_AMOUNT, toWithdraw, "", recipient);
+
+    (, uint256[] memory balancesAfter) = connector.totalBalances();
+
+    // Check assets
+    uint256 assetsWithdrawn = balanceChanges[0];
+    assertEq(balanceChanges.length, balancesBefore.length);
+    assertAlmostEq(assetsWithdrawn, balancesBefore[0] - balancesAfter[0], 2);
+
+    // Check actual tokens and amounts
+    assertEq(actualWithdrawnTokens.length, 1);
+    assertEq(actualWithdrawnAmounts.length, 1);
+    assertEq(actualWithdrawnTokens[0], _farmToken());
+    assertEq(actualWithdrawnAmounts[0], amountToWithdraw);
+
+    // Check result
+    assertTrue(result.length == 0);
+
+    // Check transfer
+    assertAlmostEq(_balance(_farmToken(), recipient), amountToWithdraw, 2);
+    assertAlmostEq(_balance(_farmToken(), address(connector)), originalConnectorBalance - amountToWithdraw, 2);
   }
 
   function _sendAndConfigureRewards(address token, uint256 amount, uint256 duration) internal {
