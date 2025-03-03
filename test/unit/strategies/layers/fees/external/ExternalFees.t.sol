@@ -404,6 +404,52 @@ contract ExternalFeesTest is Test {
     assertEq(collected[1], 2000);
   }
 
+  function test_withdraw_noFees() public {
+    uint256 positionId = 1;
+    address recipient = address(0);
+    address[] memory allTokens = CommonUtils.arrayOf(asset, token);
+    _setFee(0); // 0%
+
+    // Set balance to 100k for asset and 50k for reward
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    (address[] memory tokens1, uint256[] memory balances1) = fees.totalBalances();
+    assertEq(tokens1, allTokens);
+    assertEq(balances1, CommonUtils.arrayOf(100_000, 50_000));
+
+    // Withdraw 50k and 10k
+    fees.withdraw(positionId, allTokens, CommonUtils.arrayOf(50_000, 10_000), recipient);
+    (address[] memory tokens2, uint256[] memory balances2) = fees.totalBalances();
+    assertEq(tokens2, allTokens);
+    assertEq(balances2, CommonUtils.arrayOf(50_000, 40_000));
+
+    // Set balance to 80k for asset and 80k for reward
+    fees.setBalance(asset, 80_000);
+    fees.setBalance(token, 80_000);
+    (address[] memory tokens3, uint256[] memory balances3) = fees.totalBalances();
+    assertEq(tokens3, allTokens);
+    assertEq(balances3, CommonUtils.arrayOf(80_000, 80_000));
+
+    (address[] memory tokens4, uint256[] memory collected1) = fees.collectedFees();
+    assertEq(tokens4, allTokens);
+    assertEq(collected1, CommonUtils.arrayOf(0, 0));
+
+    // Withdraw another 10k and 20k
+    fees.withdraw(positionId, allTokens, CommonUtils.arrayOf(10_000, 20_000), recipient);
+    (address[] memory tokens5, uint256[] memory balances4) = fees.totalBalances();
+    assertEq(tokens5, allTokens);
+    assertEq(balances4, CommonUtils.arrayOf(70_000, 60_000));
+
+    // Set balance to 100k for asset and 50k for reward
+    fees.setBalance(asset, 100_000);
+    fees.setBalance(token, 50_000);
+
+    (address[] memory tokens6, uint256[] memory collected2) = fees.collectedFees();
+    assertEq(tokens6, allTokens);
+    assertEq(collected2, CommonUtils.arrayOf(0, 0));
+  }
+
   function test_specialWithdraw() public {
     uint256 positionId = 1;
     address recipient = address(0);
