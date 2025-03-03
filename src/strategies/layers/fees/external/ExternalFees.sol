@@ -180,6 +180,7 @@ abstract contract ExternalFees is BaseFees, ReentrancyGuard, Initializable {
     if (fees.performanceFee == 0) {
       _clearAllBalancesIfSet(tokens);
       _fees_underlying_withdraw(positionId, tokens, toWithdraw, recipient);
+      return;
     }
 
     (, uint256[] memory currentBalances) = _fees_underlying_totalBalances();
