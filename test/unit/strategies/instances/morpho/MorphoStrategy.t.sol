@@ -24,6 +24,8 @@ import {
 } from "src/interfaces/IValidationManagersRegistry.sol";
 import { IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
 import { Fees } from "src/types/Fees.sol";
+import { CommonUtils } from "test/utils/CommonUtils.sol";
+import { ERC20MintableBurnableMock } from "@balmy/earn-core-test/mocks/ERC20/ERC20MintableBurnableMock.sol";
 
 // solhint-disable-next-line max-states-count
 contract MorphoStrategyTest is Test {
@@ -72,6 +74,8 @@ contract MorphoStrategyTest is Test {
     vm.mockCall(
       address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
     );
+    vm.mockCall(address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.rescueStarted.selector), "");
+    vm.mockCall(address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.rescueCancelled.selector), "");
     vm.mockCall(
       address(liquidityMiningManager),
       abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
@@ -98,6 +102,10 @@ contract MorphoStrategyTest is Test {
       abi.encode(new ICreationValidationManagerCore[](0))
     );
     vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(asset));
+    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(0));
+    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.previewRedeem.selector), abi.encode(0));
+    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.maxWithdraw.selector), abi.encode(0));
+    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.withdraw.selector), abi.encode(0));
     vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.approve.selector), abi.encode(true));
   }
 
@@ -275,6 +283,73 @@ contract MorphoStrategyTest is Test {
     );
     assertEq(cloneAddress, address(clone));
     _assertStrategyWasDeployedCorrectly(clone, strategyId);
+  }
+
+  function test_cancelRescue_withRewards() public {
+    ERC20MintableBurnableMock assetToken = new ERC20MintableBurnableMock();
+    ERC20MintableBurnableMock rewardToken = new ERC20MintableBurnableMock();
+    uint256 rewardAmount = 8640e10;
+
+    // We are making ourselves the rewards manager, so that we can configure rewards
+    vm.mockCall(
+      address(globalRegistry),
+      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("MORPHO_REWARDS_MANAGER")),
+      abi.encode(address(this))
+    );
+    // Set the asset to the asset token
+    vm.mockCall(address(erc4626Vault), abi.encodeWithSelector(IERC4626.asset.selector), abi.encode(address(assetToken)));
+    // Mark ourselves as able to start a rescue
+    vm.mockCall(
+      address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.canStartRescue.selector), abi.encode(true)
+    );
+    // Mark ourselves as able to cancel a rescue
+    vm.mockCall(
+      address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.canCancelRescue.selector), abi.encode(true)
+    );
+
+    // Deploy strategy
+    MorphoStrategy strategy = factory.clone2StrategyWithId(
+      strategyId,
+      MorphoStrategyData(
+        vault,
+        globalRegistry,
+        erc4626Vault,
+        validationData,
+        guardianData,
+        feesData,
+        liquidityMiningData,
+        CommonUtils.arrayOf(address(rewardToken))
+      ),
+      bytes32(uint256(12_345))
+    );
+
+    // Configure rewards
+    deal(address(rewardToken), address(strategy), rewardAmount);
+    strategy.configureRewards(CommonUtils.arrayOf(address(rewardToken)), 1 days);
+
+    // Emit all rewards
+    vm.warp(block.timestamp + 1 days);
+
+    // Make sure balance is correct
+    (address[] memory tokens, uint256[] memory balances) = strategy.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(address(assetToken), address(rewardToken)));
+    assertEq(balances, CommonUtils.arrayOf(0, rewardAmount), "Balance is not correct after rewards were emitted");
+
+    // Start rescue
+    strategy.rescue(address(this));
+
+    // Make sure balance is still correct
+    (tokens, balances) = strategy.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(address(assetToken), address(rewardToken)));
+    assertEq(balances, CommonUtils.arrayOf(0, rewardAmount), "Balance is not correct after rescue was started");
+
+    // Cancel rescue
+    strategy.cancelRescue();
+
+    // Make sure balance is still correct
+    (tokens, balances) = strategy.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(address(assetToken), address(rewardToken)));
+    assertEq(balances, CommonUtils.arrayOf(0, rewardAmount), "Balance is not correct after rescue was cancelled");
   }
 
   function _assertStrategyWasDeployedCorrectly(MorphoStrategy clone, StrategyId strategyId_) private {
