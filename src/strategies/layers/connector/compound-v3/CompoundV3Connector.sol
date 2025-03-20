@@ -118,6 +118,10 @@ abstract contract CompoundV3Connector is BaseConnector, Initializable {
     returns (address[] memory tokens, uint256[] memory withdrawable)
   {
     (tokens, withdrawable) = _connector_totalBalances();
+    if (tokens.length > 1) {
+      // We need to check if the comet rewards has the claimable amount of the reward token in its balance
+      withdrawable[1] = Math.min(withdrawable[1], IERC20(tokens[1]).balanceOf(address(cometRewards())));
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
