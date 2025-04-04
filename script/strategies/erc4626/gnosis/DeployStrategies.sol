@@ -39,7 +39,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - sDAI - ", guard)
     });
   }

@@ -44,7 +44,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - weth - ", guard)
     });
 
@@ -58,7 +58,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - wsteth - ", guard)
     });
 
@@ -72,7 +72,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - gno - ", guard)
     });
 
@@ -86,7 +86,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdc - ", guard)
     });
 
@@ -100,7 +100,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - wxdai - ", guard)
     });
 
@@ -114,7 +114,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - eur.e - ", guard)
     });
 
@@ -128,7 +128,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - sdai - ", guard)
     });
 
@@ -142,7 +142,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdc.e - ", guard)
     });
   }
