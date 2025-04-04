@@ -7,14 +7,14 @@
     "url": "https://github.com/balmy-protocol"
   },
   "devDependencies": {
-    "@balmy/earn-core": "github:balmy-protocol/earn-core#69590f2b285ea1196fe7c72e433a84cecb428a09",
+    "@balmy/earn-core": "github:balmy-protocol/earn-core#0ca4afa6a8afbca21fc7fa837af6df9b9bc9d967",
     "@balmy/nft-permissions": "github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638",
     "@balmy/call-simulation": "github:balmy-protocol/call-simulation#a510c80c7e81480eb5806422101d199a39662024",
     "@forta/firewall": "github:forta-network/forta-firewall-contracts#81a970149dffdb95b0d0e0a67ad23b1db6539390",
     "@openzeppelin": "github:OpenZeppelin/openzeppelin-contracts#bcdfa848a6abb37216df861573d9576636e77824",
     "@prb/test": "github:PaulRBerg/prb-test#8d76ad63d1bfa0b16bb880cfe4620a9e7e6aaa19",
     "ds-test": "github:dapphub/ds-test",
-    "forge-std": "github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d",
+    "forge-std": "github:foundry-rs/forge-std#6853b9ec7df5dc0c213b05ae67785ad4f4baa0ea",
     "prettier": "^2.8.7",
     "solhint-community": "^3.5.0",
     "createx-forge": "github:radeksvarz/createx-forge#1d5ed80fabe164421228d7ce0fd5c7f3e3010300"
