@@ -35,7 +35,9 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
   }
 
   function _buildNewConnector() internal override returns (BaseConnectorInstance) {
-    return new MorphoConnectorInstance(_GAUNTLET_DAI, registry);
+    MorphoConnectorInstance connector_ = new MorphoConnectorInstance(_GAUNTLET_DAI, registry);
+    connector_.init();
+    return connector_;
   }
 
   function _farmToken() internal pure override returns (address) {
@@ -87,24 +89,61 @@ contract MorphoConnectorTest is BaseConnectorImmediateWithdrawalTest, BaseConnec
     assertTrue(types[1] == IEarnStrategy.WithdrawalType.IMMEDIATE);
   }
 
-  function testFork_totalBalances_withRewards() public {
+  function testFork_totalBalances_withRegistration() public {
+    MorphoConnectorInstance newConnector = new MorphoConnectorInstance(_GAUNTLET_DAI, registry);
+    newConnector.init(CommonUtils.arrayOf(_MORPHO_TOKEN));
     uint256 totalRewards = 8640e10;
     uint256 initialTimestamp = block.timestamp;
-    _sendAndConfigureRewards(_MORPHO_TOKEN, totalRewards, 1 days);
+
+    _give(_MORPHO_TOKEN, address(newConnector), totalRewards);
+
+    (address[] memory tokens, uint256[] memory balances) = newConnector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, CommonUtils.arrayOf(0, totalRewards));
+
+    // Register the strategy (registration rests the balance)
+    newConnector.strategyRegistered(StrategyId.wrap(1), IEarnStrategy(address(0)), "");
+    (tokens, balances) = newConnector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
+    assertEq(balances, CommonUtils.arrayOf(0, 0));
+
+    _configureRewardsAndCheckBalances(newConnector, totalRewards, initialTimestamp);
+  }
+
+  function testFork_totalBalances_withNoRegistration() public {
+    uint256 totalRewards = 8640e10;
+    uint256 initialTimestamp = block.timestamp;
+    _give(_MORPHO_TOKEN, address(connector), totalRewards);
 
     (address[] memory tokens, uint256[] memory balances) = connector.totalBalances();
+    assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset()));
+    assertEq(balances, CommonUtils.arrayOf(0));
+
+    _configureRewardsAndCheckBalances(connector, totalRewards, initialTimestamp);
+  }
+
+  function _configureRewardsAndCheckBalances(
+    BaseConnectorInstance connector_,
+    uint256 totalRewards,
+    uint256 initialTimestamp
+  )
+    internal
+  {
+    MorphoConnectorInstance(address(connector_)).configureRewards(CommonUtils.arrayOf(_MORPHO_TOKEN), 1 days);
+
+    (address[] memory tokens, uint256[] memory balances) = connector_.totalBalances();
     assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
     assertEq(balances, CommonUtils.arrayOf(0, 0));
 
     vm.warp(initialTimestamp + 0.5 days);
 
-    (tokens, balances) = connector.totalBalances();
+    (tokens, balances) = connector_.totalBalances();
     assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
     assertEq(balances, CommonUtils.arrayOf(0, totalRewards / 2));
 
     vm.warp(initialTimestamp + 1 days);
 
-    (tokens, balances) = connector.totalBalances();
+    (tokens, balances) = connector_.totalBalances();
     assertEq(tokens, CommonUtils.arrayOf(_GAUNTLET_DAI.asset(), _MORPHO_TOKEN));
     assertEq(balances, CommonUtils.arrayOf(0, totalRewards));
   }
@@ -259,10 +298,17 @@ contract MorphoConnectorInstance is BaseConnectorInstance, MorphoConnector {
   IERC4626 internal immutable _vault;
   IGlobalEarnRegistry internal immutable _registry;
 
-  constructor(IERC4626 vault_, IGlobalEarnRegistry registry_) initializer {
+  constructor(IERC4626 vault_, IGlobalEarnRegistry registry_) {
     _vault = vault_;
     _registry = registry_;
+  }
+
+  function init() external initializer {
     _connector_init();
+  }
+
+  function init(address[] memory rewardTokens) external initializer {
+    _connector_init(rewardTokens);
   }
 
   function ERC4626Vault() public view override returns (IERC4626) {

@@ -51,17 +51,17 @@ abstract contract MorphoConnector is ERC4626Connector {
     for (uint256 i = 0; i < rewardTokens.length; ++i) {
       address rewardToken = rewardTokens[i];
       Rewards memory rewardsMem = rewards[rewardToken];
+      if (rewardsMem.lastUpdated == 0) {
+        // If last updated is 0, we are configuring the reward token for the first time and we'll need to add the
+        // token to the list of rewards. But first, we'll make sure it's not the asset
+        if (rewardToken == _connector_asset()) {
+          revert RewardTokenCannotBeAsset();
+        }
+        _rewardTokens.push(rewardToken);
+      }
       uint256 alreadyEmitted = _emittedRewards(rewardsMem);
       uint256 unaccounted = rewardToken.balanceOf(address(this)) - alreadyEmitted;
       if (unaccounted > 0) {
-        if (rewardsMem.lastUpdated == 0) {
-          // If last updated is 0, we are configuring the reward token for the first time and we'll need to add the
-          // token to the list of rewards. But first, we'll make sure it's not the asset
-          if (rewardToken == _connector_asset()) {
-            revert RewardTokenCannotBeAsset();
-          }
-          _rewardTokens.push(rewardToken);
-        }
         rewards[rewardToken] = Rewards({
           deadline: (block.timestamp + duration).toUint32(),
           lastUpdated: uint32(block.timestamp),
@@ -199,6 +199,10 @@ abstract contract MorphoConnector is ERC4626Connector {
 
       // Collect rewards config
       allRewards[i] = rewards[rewardToken];
+      // Note: we should delete the reward config here, but we are trying to save up bytecode space. So when a strategy
+      //       is migrated we might continue to report balance for rewards, even though the tokens have been
+      //       transferred. While not ideal, it's something we can live with since it's not like we would want to
+      //       continue to use this strategy in the future anyway.
 
       // Transfer reward tokens
       rewardToken.transfer({ recipient: address(newStrategy), amount: rewardToken.balanceOf(address(this)) });
@@ -209,18 +213,30 @@ abstract contract MorphoConnector is ERC4626Connector {
   // slither-disable-next-line naming-convention,dead-code
   function _connector_strategyRegistered(StrategyId, IEarnStrategy, bytes calldata migrationData) internal override {
     if (migrationData.length == 0) {
-      return;
-    }
+      // If migration data is empty, we'll reset all rewards. They shouldn't be configured in the first place, but
+      // we'll do it anyway just to be on the safe side
+      uint256 length = _rewardTokens.length;
+      for (uint256 i = 0; i < length; ++i) {
+        rewards[_rewardTokens[i]] = Rewards({
+          deadline: uint32(block.timestamp),
+          lastUpdated: uint32(block.timestamp),
+          emittedBeforeLastUpdate: 0,
+          emissionPerSecond: 0
+        });
+      }
+    } else {
+      // Note: we ignore the underlying data because we know the current ERC4626 connector
+      //       doesn't need it. This will help us reduce contract size
+      (, address[] memory rewardTokens, Rewards[] memory allRewards) =
+        abi.decode(migrationData, (bytes, address[], Rewards[]));
 
-    // Note: we ignore the underlying data because we know the current ERC4626 connector
-    //       doesn't need it. This will help us reduce contract size
-    (, address[] memory rewardTokens, Rewards[] memory allRewards) =
-      abi.decode(migrationData, (bytes, address[], Rewards[]));
-
-    // Configure rewards
-    _rewardTokens = rewardTokens;
-    for (uint256 i = 0; i < rewardTokens.length; ++i) {
-      rewards[rewardTokens[i]] = allRewards[i];
+      // Configure rewards
+      delete _rewardTokens;
+      for (uint256 i = 0; i < rewardTokens.length; ++i) {
+        address rewardToken = rewardTokens[i];
+        _rewardTokens.push(rewardToken);
+        rewards[rewardToken] = allRewards[i];
+      }
     }
   }
 
@@ -230,11 +246,6 @@ abstract contract MorphoConnector is ERC4626Connector {
       ? rewardsMem.emissionPerSecond * (Math.min(block.timestamp, rewardsMem.deadline) - rewardsMem.lastUpdated)
       : 0;
     return rewardsMem.emittedBeforeLastUpdate + emittedSinceLastUpdate;
-  }
-
-  // slither-disable-next-line dead-code
-  function _emittedRewards(address rewardToken) private view returns (uint256) {
-    return _emittedRewards(rewards[rewardToken]);
   }
 
   function _getRewardsManager() private view returns (address) {
@@ -256,7 +267,14 @@ abstract contract MorphoConnector is ERC4626Connector {
       uint256 index = i + 1;
       address rewardToken = rewardsTokens[i];
       tokens[index] = rewardToken;
-      amounts[index] = _emittedRewards(rewardToken);
+      Rewards memory rewardsMem = rewards[rewardToken];
+      // Note: this might look a bit confusing, but the idea is that when a strategy is deployed, we will report the
+      //       reward balance as all tokens currently on the strategy. Once the strategy is registered, we'll stop doing
+      //       it, and we'll start reporting the emitted rewards as expected. We are doing this because the strategy
+      //       registry, during a migration, checks that the balance of the new strategy is the same (or more) than it
+      //       was before the migration started. And then it registers the new strategy. So if we don't do this, we'll
+      //       report all reward balance as 0, and the migration will fail
+      amounts[index] = rewardsMem.deadline == 0 ? rewardToken.balanceOf(address(this)) : _emittedRewards(rewardsMem);
     }
   }
 }
