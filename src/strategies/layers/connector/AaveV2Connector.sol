@@ -157,8 +157,10 @@ abstract contract AaveV2Connector is BaseConnector, Initializable {
     override
   {
     uint256 assets = toWithdraw[0];
-    // slither-disable-next-line unused-return
-    pool().withdraw(address(_asset()), assets, recipient);
+    if (assets > 0) {
+      // slither-disable-next-line unused-return
+      pool().withdraw(address(_asset()), assets, recipient);
+    }
   }
 
   // slither-disable-next-line naming-convention,dead-code
