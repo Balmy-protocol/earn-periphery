@@ -34,9 +34,9 @@
   version "0.0.2"
   resolved "https://codeload.github.com/balmy-protocol/call-simulation/tar.gz/a510c80c7e81480eb5806422101d199a39662024"
 
-"@balmy/earn-core@github:balmy-protocol/earn-core#69590f2b285ea1196fe7c72e433a84cecb428a09":
+"@balmy/earn-core@github:balmy-protocol/earn-core#0ca4afa6a8afbca21fc7fa837af6df9b9bc9d967":
   version "0.0.0"
-  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/69590f2b285ea1196fe7c72e433a84cecb428a09"
+  resolved "https://codeload.github.com/balmy-protocol/earn-core/tar.gz/0ca4afa6a8afbca21fc7fa837af6df9b9bc9d967"
 
 "@balmy/nft-permissions@github:balmy-protocol/nft-permissions#1e75f88d0da6e93f2afbd1069a8c37553f448638":
   version "1.0.0"
@@ -320,9 +320,9 @@ follow-redirects@^1.15.6:
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.9.tgz#a604fa10e443bf98ca94228d9eebcc2e8a2c8ee1"
   integrity sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==
 
-"forge-std@github:foundry-rs/forge-std#1d9650e951204a0ddce9ff89c32f1997984cef4d":
-  version "1.6.0"
-  resolved "https://codeload.github.com/foundry-rs/forge-std/tar.gz/1d9650e951204a0ddce9ff89c32f1997984cef4d"
+"forge-std@github:foundry-rs/forge-std#6853b9ec7df5dc0c213b05ae67785ad4f4baa0ea":
+  version "1.9.6"
+  resolved "https://codeload.github.com/foundry-rs/forge-std/tar.gz/6853b9ec7df5dc0c213b05ae67785ad4f4baa0ea"
 
 form-data@^4.0.0:
   version "4.0.1"
