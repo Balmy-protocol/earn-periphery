@@ -272,10 +272,8 @@ abstract contract MorphoConnector is ERC4626Connector {
       //       reward balance as all tokens currently on the strategy. Once the strategy is registered, we'll stop doing
       //       it, and we'll start reporting the emitted rewards as expected. We are doing this because the strategy
       //       registry, during a migration, checks that the balance of the new strategy is the same (or more) than it
-      // was
-      //       before the migration started. And then it registers the new strategy. So if we don't do this, we'll
-      // report
-      //       all reward balance as 0, and the migration will fail.
+      //       was before the migration started. And then it registers the new strategy. So if we don't do this, we'll
+      //       report all reward balance as 0, and the migration will fail
       amounts[index] = rewardsMem.deadline == 0 ? rewardToken.balanceOf(address(this)) : _emittedRewards(rewardsMem);
     }
   }
