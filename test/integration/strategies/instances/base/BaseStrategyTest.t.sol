@@ -14,18 +14,18 @@ import {
   StrategyId
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
 import { IEarnVault } from "@balmy/earn-core/vault/EarnVault.sol";
-import { IGlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
+import { IGlobalEarnRegistry, GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { IFeeManager } from "src/interfaces/IFeeManager.sol";
 import { IValidationManagersRegistryCore } from "src/interfaces/IValidationManagersRegistry.sol";
-import { IGuardianManager, IGuardianManagerCore } from "src/interfaces/IGuardianManager.sol";
-import { IDelayedWithdrawalManager } from "src/delayed-withdrawal-manager/DelayedWithdrawalManager.sol";
+import { IGuardianManager } from "src/interfaces/IGuardianManager.sol";
 import { GuardianManager } from "src/strategies/layers/guardian/external/GuardianManager.sol";
 import { MorphoRewardsManager } from "src/strategies/layers/connector/morpho/MorphoRewardsManager.sol";
 import { CometRewardsTracker } from "src/strategies/layers/connector/compound-v3/CometRewardsTracker.sol";
+import { GlobalValidationManagersRegistry } from
+  "src/strategies/layers/creation-validation/external/GlobalValidationManagersRegistry.sol";
 
 import {
   ILiquidityMiningManager,
-  ILiquidityMiningManagerCore,
   LiquidityMiningManager
 } from "src/strategies/layers/liquidity-mining/external/LiquidityMiningManager.sol";
 import { FeeManager } from "src/strategies/layers/fees/external/FeeManager.sol";
@@ -48,22 +48,21 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   address internal judge = address(24);
 
   IEarnVault internal vault = IEarnVault(address(3));
-  IGlobalEarnRegistry internal globalRegistry = IGlobalEarnRegistry(address(4));
+  IGlobalEarnRegistry internal globalRegistry;
   IEarnStrategyRegistry internal strategyRegistry;
 
-  IFeeManager internal feeManager = IFeeManager(address(7));
-  IValidationManagersRegistryCore internal validationManagerRegistry = IValidationManagersRegistryCore(address(9));
+  IFeeManager internal feeManager;
+  IValidationManagersRegistryCore internal validationManagerRegistry;
   IGuardianManager internal guardianManager;
   ILiquidityMiningManager internal liquidityMiningManager;
-  IDelayedWithdrawalManager internal delayedWithdrawalManager = IDelayedWithdrawalManager(address(12));
   MorphoRewardsManager internal morphoRewardsManager = new MorphoRewardsManager(owner, CommonUtils.arrayOf(owner));
   ICreationValidationManagerCore[] internal creationValidationManager;
 
   bytes internal validationManagersStrategyData = abi.encodePacked("registryData");
   bytes internal validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
-  bytes internal guardianData = abi.encodePacked("guardianData");
+  bytes internal guardianData = "";
   bytes internal feesData = abi.encode(Fees(0, 0, 0, 0));
-  bytes internal liquidityMiningData = abi.encodePacked("liquidityMiningData");
+  bytes internal liquidityMiningData = "";
 
   function setUp() public {
     _configureFork();
@@ -79,7 +78,8 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
       CommonUtils.arrayOf(owner, guardian),
       CommonUtils.arrayOf(owner, judge)
     );
-
+    ICreationValidationManagerCore[] memory creationValidationManagers = new ICreationValidationManagerCore[](0);
+    validationManagerRegistry = new GlobalValidationManagersRegistry(creationValidationManagers, owner);
     feeManager = new FeeManager(
       IEarnStrategyRegistry(address(strategyRegistry)),
       owner,
@@ -87,61 +87,35 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
       CommonUtils.arrayOf(owner),
       Fees(0, 0, 0, 0)
     );
+    GlobalEarnRegistry.InitialConfig[] memory initialConfig = new GlobalEarnRegistry.InitialConfig[](6);
+    initialConfig[0] =
+      GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: address(feeManager) });
+    initialConfig[1] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("VALIDATION_MANAGERS_REGISTRY"),
+      contractAddress: address(validationManagerRegistry)
+    });
+    initialConfig[2] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("LIQUIDITY_MINING_MANAGER"),
+      contractAddress: address(liquidityMiningManager)
+    });
+    initialConfig[3] =
+      GlobalEarnRegistry.InitialConfig({ id: keccak256("GUARDIAN_MANAGER"), contractAddress: address(guardianManager) });
+    initialConfig[4] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("MORPHO_REWARDS_MANAGER"),
+      contractAddress: address(morphoRewardsManager)
+    });
+    initialConfig[5] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("COMET_REWARDS_TRACKER"),
+      contractAddress: address(new CometRewardsTracker())
+    });
 
+    globalRegistry = new GlobalEarnRegistry(initialConfig, owner);
     vm.mockCall(
       address(vault),
       abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector),
       abi.encode(address(strategyRegistry))
     );
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("COMET_REWARDS_TRACKER")),
-      abi.encode(new CometRewardsTracker())
-    );
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("FEE_MANAGER")),
-      abi.encode(feeManager)
-    );
 
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("GUARDIAN_MANAGER")),
-      abi.encode(guardianManager)
-    );
-    vm.mockCall(
-      address(guardianManager), abi.encodeWithSelector(IGuardianManagerCore.strategySelfConfigure.selector), ""
-    );
-    vm.mockCall(
-      address(liquidityMiningManager),
-      abi.encodeWithSelector(ILiquidityMiningManagerCore.strategySelfConfigure.selector),
-      ""
-    );
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("LIQUIDITY_MINING_MANAGER")),
-      abi.encode(liquidityMiningManager)
-    );
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("VALIDATION_MANAGERS_REGISTRY")),
-      abi.encode(validationManagerRegistry)
-    );
-    vm.mockCall(
-      address(globalRegistry),
-      abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("MORPHO_REWARDS_MANAGER")),
-      abi.encode(morphoRewardsManager)
-    );
-    vm.mockCall(
-      address(validationManagerRegistry),
-      abi.encodeWithSelector(IValidationManagersRegistryCore.strategySelfConfigure.selector),
-      abi.encode(new ICreationValidationManagerCore[](0))
-    );
-    vm.mockCall(
-      address(vault),
-      abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector),
-      abi.encode(address(strategyRegistry))
-    );
     (IEarnStrategy __strategy, StrategyId _strategyId) = _deployNewStrategy();
     _strategy = BaseStrategy(payable(address(__strategy)));
     strategyId = _strategyId;
