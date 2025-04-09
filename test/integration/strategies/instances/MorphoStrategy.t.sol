@@ -99,8 +99,9 @@ contract MorphoBaseWETHStrategyTest is MorphoBaseStrategyTest {
       abi.encode(morphoRewardsManager)
     );
 
-    vm.prank(owner);
+    vm.startPrank(owner);
     morphoRewardsManager.configureRewards(configurations, secondsToWarp);
+    vm.stopPrank();
 
     vm.warp(block.timestamp + secondsToWarp);
   }

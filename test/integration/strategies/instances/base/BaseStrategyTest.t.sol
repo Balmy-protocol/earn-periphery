@@ -13,7 +13,8 @@ import {
   IEarnStrategy,
   StrategyId
 } from "@balmy/earn-core/strategy-registry/EarnStrategyRegistry.sol";
-import { IEarnVault } from "@balmy/earn-core/vault/EarnVault.sol";
+import { IEarnVault, EarnVault } from "@balmy/earn-core/vault/EarnVault.sol";
+import { EarnNFTDescriptor } from "@balmy/earn-core/nft-descriptor/EarnNFTDescriptor.sol";
 import { IGlobalEarnRegistry, GlobalEarnRegistry } from "src/global-registry/GlobalEarnRegistry.sol";
 import { IFeeManager } from "src/interfaces/IFeeManager.sol";
 import { IValidationManagersRegistryCore } from "src/interfaces/IValidationManagersRegistry.sol";
@@ -33,6 +34,7 @@ import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { Fees } from "src/types/Fees.sol";
 import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
 import { BaseStrategy } from "../interface/BaseStrategy.sol";
+import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
 
 abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   using SafeERC20 for IERC20;
@@ -47,7 +49,7 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   address internal guardian = address(23);
   address internal judge = address(24);
 
-  IEarnVault internal vault = IEarnVault(address(3));
+  IEarnVault internal vault;
   IGlobalEarnRegistry internal globalRegistry;
   IEarnStrategyRegistry internal strategyRegistry;
 
@@ -64,10 +66,16 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   bytes internal feesData = abi.encode(Fees(0, 0, 0, 0));
   bytes internal liquidityMiningData = "";
 
+  INFTPermissions.PermissionSet[] internal permissions;
+
+  address internal asset;
+  address internal lmmToken;
+
   function setUp() public {
     _configureFork();
     _setUp();
     strategyRegistry = new EarnStrategyRegistry();
+    vault = new EarnVault(strategyRegistry, owner, CommonUtils.arrayOf(owner), new EarnNFTDescriptor("baseUrl/", owner));
     liquidityMiningManager =
       new LiquidityMiningManager(IEarnStrategyRegistry(address(strategyRegistry)), owner, CommonUtils.arrayOf(owner));
     guardianManager = new GuardianManager(
@@ -108,13 +116,9 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
       id: keccak256("COMET_REWARDS_TRACKER"),
       contractAddress: address(new CometRewardsTracker())
     });
+    permissions = new INFTPermissions.PermissionSet[](0);
 
     globalRegistry = new GlobalEarnRegistry(initialConfig, owner);
-    vm.mockCall(
-      address(vault),
-      abi.encodeWithSelector(IEarnVault.STRATEGY_REGISTRY.selector),
-      abi.encode(address(strategyRegistry))
-    );
 
     (IEarnStrategy __strategy, StrategyId _strategyId) = _deployNewStrategy();
     _strategy = BaseStrategy(payable(address(__strategy)));
@@ -126,6 +130,7 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     vm.makePersistent(address(strategyRegistry));
     vm.makePersistent(address(migrateStrategy));
     vm.makePersistent(address(morphoRewardsManager));
+    vm.makePersistent(address(vault));
   }
 
   receive() external payable { }
@@ -141,39 +146,39 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   // solhint-disable no-empty-blocks
   function _deployNewStrategyToMigrate(StrategyId _strategyId) internal virtual returns (IEarnStrategy, StrategyId) { }
 
-  function _balance(address asset, address account) internal view returns (uint256) {
-    return asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? account.balance : IERC20(asset).balanceOf(account);
+  function _balance(address _asset, address account) internal view returns (uint256) {
+    return _asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE ? account.balance : IERC20(_asset).balanceOf(account);
   }
 
-  function _maxApproval(address asset, address spender) internal virtual {
-    if (asset != Token.NATIVE_TOKEN) {
-      IERC20(asset).approve(spender, type(uint256).max);
+  function _maxApproval(address _asset, address spender) internal virtual {
+    if (_asset != Token.NATIVE_TOKEN) {
+      IERC20(_asset).approve(spender, type(uint256).max);
     }
   }
 
-  function _setBalance(address asset, address account, uint256 amount) internal virtual {
-    if (asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+  function _setBalance(address _asset, address account, uint256 amount) internal virtual {
+    if (_asset == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
       deal(account, amount);
     } else {
-      deal(asset, account, amount);
+      deal(_asset, account, amount);
     }
   }
 
-  function _setBalance(address asset, address account, uint256 amount, address from) internal virtual {
+  function _setBalance(address _asset, address account, uint256 amount, address from) internal virtual {
     // We need to set the balance of the account to 0
-    uint256 balance = IERC20(asset).balanceOf(account);
+    uint256 balance = IERC20(_asset).balanceOf(account);
     if (balance > amount) {
       vm.prank(from);
-      IERC20(asset).transfer(account, balance - amount);
+      IERC20(_asset).transfer(account, balance - amount);
     } else if (balance < amount) {
       vm.prank(from);
-      IERC20(asset).transfer(account, amount - balance);
+      IERC20(_asset).transfer(account, amount - balance);
     }
   }
 
-  function _give(address asset, address account, uint256 amount) internal returns (uint256 newBalance) {
-    uint256 balance = _balance(asset, account);
-    _setBalance(asset, account, balance + amount);
+  function _give(address _asset, address account, uint256 amount) internal returns (uint256 newBalance) {
+    uint256 balance = _balance(_asset, account);
+    _setBalance(_asset, account, balance + amount);
     return balance + amount;
   }
 
@@ -196,6 +201,40 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   function assertAlmostEqArrays(uint256[] memory a, uint256[] memory b, uint256 precision) internal {
     for (uint256 i = 0; i < a.length; i++) {
       assertAlmostEq(a[i], b[i], precision);
+    }
+  }
+
+  function _setLMCampaign(uint24 rewardAmount) internal {
+    vm.startPrank(owner);
+    _setBalance(lmmToken, owner, type(uint256).max);
+
+    if (lmmToken == Token.NATIVE_TOKEN) {
+      liquidityMiningManager.setCampaign{ value: rewardAmount }(strategyId, lmmToken, 1, rewardAmount);
+    } else {
+      _maxApproval(lmmToken, address(liquidityMiningManager));
+      liquidityMiningManager.setCampaign(strategyId, lmmToken, 1, rewardAmount);
+    }
+    vm.stopPrank();
+  }
+
+  function _addToLMCampaign(uint24 rewardAmount) internal {
+    vm.startPrank(owner);
+    _setBalance(lmmToken, owner, type(uint256).max);
+    if (lmmToken == Token.NATIVE_TOKEN) {
+      liquidityMiningManager.addToCampaign{ value: rewardAmount }(strategyId, lmmToken, rewardAmount, rewardAmount);
+    } else {
+      _maxApproval(lmmToken, address(liquidityMiningManager));
+      liquidityMiningManager.addToCampaign(strategyId, lmmToken, rewardAmount, rewardAmount);
+    }
+
+    vm.stopPrank();
+  }
+
+  function _balance(address token) internal view returns (uint256) {
+    if (token == Token.NATIVE_TOKEN) {
+      return address(this).balance;
+    } else {
+      return IERC20(token).balanceOf(address(this));
     }
   }
 }
