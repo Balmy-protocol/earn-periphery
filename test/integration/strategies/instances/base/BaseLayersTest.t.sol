@@ -166,7 +166,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw[tokens.length - 1] = rewardAmountToWithdraw;
     vault.withdraw(positionId, tokens, intendedWithdraw, address(this));
     uint256 rewardBalance = _balance(lmmToken);
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
     assertAlmostEq(_balance(lmmToken), rewardBalance + rewardAmountToWithdraw, 2, "Reward balance is not correct 1");
 
     (, uint256[] memory balances3,,) = vault.position(positionId);
@@ -374,8 +374,8 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     assertAlmostEq(balances[0], warpedBalances[0] - withdrawAmount / 2, 2, "Balance is not correct 1");
 
     uint256 rewardBalance = _balance(lmmToken);
-    uint256 lmmBalance = liquidityMiningManager.rewardAmount(strategyId, lmmToken);
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    uint256 lmmBalance = managers.liquidityMiningManager.rewardAmount(strategyId, lmmToken);
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
     assertAlmostEq(
       _balance(lmmToken), rewardBalance + rewardAmountToWithdraw + lmmBalance, 2, "Reward balance is not correct 1"
     );
@@ -426,8 +426,8 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     assertAlmostEq(balances[0], warpedBalances[0] + depositAmount, 2, "Balance is not correct 1");
 
     uint256 rewardBalance = _balance(lmmToken);
-    uint256 lmmBalance = liquidityMiningManager.rewardAmount(strategyId, lmmToken);
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    uint256 lmmBalance = managers.liquidityMiningManager.rewardAmount(strategyId, lmmToken);
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
     assertAlmostEq(
       _balance(lmmToken),
       rewardBalance + warpedBalances[tokens.length - 1] + lmmBalance,

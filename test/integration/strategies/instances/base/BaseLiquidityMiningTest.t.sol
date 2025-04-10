@@ -33,7 +33,7 @@ abstract contract BaseLiquidityMiningTest is BaseStrategyTest {
     assertAlmostEq(_balance(lmmToken), rewardBalance + rewardAmountToWithdraw, 2, "Reward balance is not correct 1");
 
     rewardBalance = _balance(lmmToken);
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
     assertAlmostEq(_balance(lmmToken), rewardBalance + rewardAmountToWithdraw, 2, "Reward balance is not correct 2");
     (, balances,,) = vault.position(positionId);
     assertEq(previousBalances.length + 1, balances.length, "Balances length is not correct");
@@ -64,7 +64,7 @@ abstract contract BaseLiquidityMiningTest is BaseStrategyTest {
     IERC20(asset).approve(address(vault), type(uint256).max);
     vault.increasePosition(positionId, asset, depositAmount);
 
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
 
     (, balances,,) = vault.position(positionId);
     assertEq(previousBalances.length + 1, balances.length, "Balances length is not correct");
@@ -115,7 +115,7 @@ abstract contract BaseLiquidityMiningTest is BaseStrategyTest {
       "Reward balance is not correct"
     );
 
-    liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
+    managers.liquidityMiningManager.abortCampaign(strategyId, lmmToken, address(this));
     (, uint256[] memory balances4,,) = vault.position(positionId);
     assertAlmostEq(balances4[balances4.length - 1], 0, 2, "Reward balance is not correct");
 

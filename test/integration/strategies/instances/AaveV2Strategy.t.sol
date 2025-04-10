@@ -31,10 +31,10 @@ abstract contract AaveV2StrategyTest is BaseLayersTest {
         globalRegistry,
         aToken,
         IAaveV2Pool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9),
-        validationData,
-        guardianData,
-        feesData,
-        liquidityMiningData
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));
@@ -57,10 +57,10 @@ abstract contract AaveV2StrategyTest is BaseLayersTest {
         globalRegistry,
         aToken,
         IAaveV2Pool(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9),
-        validationData,
-        guardianData,
+        strategyData.validationData,
+        strategyData.guardianData,
         bytes(""),
-        liquidityMiningData
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));

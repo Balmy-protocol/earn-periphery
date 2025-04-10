@@ -38,10 +38,10 @@ abstract contract AaveV3StrategyTest is BaseLayersTest {
         aToken,
         pool,
         rewardsController,
-        validationData,
-        guardianData,
-        feesData,
-        liquidityMiningData
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));
@@ -60,7 +60,15 @@ abstract contract AaveV3StrategyTest is BaseLayersTest {
     IEarnStrategy __strategy = factory.cloneStrategyWithId(
       _strategyId,
       AaveV3StrategyData(
-        vault, globalRegistry, aToken, pool, rewardsController, validationData, bytes(""), bytes(""), bytes("")
+        vault,
+        globalRegistry,
+        aToken,
+        pool,
+        rewardsController,
+        strategyData.validationData,
+        bytes(""),
+        bytes(""),
+        bytes("")
       )
     );
     vm.startPrank(address(vault));
@@ -113,8 +121,10 @@ contract AaveV3BaseCBBTCStrategyTest is AaveV3BaseStrategyTest {
 contract AaveV3BaseCBBTCStrategyWithFeesTest is AaveV3BaseCBBTCStrategyTest {
   function _setUp() internal override {
     super._setUp();
-    feesData = abi.encode(Fees(0, 0, 5000, 500));
-    vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), feesData);
+    strategyData.feesData = abi.encode(Fees(0, 0, 5000, 500));
+    vm.mockCall(
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+    );
   }
 }
 
@@ -122,8 +132,10 @@ contract AaveV3BaseCBBTCStrategyWithFeesAndNativeLMTest is AaveV3BaseCBBTCStrate
   function _setUp() internal override {
     super._setUp();
     lmmToken = Token.NATIVE_TOKEN; // Native token
-    feesData = abi.encode(Fees(0, 0, 5000, 500));
-    vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), feesData);
+    strategyData.feesData = abi.encode(Fees(0, 0, 5000, 500));
+    vm.mockCall(
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+    );
   }
 }
 
@@ -153,8 +165,10 @@ contract AaveV3OptimismWETHStrategyTest is AaveV3OptimismStrategyTest {
 contract AaveV3OptimismWETHWithFeesStrategyTest is AaveV3OptimismWETHStrategyTest {
   function _setUp() internal override {
     super._setUp();
-    feesData = abi.encode(Fees(0, 0, 1000, 1000));
-    vm.mockCall(address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), feesData);
+    strategyData.feesData = abi.encode(Fees(0, 0, 1000, 1000));
+    vm.mockCall(
+      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+    );
   }
 }
 

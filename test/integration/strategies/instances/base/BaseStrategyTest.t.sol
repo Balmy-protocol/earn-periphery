@@ -33,8 +33,25 @@ import { FeeManager } from "src/strategies/layers/fees/external/FeeManager.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { Fees } from "src/types/Fees.sol";
 import { ICreationValidationManagerCore } from "src/interfaces/ICreationValidationManager.sol";
-import { BaseStrategy } from "../interface/BaseStrategy.sol";
+import { BaseStrategy } from "./BaseStrategy.sol";
 import { INFTPermissions } from "@balmy/nft-permissions/interfaces/INFTPermissions.sol";
+
+struct StrategyData {
+  bytes validationManagersStrategyData;
+  bytes validationData;
+  bytes guardianData;
+  bytes feesData;
+  bytes liquidityMiningData;
+}
+
+struct Managers {
+  IFeeManager feeManager;
+  IValidationManagersRegistryCore validationManagerRegistry;
+  IGuardianManager guardianManager;
+  ILiquidityMiningManager liquidityMiningManager;
+  MorphoRewardsManager morphoRewardsManager;
+  ICreationValidationManagerCore[] creationValidationManager;
+}
 
 abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   using SafeERC20 for IERC20;
@@ -53,18 +70,15 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   IGlobalEarnRegistry internal globalRegistry;
   IEarnStrategyRegistry internal strategyRegistry;
 
-  IFeeManager internal feeManager;
-  IValidationManagersRegistryCore internal validationManagerRegistry;
-  IGuardianManager internal guardianManager;
-  ILiquidityMiningManager internal liquidityMiningManager;
-  MorphoRewardsManager internal morphoRewardsManager = new MorphoRewardsManager(owner, CommonUtils.arrayOf(owner));
-  ICreationValidationManagerCore[] internal creationValidationManager;
+  Managers internal managers;
 
-  bytes internal validationManagersStrategyData = abi.encodePacked("registryData");
-  bytes internal validationData = abi.encode(validationManagersStrategyData, new bytes[](0));
-  bytes internal guardianData = "";
-  bytes internal feesData = abi.encode(Fees(0, 0, 0, 0));
-  bytes internal liquidityMiningData = "";
+  StrategyData internal strategyData = StrategyData({
+    validationManagersStrategyData: abi.encodePacked("registryData"),
+    validationData: abi.encode(abi.encodePacked("registryData"), new bytes[](0)),
+    guardianData: "",
+    feesData: abi.encode(Fees(0, 0, 0, 0)),
+    liquidityMiningData: ""
+  });
 
   INFTPermissions.PermissionSet[] internal permissions;
 
@@ -76,9 +90,9 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     _setUp();
     strategyRegistry = new EarnStrategyRegistry();
     vault = new EarnVault(strategyRegistry, owner, CommonUtils.arrayOf(owner), new EarnNFTDescriptor("baseUrl/", owner));
-    liquidityMiningManager =
+    managers.liquidityMiningManager =
       new LiquidityMiningManager(IEarnStrategyRegistry(address(strategyRegistry)), owner, CommonUtils.arrayOf(owner));
-    guardianManager = new GuardianManager(
+    managers.guardianManager = new GuardianManager(
       IEarnStrategyRegistry(address(strategyRegistry)),
       owner,
       CommonUtils.arrayOf(owner, guardian),
@@ -87,8 +101,8 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
       CommonUtils.arrayOf(owner, judge)
     );
     ICreationValidationManagerCore[] memory creationValidationManagers = new ICreationValidationManagerCore[](0);
-    validationManagerRegistry = new GlobalValidationManagersRegistry(creationValidationManagers, owner);
-    feeManager = new FeeManager(
+    managers.validationManagerRegistry = new GlobalValidationManagersRegistry(creationValidationManagers, owner);
+    managers.feeManager = new FeeManager(
       IEarnStrategyRegistry(address(strategyRegistry)),
       owner,
       CommonUtils.arrayOf(owner),
@@ -97,20 +111,22 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     );
     GlobalEarnRegistry.InitialConfig[] memory initialConfig = new GlobalEarnRegistry.InitialConfig[](6);
     initialConfig[0] =
-      GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: address(feeManager) });
+      GlobalEarnRegistry.InitialConfig({ id: keccak256("FEE_MANAGER"), contractAddress: address(managers.feeManager) });
     initialConfig[1] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("VALIDATION_MANAGERS_REGISTRY"),
-      contractAddress: address(validationManagerRegistry)
+      contractAddress: address(managers.validationManagerRegistry)
     });
     initialConfig[2] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("LIQUIDITY_MINING_MANAGER"),
-      contractAddress: address(liquidityMiningManager)
+      contractAddress: address(managers.liquidityMiningManager)
     });
-    initialConfig[3] =
-      GlobalEarnRegistry.InitialConfig({ id: keccak256("GUARDIAN_MANAGER"), contractAddress: address(guardianManager) });
+    initialConfig[3] = GlobalEarnRegistry.InitialConfig({
+      id: keccak256("GUARDIAN_MANAGER"),
+      contractAddress: address(managers.guardianManager)
+    });
     initialConfig[4] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("MORPHO_REWARDS_MANAGER"),
-      contractAddress: address(morphoRewardsManager)
+      contractAddress: address(managers.morphoRewardsManager)
     });
     initialConfig[5] = GlobalEarnRegistry.InitialConfig({
       id: keccak256("COMET_REWARDS_TRACKER"),
@@ -129,7 +145,7 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     vm.makePersistent(address(__strategy));
     vm.makePersistent(address(strategyRegistry));
     vm.makePersistent(address(migrateStrategy));
-    vm.makePersistent(address(morphoRewardsManager));
+    vm.makePersistent(address(managers.morphoRewardsManager));
     vm.makePersistent(address(vault));
   }
 
@@ -194,7 +210,7 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
   }
 
   function applyRescueFee(uint256 amount) internal view returns (uint256) {
-    Fees memory fees = feeManager.getFees(strategyId);
+    Fees memory fees = managers.feeManager.getFees(strategyId);
     return amount - amount * fees.rescueFee / 10_000;
   }
 
@@ -209,10 +225,10 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     _setBalance(lmmToken, owner, type(uint256).max);
 
     if (lmmToken == Token.NATIVE_TOKEN) {
-      liquidityMiningManager.setCampaign{ value: rewardAmount }(strategyId, lmmToken, 1, rewardAmount);
+      managers.liquidityMiningManager.setCampaign{ value: rewardAmount }(strategyId, lmmToken, 1, rewardAmount);
     } else {
-      _maxApproval(lmmToken, address(liquidityMiningManager));
-      liquidityMiningManager.setCampaign(strategyId, lmmToken, 1, rewardAmount);
+      _maxApproval(lmmToken, address(managers.liquidityMiningManager));
+      managers.liquidityMiningManager.setCampaign(strategyId, lmmToken, 1, rewardAmount);
     }
     vm.stopPrank();
   }
@@ -221,10 +237,12 @@ abstract contract BaseStrategyTest is PRBTest, StdUtils, StdCheats {
     vm.startPrank(owner);
     _setBalance(lmmToken, owner, type(uint256).max);
     if (lmmToken == Token.NATIVE_TOKEN) {
-      liquidityMiningManager.addToCampaign{ value: rewardAmount }(strategyId, lmmToken, rewardAmount, rewardAmount);
+      managers.liquidityMiningManager.addToCampaign{ value: rewardAmount }(
+        strategyId, lmmToken, rewardAmount, rewardAmount
+      );
     } else {
-      _maxApproval(lmmToken, address(liquidityMiningManager));
-      liquidityMiningManager.addToCampaign(strategyId, lmmToken, rewardAmount, rewardAmount);
+      _maxApproval(lmmToken, address(managers.liquidityMiningManager));
+      managers.liquidityMiningManager.addToCampaign(strategyId, lmmToken, rewardAmount, rewardAmount);
     }
 
     vm.stopPrank();

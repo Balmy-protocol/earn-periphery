@@ -29,7 +29,14 @@ abstract contract MorphoStrategyTest is BaseLayersTest {
     (IEarnStrategy __strategy, StrategyId _strategyId) = factory.cloneStrategyAndRegister(
       owner,
       MorphoStrategyData(
-        vault, globalRegistry, mToken, validationData, guardianData, feesData, liquidityMiningData, rewardTokens
+        vault,
+        globalRegistry,
+        mToken,
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData,
+        rewardTokens
       )
     );
     vm.startPrank(address(vault));
@@ -47,7 +54,9 @@ abstract contract MorphoStrategyTest is BaseLayersTest {
   {
     IEarnStrategy __strategy = factory.cloneStrategyWithId(
       _strategyId,
-      MorphoStrategyData(vault, globalRegistry, mToken, validationData, bytes(""), bytes(""), bytes(""), rewardTokens)
+      MorphoStrategyData(
+        vault, globalRegistry, mToken, strategyData.validationData, bytes(""), bytes(""), bytes(""), rewardTokens
+      )
     );
     vm.startPrank(address(vault));
     IERC20(asset).approve(address(__strategy), type(uint256).max);

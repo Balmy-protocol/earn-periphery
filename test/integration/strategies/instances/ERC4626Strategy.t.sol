@@ -31,7 +31,13 @@ contract ERC4626StrategyTest is BaseLayersTest {
     (IEarnStrategy __strategy, StrategyId _strategyId) = factory.cloneStrategyAndRegister(
       owner,
       ERC4626StrategyData(
-        vault, globalRegistry, erc4626Vault, validationData, guardianData, feesData, liquidityMiningData
+        vault,
+        globalRegistry,
+        erc4626Vault,
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));
@@ -49,7 +55,9 @@ contract ERC4626StrategyTest is BaseLayersTest {
   {
     IEarnStrategy __strategy = factory.cloneStrategyWithId(
       _strategyId,
-      ERC4626StrategyData(vault, globalRegistry, erc4626Vault, validationData, bytes(""), bytes(""), bytes(""))
+      ERC4626StrategyData(
+        vault, globalRegistry, erc4626Vault, strategyData.validationData, bytes(""), bytes(""), bytes("")
+      )
     );
     vm.startPrank(address(vault));
     IERC20(asset).approve(address(__strategy), type(uint256).max);

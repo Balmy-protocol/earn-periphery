@@ -35,10 +35,10 @@ abstract contract CompoundV2StrategyTest is BaseLayersTest {
         cToken,
         comptroller,
         comp,
-        validationData,
-        guardianData,
-        feesData,
-        liquidityMiningData
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));
@@ -57,7 +57,16 @@ abstract contract CompoundV2StrategyTest is BaseLayersTest {
     IEarnStrategy __strategy = factory.cloneStrategyWithId(
       _strategyId,
       CompoundV2StrategyData(
-        vault, globalRegistry, asset, cToken, comptroller, comp, validationData, bytes(""), bytes(""), bytes("")
+        vault,
+        globalRegistry,
+        asset,
+        cToken,
+        comptroller,
+        comp,
+        strategyData.validationData,
+        bytes(""),
+        bytes(""),
+        bytes("")
       )
     );
     vm.startPrank(address(vault));

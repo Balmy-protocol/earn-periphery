@@ -29,7 +29,14 @@ abstract contract CompoundV3StrategyTest is BaseLayersTest {
     (IEarnStrategy __strategy, StrategyId _strategyId) = factory.cloneStrategyAndRegister(
       owner,
       CompoundV3StrategyData(
-        vault, globalRegistry, cToken, cometRewards, validationData, guardianData, feesData, liquidityMiningData
+        vault,
+        globalRegistry,
+        cToken,
+        cometRewards,
+        strategyData.validationData,
+        strategyData.guardianData,
+        strategyData.feesData,
+        strategyData.liquidityMiningData
       )
     );
     vm.startPrank(address(vault));
@@ -48,7 +55,7 @@ abstract contract CompoundV3StrategyTest is BaseLayersTest {
     IEarnStrategy __strategy = factory.cloneStrategyWithId(
       _strategyId,
       CompoundV3StrategyData(
-        vault, globalRegistry, cToken, cometRewards, validationData, bytes(""), bytes(""), bytes("")
+        vault, globalRegistry, cToken, cometRewards, strategyData.validationData, bytes(""), bytes(""), bytes("")
       )
     );
     vm.startPrank(address(vault));
