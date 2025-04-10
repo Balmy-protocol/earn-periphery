@@ -15,7 +15,7 @@ import {
 import { IFeeManagerCore } from "src/interfaces/IFeeManager.sol";
 import { Fees } from "src/types/Fees.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 import { Token } from "@balmy/earn-core/libraries/Token.sol";
 // solhint-disable-next-line max-states-count
 
@@ -123,7 +123,9 @@ contract AaveV3BaseCBBTCStrategyWithFeesTest is AaveV3BaseCBBTCStrategyTest {
     super._setUp();
     strategyData.feesData = abi.encode(Fees(0, 0, 5000, 500));
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+      address(managers.feeManager),
+      abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId),
+      strategyData.feesData
     );
   }
 }
@@ -134,7 +136,9 @@ contract AaveV3BaseCBBTCStrategyWithFeesAndNativeLMTest is AaveV3BaseCBBTCStrate
     lmmToken = Token.NATIVE_TOKEN; // Native token
     strategyData.feesData = abi.encode(Fees(0, 0, 5000, 500));
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+      address(managers.feeManager),
+      abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId),
+      strategyData.feesData
     );
   }
 }
@@ -167,7 +171,9 @@ contract AaveV3OptimismWETHWithFeesStrategyTest is AaveV3OptimismWETHStrategyTes
     super._setUp();
     strategyData.feesData = abi.encode(Fees(0, 0, 1000, 1000));
     vm.mockCall(
-      address(feeManager), abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId), strategyData.feesData
+      address(managers.feeManager),
+      abi.encodeWithSelector(IFeeManagerCore.getFees.selector, strategyId),
+      strategyData.feesData
     );
   }
 }

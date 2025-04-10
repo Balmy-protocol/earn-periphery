@@ -12,7 +12,7 @@ import {
   AaveV2StrategyData
 } from "src/strategies/instances/aave-v2/AaveV2StrategyFactory.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 // solhint-disable-next-line max-states-count
 
 abstract contract AaveV2StrategyTest is BaseLayersTest {

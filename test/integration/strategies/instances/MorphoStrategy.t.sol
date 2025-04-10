@@ -15,7 +15,7 @@ import { MorphoRewardsManager } from "src/strategies/layers/connector/morpho/Mor
 import { MorphoConnector } from "src/strategies/layers/connector/morpho/MorphoConnector.sol";
 import { CommonUtils } from "test/utils/CommonUtils.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 
 // solhint-disable-next-line max-states-count
 abstract contract MorphoStrategyTest is BaseLayersTest {
@@ -101,15 +101,15 @@ contract MorphoBaseWETHStrategyTest is MorphoBaseStrategyTest {
 
     _give(rewardTokens[0], address(_strategy), secondsToWarp * 10);
     _give(rewardTokens[1], address(_strategy), secondsToWarp * 20);
-    morphoRewardsManager = new MorphoRewardsManager(owner, CommonUtils.arrayOf(owner));
+    managers.morphoRewardsManager = new MorphoRewardsManager(owner, CommonUtils.arrayOf(owner));
     vm.mockCall(
       address(globalRegistry),
       abi.encodeWithSelector(IGlobalEarnRegistry.getAddressOrFail.selector, keccak256("MORPHO_REWARDS_MANAGER")),
-      abi.encode(morphoRewardsManager)
+      abi.encode(managers.morphoRewardsManager)
     );
 
     vm.startPrank(owner);
-    morphoRewardsManager.configureRewards(configurations, secondsToWarp);
+    managers.morphoRewardsManager.configureRewards(configurations, secondsToWarp);
     vm.stopPrank();
 
     vm.warp(block.timestamp + secondsToWarp);

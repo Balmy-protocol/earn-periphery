@@ -12,7 +12,7 @@ import {
   ICometRewards
 } from "src/strategies/instances/compound-v3/CompoundV3StrategyFactory.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 // solhint-disable-next-line max-states-count
 
 abstract contract CompoundV3StrategyTest is BaseLayersTest {

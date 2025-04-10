@@ -11,7 +11,7 @@ import {
   ERC4626StrategyData
 } from "src/strategies/instances/erc4626/ERC4626StrategyFactory.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 // solhint-disable-next-line max-states-count
 
 contract ERC4626StrategyTest is BaseLayersTest {

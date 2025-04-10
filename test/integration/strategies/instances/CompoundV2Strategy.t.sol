@@ -12,7 +12,7 @@ import {
   ICERC20
 } from "src/strategies/instances/compound-v2/CompoundV2StrategyFactory.sol";
 import { BaseLayersTest } from "./base/BaseLayersTest.t.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./base/BaseStrategy.sol";
 // solhint-disable-next-line max-states-count
 
 abstract contract CompoundV2StrategyTest is BaseLayersTest {

@@ -6,7 +6,7 @@ import { BaseLiquidityMiningTest } from "./BaseLiquidityMiningTest.t.sol";
 import { BaseGuardianTest } from "./BaseGuardianTest.t.sol";
 import { ExternalGuardian } from "src/strategies/layers/guardian/external/ExternalGuardian.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { BaseStrategy } from "test/integration/strategies/instances/interface/BaseStrategy.sol";
+import { BaseStrategy } from "./BaseStrategy.sol";
 import { IEarnStrategy } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
 
 abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, BaseGuardianTest {
