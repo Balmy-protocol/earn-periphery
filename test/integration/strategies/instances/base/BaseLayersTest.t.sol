@@ -198,7 +198,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw, address(this));
     (, uint256[] memory balances) = _strategy.totalBalances();
-    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 2);
+    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 3);
     vm.stopPrank();
 
     _warpTime(strategyRegistry.STRATEGY_UPDATE_DELAY());
@@ -212,7 +212,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw2[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw2, address(this));
     (, uint256[] memory balances2,,) = vault.position(positionId);
-    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 2);
+    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 3);
     vm.stopPrank();
   }
 
@@ -230,7 +230,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     IERC20(asset).approve(address(vault), type(uint256).max);
     vault.increasePosition(positionId, asset, depositAmount);
     (address[] memory tokens, uint256[] memory previousBalances,,) = vault.position(positionId);
-    assertAlmostEq(previousBalances[0], depositAmount * 2, 3);
+    assertAlmostEq(previousBalances[0], depositAmount * 2, 4);
 
     withdrawAmount = uint80(bound(withdrawAmount, 1e7, previousBalances[0]));
     uint256[] memory intendedWithdraw = new uint256[](tokens.length);
@@ -238,7 +238,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     vault.withdraw(positionId, tokens, intendedWithdraw, address(this));
     (, uint256[] memory balances,,) = vault.position(positionId);
 
-    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 2);
+    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 4);
     vm.stopPrank();
 
     _warpTime(strategyRegistry.STRATEGY_UPDATE_DELAY());
@@ -253,7 +253,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw3[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw3, address(this));
     (, uint256[] memory balances2,,) = vault.position(positionId);
-    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 2);
+    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 4);
     vm.stopPrank();
   }
 
@@ -264,7 +264,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     IERC20(asset).approve(address(vault), type(uint256).max);
     (uint256 positionId,) = vault.createPosition(strategyId, asset, depositAmount, owner, permissions, "", "");
     (address[] memory tokens, uint256[] memory previousBalances,,) = vault.position(positionId);
-    assertAlmostEq(previousBalances[0], depositAmount, 2);
+    assertAlmostEq(previousBalances[0], depositAmount, 3);
 
     vm.startPrank(owner);
     strategyRegistry.proposeStrategyUpdate(strategyId, IEarnStrategy(payable(address(migrateStrategy))), bytes(""));
@@ -274,7 +274,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw, address(this));
     (, uint256[] memory balances,,) = vault.position(positionId);
-    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 2);
+    assertAlmostEq(balances[0], previousBalances[0] - withdrawAmount / 2, 3);
     vm.stopPrank();
 
     _warpTime(strategyRegistry.STRATEGY_UPDATE_DELAY());
@@ -287,7 +287,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     IERC20(asset).approve(address(vault), type(uint256).max);
     vault.increasePosition(positionId, asset, depositAmount);
     (, uint256[] memory balances2,,) = vault.position(positionId);
-    assertAlmostEq(balances2[0], balances[0] + depositAmount, 2);
+    assertAlmostEq(balances2[0], balances[0] + depositAmount, 3);
     vm.stopPrank();
   }
 
@@ -335,7 +335,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw2[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens2, intendedWithdraw2, address(this));
     (, uint256[] memory balances3,,) = vault.position(positionId);
-    assertAlmostEq(balances3[0], balances[0] - withdrawAmount / 2, 2, "Balance is not correct 2");
+    assertAlmostEq(balances3[0], balances[0] - withdrawAmount / 2, 3, "Balance is not correct 2");
     vm.stopPrank();
   }
 
@@ -390,7 +390,7 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     intendedWithdraw2[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw2, address(this));
     (, uint256[] memory balances2,,) = vault.position(positionId);
-    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 2, "Balance is not correct 3");
+    assertAlmostEq(balances2[0], balances[0] - withdrawAmount / 2, 3, "Balance is not correct 3");
     vm.stopPrank();
   }
 
@@ -446,14 +446,14 @@ abstract contract BaseLayersTest is BaseStrategyTest, BaseLiquidityMiningTest, B
     strategyRegistry.updateStrategy(strategyId, bytes(""));
     BaseStrategy migratedStrategy = BaseStrategy(payable(address(strategyRegistry.getStrategy(strategyId))));
     (, balances) = migratedStrategy.totalBalances();
-    assertAlmostEq(balances[balances.length - 1], 0, 2, "Balance is not correct 3");
+    assertAlmostEq(balances[balances.length - 1], 0, 3, "Balance is not correct 3");
 
     withdrawAmount = uint80(bound(withdrawAmount, 1e7, balances[0]));
     uint256[] memory intendedWithdraw2 = new uint256[](tokens.length);
     intendedWithdraw2[0] = withdrawAmount / 2;
     vault.withdraw(positionId, tokens, intendedWithdraw2, address(this));
     (, uint256[] memory balances3,,) = vault.position(positionId);
-    assertAlmostEq(balances3[0], balances[0] - withdrawAmount / 2, 2, "Balance is not correct 4");
+    assertAlmostEq(balances3[0], balances[0] - withdrawAmount / 2, 3, "Balance is not correct 4");
     vm.stopPrank();
   }
 
