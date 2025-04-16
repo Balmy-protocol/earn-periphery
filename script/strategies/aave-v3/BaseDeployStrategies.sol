@@ -14,7 +14,7 @@ import {
   AaveV3StrategyData
 } from "src/strategies/instances/aave-v3/AaveV3StrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 
 import { console2 } from "forge-std/console2.sol";
 
@@ -36,11 +36,42 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V2_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
+    return deployAaveV3StrategyWithId(
+      aaveV3Pool,
+      aaveV3Rewards,
+      aToken,
+      tosGroup,
+      signerGroup,
+      guardians,
+      judges,
+      fees,
+      guard,
+      description,
+      StrategyIdConstants.NO_STRATEGY
+    );
+  }
+
+  function deployAaveV3StrategyWithId(
+    address aaveV3Pool,
+    address aaveV3Rewards,
+    IAToken aToken,
+    bytes32 tosGroup,
+    bytes32 signerGroup,
+    address[] memory guardians,
+    address[] memory judges,
+    Fees memory fees,
+    bytes32 guard,
+    string memory description,
+    StrategyId initialStrategyId
+  )
+    internal
+    returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
+  {
+    address implementation = deployContract("V6_S_AAVEV3", abi.encodePacked(type(AaveV3Strategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
     AaveV3StrategyFactory aaveV3StrategyFactory = AaveV3StrategyFactory(
       deployContract(
-        "V2_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
+        "V6_F_AAVEV3", abi.encodePacked(type(AaveV3StrategyFactory).creationCode, abi.encode(implementation))
       )
     );
     console2.log("Factory deployed: ", address(aaveV3StrategyFactory));
@@ -60,7 +91,7 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     bytes memory guardianData = guardians.length > 0 || judges.length > 0 ? abi.encode(guardians, judges) : bytes("");
     bytes memory liquidityMiningData = "";
     bytes memory feesData = fees.equals(DEFAULT_FEES) ? bytes("") : abi.encode(fees);
-    bytes32 salt = keccak256(abi.encode("V1_S_AAVEV3", guard));
+    bytes32 salt = keccak256(abi.encode("V4_S_AAVEV3", guard));
 
     address computedAddress = aaveV3StrategyFactory.addressOfClone2(
       IEarnVault(vault),
@@ -73,22 +104,40 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
     } else {
-      (strategy, strategyId) = aaveV3StrategyFactory.clone2StrategyAndRegister(
-        admin,
-        AaveV3StrategyData(
-          IEarnVault(vault),
-          IGlobalEarnRegistry(globalRegistry),
-          aToken,
-          IAaveV3Pool(aaveV3Pool),
-          IAaveV3Rewards(aaveV3Rewards),
-          creationValidationData,
-          guardianData,
-          feesData,
-          liquidityMiningData
-        ),
-        salt
-      );
-
+      if (initialStrategyId == StrategyIdConstants.NO_STRATEGY) {
+        (strategy, strategyId) = aaveV3StrategyFactory.clone2StrategyAndRegister(
+          admin,
+          AaveV3StrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            aToken,
+            IAaveV3Pool(aaveV3Pool),
+            IAaveV3Rewards(aaveV3Rewards),
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData
+          ),
+          salt
+        );
+      } else {
+        strategyId = initialStrategyId;
+        strategy = aaveV3StrategyFactory.clone2StrategyWithId(
+          StrategyId(initialStrategyId),
+          AaveV3StrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            aToken,
+            IAaveV3Pool(aaveV3Pool),
+            IAaveV3Rewards(aaveV3Rewards),
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData
+          ),
+          salt
+        );
+      }
       console2.log(string.concat(description, ":"), address(strategy));
       console2.log(string.concat(description, " id:"), StrategyId.unwrap(strategyId));
     }

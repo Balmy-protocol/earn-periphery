@@ -13,8 +13,7 @@ import {
   CompoundV3StrategyData
 } from "src/strategies/instances/compound-v3/CompoundV3StrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { console2 } from "forge-std/console2.sol";
 
 import { Fees } from "src/types/Fees.sol";
@@ -34,11 +33,40 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V1_S_COMPV3", abi.encodePacked(type(CompoundV3Strategy).creationCode));
+    return deployCompoundV3StrategyWithId(
+      cToken,
+      cometRewards,
+      tosGroup,
+      signerGroup,
+      guardians,
+      judges,
+      fees,
+      guard,
+      description,
+      StrategyIdConstants.NO_STRATEGY
+    );
+  }
+
+  function deployCompoundV3StrategyWithId(
+    ICERC20 cToken,
+    address cometRewards,
+    bytes32 tosGroup,
+    bytes32 signerGroup,
+    address[] memory guardians,
+    address[] memory judges,
+    Fees memory fees,
+    bytes32 guard,
+    string memory description,
+    StrategyId initialStrategyId
+  )
+    internal
+    returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
+  {
+    address implementation = deployContract("V6_S_COMPV3", abi.encodePacked(type(CompoundV3Strategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
     CompoundV3StrategyFactory compoundV3StrategyFactory = CompoundV3StrategyFactory(
       deployContract(
-        "V1_F_COMPV3", abi.encodePacked(type(CompoundV3StrategyFactory).creationCode, abi.encode(implementation))
+        "V6_F_COMPV3", abi.encodePacked(type(CompoundV3StrategyFactory).creationCode, abi.encode(implementation))
       )
     );
     console2.log("Factory deployed: ", address(compoundV3StrategyFactory));
@@ -66,20 +94,37 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     if (computedAddress.code.length > 0) {
       console2.log("\u001b[93m\u2718 Strategy already deployed at:", computedAddress, "\u001b[0m");
     } else {
-      (strategy, strategyId) = compoundV3StrategyFactory.clone2StrategyAndRegister(
-        admin,
-        CompoundV3StrategyData(
-          IEarnVault(vault),
-          IGlobalEarnRegistry(globalRegistry),
-          cToken,
-          ICometRewards(cometRewards),
-          creationValidationData,
-          guardianData,
-          feesData,
-          liquidityMiningData
-        ),
-        salt
-      );
+      if (initialStrategyId == StrategyIdConstants.NO_STRATEGY) {
+        (strategy, strategyId) = compoundV3StrategyFactory.clone2StrategyAndRegister(
+          admin,
+          CompoundV3StrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            cToken,
+            ICometRewards(cometRewards),
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData
+          ),
+          salt
+        );
+      } else {
+        strategy = compoundV3StrategyFactory.clone2StrategyWithId(
+          StrategyId(initialStrategyId),
+          CompoundV3StrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            cToken,
+            ICometRewards(cometRewards),
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData
+          ),
+          salt
+        );
+      }
       console2.log("\u001b[92m\u2714", string.concat(description, ":"), address(strategy), "\u001b[0m");
       console2.log("\u001b[92m\u2714", string.concat(description, " id:"), StrategyId.unwrap(strategyId), "\u001b[0m");
     }
