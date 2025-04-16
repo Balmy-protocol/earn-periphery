@@ -30,7 +30,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - lusd - ", guard),
       initialStrategyId: StrategyId.wrap(40)
     });
@@ -45,7 +45,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - frax - ", guard),
       initialStrategyId: StrategyId.wrap(41)
     });
@@ -60,7 +60,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - weth - ", guard),
       initialStrategyId: StrategyId.wrap(42)
     });
@@ -75,7 +75,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - bridged usdc - ", guard),
       initialStrategyId: StrategyId.wrap(43)
     });
@@ -90,7 +90,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - wbtc - ", guard),
       initialStrategyId: StrategyId.wrap(44)
     });
@@ -105,7 +105,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdt - ", guard),
       initialStrategyId: StrategyId.wrap(45)
     });
@@ -120,7 +120,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - arb - ", guard),
       initialStrategyId: StrategyId.wrap(46)
     });
@@ -135,7 +135,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - dai - ", guard),
       initialStrategyId: StrategyId.wrap(47)
     });
@@ -150,7 +150,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdc - ", guard),
       initialStrategyId: StrategyId.wrap(48)
     });
@@ -165,7 +165,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - gho - ", guard),
       initialStrategyId: StrategyId.wrap(49)
     });

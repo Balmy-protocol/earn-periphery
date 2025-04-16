@@ -27,7 +27,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
       guard: "hypernative",
-      version: "v2"
+      version: "v1"
     });
     vm.stopBroadcast();
   }
@@ -58,7 +58,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
@@ -71,7 +71,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
@@ -87,7 +87,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
@@ -100,7 +100,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
@@ -116,7 +116,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
@@ -129,7 +129,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });
@@ -145,7 +145,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens
     });
@@ -158,7 +158,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens
     });

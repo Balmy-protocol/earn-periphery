@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import { BaseDeployStrategies, IERC4626, StrategyId } from "../BaseDeployStrategies.sol";
-import { Fees } from "src/strategies/layers/fees/external/FeeManager.sol";
 import { DeployPeriphery } from "script/DeployPeriphery.sol";
 
 contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
@@ -34,7 +33,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
       initialStrategyId: StrategyId.wrap(11)
@@ -48,7 +47,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
       initialStrategyId: StrategyId.wrap(12)
@@ -64,7 +63,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
       initialStrategyId: StrategyId.wrap(13)
@@ -78,7 +77,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
       initialStrategyId: StrategyId.wrap(14)
@@ -94,7 +93,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
       initialStrategyId: StrategyId.wrap(15)
@@ -108,7 +107,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
       initialStrategyId: StrategyId.wrap(16)
@@ -124,7 +123,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
       initialStrategyId: StrategyId.wrap(17)
@@ -138,7 +137,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
       initialStrategyId: StrategyId.wrap(18)

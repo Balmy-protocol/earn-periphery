@@ -18,14 +18,14 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       judges: judges,
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
       guard: "",
-      version: "v1"
+      version: "v3"
     });
     _deployAaveV3Strategies({
       guardians: _getGuardiansArray(HYPERNATIVE_GUARDIAN, false),
       judges: judges,
       tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
       guard: "hypernative",
-      version: "v2"
+      version: "v1"
     });
     vm.stopBroadcast();
   }
@@ -53,7 +53,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdc - ", guard)
     });
     // WETH
@@ -66,7 +66,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - weth - ", guard)
     });
     // cbBTC
@@ -79,7 +79,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - cbbtc - ", guard)
     });
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
@@ -95,7 +95,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - usdc - ", guard)
     });
 
@@ -109,7 +109,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - weth - ", guard)
     });
     // cbBTC
@@ -122,7 +122,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier1Fees,
-      guard: bytes32(bytes(string.concat(version, "-t1", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - cbbtc - ", guard)
     });
 
@@ -138,7 +138,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - usdc - ", guard)
     });
 
@@ -152,7 +152,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - weth - ", guard)
     });
     // cbBTC
@@ -165,7 +165,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier2Fees,
-      guard: bytes32(bytes(string.concat(version, "-t2", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - cbbtc - ", guard)
     });
     // Tier 3 = 2.5% performance fee + 1% rescue fee
@@ -181,7 +181,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - usdc - ", guard)
     });
     // WETH
@@ -194,7 +194,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - weth - ", guard)
     });
     // cbBTC
@@ -207,7 +207,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: tier3Fees,
-      guard: bytes32(bytes(string.concat(version, "-t3", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - cbbtc - ", guard)
     });
   }

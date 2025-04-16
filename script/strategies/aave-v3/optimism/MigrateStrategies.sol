@@ -8,7 +8,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
     vm.startBroadcast();
     deployPeriphery();
-    _deployAaveV3Strategies({ guard: "", version: "v2" });
+    _deployAaveV3Strategies({ guard: "", version: "v3" });
     vm.stopBroadcast();
   }
 
@@ -29,7 +29,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - weth - ", guard),
       initialStrategyId: StrategyId.wrap(1)
     });
@@ -44,7 +44,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - bridged usdc - ", guard),
       initialStrategyId: StrategyId.wrap(2)
     });
@@ -59,7 +59,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - wbtc - ", guard),
       initialStrategyId: StrategyId.wrap(3)
     });
@@ -74,7 +74,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdt - ", guard),
       initialStrategyId: StrategyId.wrap(4)
     });
@@ -89,7 +89,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - op - ", guard),
       initialStrategyId: StrategyId.wrap(5)
     });
@@ -104,7 +104,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - susd - ", guard),
       initialStrategyId: StrategyId.wrap(6)
     });
@@ -119,7 +119,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - usdc - ", guard),
       initialStrategyId: StrategyId.wrap(7)
     });
@@ -134,7 +134,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - dai - ", guard),
       initialStrategyId: StrategyId.wrap(8)
     });
@@ -149,7 +149,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - lusd - ", guard),
       initialStrategyId: StrategyId.wrap(9)
     });

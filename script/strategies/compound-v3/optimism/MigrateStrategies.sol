@@ -8,7 +8,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
   function run() external override(DeployPeriphery) {
     vm.startBroadcast();
     deployPeriphery();
-    _deployCompoundV3Strategies({ guard: "", version: "v2" });
+    _deployCompoundV3Strategies({ guard: "", version: "v3" });
     vm.stopBroadcast();
   }
 
@@ -27,7 +27,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard),
       initialStrategyId: StrategyId.wrap(10)
     });
@@ -41,7 +41,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard),
       initialStrategyId: StrategyId.wrap(11)
     });
@@ -55,7 +55,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: emptyGuardians,
       judges: emptyJudges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat(version, "-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard),
       initialStrategyId: StrategyId.wrap(12)
     });
