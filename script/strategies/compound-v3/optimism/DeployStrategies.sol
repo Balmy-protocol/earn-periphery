@@ -15,13 +15,15 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: _getGuardiansArray(BALMY_GUARDIAN, true),
       judges: judges,
       tosGroup: BALMY_GUARDIAN_TOS_GROUP,
-      guard: ""
+      guard: "",
+      version: "v3"
     });
     _deployCompoundV3Strategies({
       guardians: _getGuardiansArray(HYPERNATIVE_GUARDIAN, false),
       judges: judges,
       tosGroup: HYPERNATIVE_GUARDIAN_TOS_GROUP,
-      guard: "hypernative"
+      guard: "hypernative",
+      version: "v1"
     });
 
     vm.stopBroadcast();
@@ -31,7 +33,8 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     address[] memory guardians,
     address[] memory judges,
     bytes32 tosGroup,
-    string memory guard
+    string memory guard,
+    string memory version
   )
     internal
   {
@@ -46,7 +49,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard)
     });
 
@@ -59,7 +62,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard)
     });
 
@@ -72,7 +75,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       guardians: guardians,
       judges: judges,
       fees: DEFAULT_FEES,
-      guard: bytes32(bytes(string.concat("v1-t0", guard))),
+      guard: keccak256(bytes(string.concat(version, "-t0", guard))),
       description: string.concat("strategy tier 0 - ", guard)
     });
   }

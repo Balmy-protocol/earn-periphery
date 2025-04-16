@@ -12,8 +12,7 @@ import {
   MorphoStrategyData
 } from "src/strategies/instances/morpho/MorphoStrategyFactory.sol";
 import { IEarnBalmyStrategy } from "src/interfaces/IEarnBalmyStrategy.sol";
-import { StrategyId } from "@balmy/earn-core/interfaces/IEarnStrategy.sol";
-
+import { StrategyId, StrategyIdConstants } from "@balmy/earn-core/types/StrategyId.sol";
 import { console2 } from "forge-std/console2.sol";
 
 import { Fees } from "src/types/Fees.sol";
@@ -33,11 +32,42 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     internal
     returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
   {
-    address implementation = deployContract("V3_S_MORPHO", abi.encodePacked(type(MorphoStrategy).creationCode));
+    return deployMorphoStrategyWithId(
+      mToken,
+      tosGroup,
+      signerGroup,
+      guardians,
+      judges,
+      fees,
+      guard,
+      description,
+      rewardTokens,
+      StrategyIdConstants.NO_STRATEGY
+    );
+  }
+
+  function deployMorphoStrategyWithId(
+    IERC4626 mToken,
+    bytes32 tosGroup,
+    bytes32 signerGroup,
+    address[] memory guardians,
+    address[] memory judges,
+    Fees memory fees,
+    bytes32 guard,
+    string memory description,
+    address[] memory rewardTokens,
+    StrategyId initialStrategyId
+  )
+    internal
+    returns (IEarnBalmyStrategy strategy, StrategyId strategyId)
+  {
+    console2.log("MorphoStrategyFactory creation code: ");
+    console2.logBytes(abi.encodePacked(type(MorphoStrategyFactory).creationCode));
+    address implementation = deployContract("V6_S_MORPHO", abi.encodePacked(type(MorphoStrategy).creationCode));
     console2.log("Implementation deployed: ", implementation);
     MorphoStrategyFactory morphoStrategyFactory = MorphoStrategyFactory(
       deployContract(
-        "V3_F_MORPHO", abi.encodePacked(type(MorphoStrategyFactory).creationCode, abi.encode(implementation))
+        "V6_F_MORPHO", abi.encodePacked(type(MorphoStrategyFactory).creationCode, abi.encode(implementation))
       )
     );
     console2.log("Factory deployed: ", address(morphoStrategyFactory));
@@ -64,20 +94,38 @@ contract BaseDeployStrategies is BaseDeployPeriphery {
     if (computedAddress.code.length > 0) {
       console2.log("Strategy already deployed", computedAddress);
     } else {
-      (strategy, strategyId) = morphoStrategyFactory.clone2StrategyAndRegister(
-        admin,
-        MorphoStrategyData(
-          IEarnVault(vault),
-          IGlobalEarnRegistry(globalRegistry),
-          mToken,
-          creationValidationData,
-          guardianData,
-          feesData,
-          liquidityMiningData,
-          rewardTokens
-        ),
-        salt
-      );
+      if (initialStrategyId == StrategyIdConstants.NO_STRATEGY) {
+        (strategy, strategyId) = morphoStrategyFactory.clone2StrategyAndRegister(
+          admin,
+          MorphoStrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            mToken,
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData,
+            rewardTokens
+          ),
+          salt
+        );
+      } else {
+        strategyId = initialStrategyId;
+        strategy = morphoStrategyFactory.clone2StrategyWithId(
+          StrategyId(initialStrategyId),
+          MorphoStrategyData(
+            IEarnVault(vault),
+            IGlobalEarnRegistry(globalRegistry),
+            mToken,
+            creationValidationData,
+            guardianData,
+            feesData,
+            liquidityMiningData,
+            rewardTokens
+          ),
+          salt
+        );
+      }
       console2.log(string.concat(description, ":"), address(strategy));
       console2.log(string.concat(description, " id:"), StrategyId.unwrap(strategyId));
     }
