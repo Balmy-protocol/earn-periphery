@@ -55,7 +55,6 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     });
 
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
-    Fees memory tier1Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 750, rescueFee: 375 });
 
     // Moonwell Flagship ETH
     deployMorphoStrategyWithId({
@@ -64,7 +63,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier1Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
@@ -78,7 +77,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier1Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
@@ -86,7 +85,6 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     });
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
-    Fees memory tier2Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 500, rescueFee: 250 });
 
     // Moonwell Flagship ETH
     deployMorphoStrategyWithId({
@@ -95,7 +93,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier2Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
@@ -109,7 +107,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier2Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,
@@ -117,7 +115,6 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
     });
 
     // Tier 3 = 2.5% performance fee + 1% rescue fee
-    Fees memory tier3Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 250, rescueFee: 100 });
 
     // Moonwell Flagship ETH
     deployMorphoStrategyWithId({
@@ -126,7 +123,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier3Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - moonwell flagship eth - ", guard),
       rewardTokens: moonwellRewardTokens,
@@ -140,7 +137,7 @@ contract DeployStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier3Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - gauntlet usdc prime - ", guard),
       rewardTokens: gauntletRewardTokens,

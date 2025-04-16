@@ -63,7 +63,6 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       initialStrategyId: StrategyId.wrap(3)
     });
     // Tier 1 = 7.5% performance fee + 3.75% rescue fee
-    Fees memory tier1Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 750, rescueFee: 375 });
 
     // USDC
     deployAaveV3StrategyWithId({
@@ -74,7 +73,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier1Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - usdc - ", guard),
       initialStrategyId: StrategyId.wrap(4)
@@ -89,7 +88,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier1Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - weth - ", guard),
       initialStrategyId: StrategyId.wrap(5)
@@ -103,14 +102,13 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier1Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t1", guard))),
       description: string.concat("strategy tier 1 - cbbtc - ", guard),
       initialStrategyId: StrategyId.wrap(6)
     });
 
     // Tier 2 = 5% performance fee + 2.5% rescue fee
-    Fees memory tier2Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 500, rescueFee: 250 });
 
     // cbBTC
     deployAaveV3StrategyWithId({
@@ -121,13 +119,12 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier2Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t2", guard))),
       description: string.concat("strategy tier 2 - cbbtc - ", guard),
       initialStrategyId: StrategyId.wrap(20)
     });
     // Tier 3 = 2.5% performance fee + 1% rescue fee
-    Fees memory tier3Fees = Fees({ depositFee: 0, withdrawFee: 0, performanceFee: 250, rescueFee: 100 });
 
     // cbBTC
     deployAaveV3StrategyWithId({
@@ -138,7 +135,7 @@ contract MigrateStrategies is DeployPeriphery, BaseDeployStrategies {
       signerGroup: bytes32(0),
       guardians: emptyGuardians,
       judges: emptyJudges,
-      fees: tier3Fees,
+      fees: DEFAULT_FEES,
       guard: bytes32(bytes(string.concat(version, "-t3", guard))),
       description: string.concat("strategy tier 3 - cbbtc - ", guard),
       initialStrategyId: StrategyId.wrap(21)
