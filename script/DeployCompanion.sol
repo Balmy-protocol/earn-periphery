@@ -41,8 +41,9 @@ function permit2Adapter() view returns (address) {
   ) {
     return 0xED306e38BB930ec9646FF3D917B2e513a97530b1;
   }
-  if (block.chainid == 146) { // sonic
-    return 0xd4c28318bf51e823bAE1C4FEC562b80C53E66467; 
+  if (block.chainid == 146) {
+    // sonic
+    return 0xd4c28318bf51e823bAE1C4FEC562b80C53E66467;
   }
   revert("Unsupported chain");
 }
