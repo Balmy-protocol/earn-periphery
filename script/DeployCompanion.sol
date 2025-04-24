@@ -38,6 +38,7 @@ function permit2Adapter() view returns (address) {
       || block.chainid == 137 // polygon
       || block.chainid == 34_443 // mode
       || block.chainid == 42_161 // arbitrum
+      || block.chainid == 100 // gnosis
   ) {
     return 0xED306e38BB930ec9646FF3D917B2e513a97530b1;
   }
